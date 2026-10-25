@@ -8,15 +8,17 @@ Each run (daily, after build_data.py):
      inside the 90% band, log score. Prediction columns of existing rows are never changed.
   3. Write data/scorecard.json, the summary shown on the site.
 v2 = robust.fan_params on all data up to that close (the frozen code). v3 = the same fan with the 90% and 50% half-widths
-multiplied by the frozen scales s90 / s50 (frozen/v3/v3_spec.md section B), median unchanged."""
+multiplied by the frozen scales s90 / s50 (frozen/v3/v3_spec.md section B), median unchanged. base = the plain benchmark
+(power-law trend with a constant-width lognormal band, scorestats.baseline). Statistical tests: scorestats.py."""
 import csv, json, os, math, datetime as dt
-import numpy as np, pandas as pd, lib, robust
+import numpy as np, pandas as pd, lib, robust, scorestats as ST
 
 ROOT = os.path.abspath(os.path.join(lib.HERE, ".."))
 CSV = os.path.join(ROOT, "data", "scorecard.csv"); SUMMARY = os.path.join(ROOT, "data", "scorecard.json")
 FZ3 = os.path.join(lib.HERE, "frozen", "v3")
 START = pd.Timestamp("2026-10-24")      # last close known at the freeze (2026-10-25); earlier closes are never added
-HORIZONS = (30, 90, 365); QK = ("q5", "q25", "q50", "q75", "q95"); VERSIONS = ("v2", "v3")
+HORIZONS = (30, 90, 365); QK = ("q5", "q25", "q50", "q75", "q95"); VERSIONS = ("v2", "v3", "base")
+COMPARE = (("v2", "base"), ("v3", "base"), ("v3", "v2"))   # skill tests: first minus second
 S90, S50 = 0.712, 0.660                 # frozen v3 fan scales (frozen/v3/v3_spec.md, "Frozen parameters")
 RES = ("actual", "in50", "in90", "log_score")
 COLS = ["close_date", "run_utc", "version", "btc_close", "heat_score", "heat_score_v2"] + \
@@ -43,7 +45,10 @@ def log_score(q, x):
 def predictions(p, d):
     P = robust.fan_params(p.loc[:d]); F = robust.fan_at(P, [d + pd.Timedelta(days=h) for h in HORIZONS])
     v2 = {h: {k: float(F.iloc[i][k]) for k in QK} for i, h in enumerate(HORIZONS)}
-    return {"v2": v2, "v3": {h: v3_scale(v2[h]) for h in HORIZONS}}
+    return {"v2": v2, "v3": {h: v3_scale(v2[h]) for h in HORIZONS}, "base": ST.baseline(p, d, HORIZONS)}
+
+def score_one(version, q, x):
+    return ST.baseline_log_score(q, x) if version == "base" else log_score(q, x)
 
 def scores_for(d):
     h = json.load(open(os.path.join(ROOT, "data", "history.json")))
@@ -66,10 +71,11 @@ def main(p=None, now=None):
     p = (lib.coinmetrics()["price"] if p is None else p).dropna(); p = p[p > 0]
     rows = read(); PRED = [c for c in COLS if not any(c.endswith("_" + x) for x in RES)]; before = [{k: r[k] for k in PRED} for r in rows]
     last = p.index[-1]; have = {(r["close_date"], r["version"]) for r in rows}; added = 0
-    if last >= START and not any((str(last.date()), v) in have for v in VERSIONS):
+    missing = [v for v in VERSIONS if (str(last.date()), v) not in have]
+    if last >= START and missing:      # per version, so a version added later starts on the current close only
         pr = predictions(p, last); hs, hs2 = scores_for(last)
         run = (now or dt.datetime.now(dt.timezone.utc)).isoformat(timespec="seconds")
-        for v in VERSIONS:
+        for v in missing:
             r = {c: "" for c in COLS}
             r.update({"close_date": str(last.date()), "run_utc": run, "version": v, "btc_close": f"{p[last]:.2f}",
                       "heat_score": "" if hs is None else f"{hs:.1f}", "heat_score_v2": "" if hs2 is None else f"{hs2:.1f}"})
@@ -85,7 +91,7 @@ def main(p=None, now=None):
             if t not in p.index: continue
             x = float(p[t]); q = {k: float(r[f"h{h}_{k}"]) for k in QK}
             r[f"h{h}_actual"] = f"{x:.2f}"; r[f"h{h}_in50"] = str(int(q["q25"] <= x <= q["q75"]))
-            r[f"h{h}_in90"] = str(int(q["q5"] <= x <= q["q95"])); r[f"h{h}_log_score"] = f"{log_score(q, x):.4f}"; scored += 1
+            r[f"h{h}_in90"] = str(int(q["q5"] <= x <= q["q95"])); r[f"h{h}_log_score"] = f"{score_one(r['version'], q, x):.4f}"; scored += 1
     after = [{k: r[k] for k in PRED} for r in rows[:len(before)]]
     assert after == before, "refusing to change prediction columns of existing rows"
     if added or scored or not os.path.exists(CSV): write(rows)
@@ -126,8 +132,37 @@ def summary(rows, last):
                               "first_year": {"v2": {"in90": b3["by_horizon"]["0-1y"]["in90_raw"], "in50": b3["by_horizon"]["0-1y"]["in50_raw"]},
                                              "v3": {"in90": b3["by_horizon"]["0-1y"]["in90_cal"], "in50": b3["by_horizon"]["0-1y"]["in50_cal"]}}}
     out["promotion_check_earliest"] = "2027-10-25"
+    out["tests_live"] = tests(rows)
+    bt = os.path.join(ROOT, "data", "scorecard_backtest.json")
+    out["tests_backtest"] = json.load(open(bt)) if os.path.exists(bt) else None
     tmp = SUMMARY + ".tmp"
     with open(tmp, "w") as f: json.dump(out, f, indent=1)
     os.replace(tmp, SUMMARY)
+
+def tests(rows, lag_days=True):
+    """Coverage (exact binomial, non-overlapping predictions) and skill (Diebold-Mariano) per horizon.
+    Rows: dicts with close_date, version and h{h}_* fields (matured when h{h}_actual is set). Daily origins: lag = h - 1."""
+    out = {"min_eff": ST.MIN_EFF, "coverage": {}, "skill": {}}
+    by = {v: sorted([r for r in rows if r["version"] == v], key=lambda r: r["close_date"]) for v in VERSIONS}
+    start = min((r["close_date"] for r in rows), default=str(START.date()))
+    for h in HORIZONS:
+        c = out["coverage"][str(h)] = {"expected": ST.expected_date(start, h)}
+        for v in VERSIONS:
+            R = by[v]; pick = set(ST.nonoverlap([pd.Timestamp(r["close_date"]) for r in R], h))
+            M = [r for r in R if pd.Timestamp(r["close_date"]) in pick and r[f"h{h}_actual"]]; n = len(M); o = {"eff_n": n}
+            for b, tgt in (("in50", 0.5), ("in90", 0.9)):
+                k = sum(int(r[f"h{h}_{b}"]) for r in M)
+                o[b] = {"hits": k, "rate": None if not n else k / n, "p": ST.binom(k, n, tgt) if n >= ST.MIN_EFF else None}
+            c[v] = o
+        s = out["skill"][str(h)] = {"expected": ST.expected_date(start, h)}
+        for a, b in COMPARE:
+            A = {r["close_date"]: float(r[f"h{h}_log_score"]) for r in by[a] if r[f"h{h}_actual"]}
+            B = {r["close_date"]: float(r[f"h{h}_log_score"]) for r in by[b] if r[f"h{h}_actual"]}
+            ds = sorted(set(A) & set(B)); eff = len(ST.nonoverlap([pd.Timestamp(x) for x in ds], h))
+            o = {"n": len(ds), "eff_n": eff}
+            if eff >= ST.MIN_EFF: o.update(ST.dm([A[x] - B[x] for x in ds], h - 1))
+            elif ds: o["mean_diff"] = float(np.mean([A[x] - B[x] for x in ds]))
+            s[f"{a}_vs_{b}"] = o
+    return out
 
 if __name__ == "__main__": main()

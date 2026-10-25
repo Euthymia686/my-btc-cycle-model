@@ -18,7 +18,7 @@ concurrency:
 
 env:
   # sha256 of pipeline/frozen/FROZEN_SHA256SUMS (the list of every v2 and v3 frozen file, timestamped 2026-10-25)
-  FROZEN_LIST_SHA256: eafb5b8f9f3461ff6bce6bdcb8c7015d32c5d16dbb31ef6546d9b57829e5c84b
+  FROZEN_LIST_SHA256: 59797285034fa563d54baae9a115765abc3547573684c5e351db670b8271cbbc
 
 jobs:
   guard:
@@ -52,7 +52,8 @@ jobs:
           sha256sum -c pipeline/frozen/FROZEN_SHA256SUMS
       - name: Upgrade the OpenTimestamps proof once Bitcoin confirms it (failure-tolerant)
         run: |
-          pip install -q opentimestamps-client && ots upgrade pipeline/timestamps/FROZEN_SHA256SUMS.ots || echo "::notice::timestamp not upgraded yet (still pending or calendar unreachable)"
+          pip install -q opentimestamps-client || true
+          for f in pipeline/timestamps/*.ots; do ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"; done
           rm -f pipeline/timestamps/*.ots.bak
       - name: Commit refreshed data if changed
         run: |

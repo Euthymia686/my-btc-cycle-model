@@ -102,3 +102,4 @@ table.sc thead th{color:var(--mute);font-weight:500}table.sc td.ok{color:var(--u
 .scorecard .first{font-size:13px;margin:4px 0}.scorecard ul.weak{margin:4px 0 6px;padding-left:18px;font-size:13px}.scorecard ul.weak li{margin:3px 0}
 @media (max-width:760px){.scgrid{grid-template-columns:1fr;gap:4px}}
 .scorecard a{color:#7aa2ff}
+table.sc.st{font-size:12px}table.sc.st td,table.sc.st th{padding:2px 8px 2px 0}.scorecard .stwrap{overflow-x:auto}

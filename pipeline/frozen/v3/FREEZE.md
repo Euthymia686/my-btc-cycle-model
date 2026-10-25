@@ -4,7 +4,9 @@ v3 is frozen as of 2026-10-25 and runs alongside v2. From this date both are sco
 `data/scorecard.csv`. Nothing in this folder may change. Any change means a new version (v4) with a new freeze date.
 The workflow fails if any frozen file changes (see `pipeline/frozen/FROZEN_SHA256SUMS`). That list is timestamped in the
 Bitcoin blockchain with OpenTimestamps: `pipeline/timestamps/FROZEN_SHA256SUMS.ots` (check with
-`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`).
+`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`). The first list, stamped about an hour
+earlier the same day before the grading method below was added, is kept with its own proof as
+`pipeline/timestamps/FROZEN_SHA256SUMS.first.txt` and `.first.txt.ots`.
 
 ## What is frozen
 
@@ -72,6 +74,36 @@ data), using every matured scorecard prediction at all three horizons:
 3. v3's share inside the 90% band is at least 80% at every horizon with at least 30 matured predictions.
 
 If any condition fails, v2 stays. The same rule is re-checked every 6 months after that. The rule does not change.
+
+## Grading method (pre-registered 2026-10-25, before any result)
+
+Added the same day as the freeze, before any forecast matured, so the way the results are graded is fixed in advance too.
+The code is `pipeline/scorestats.py` and `pipeline/scorecard.py`; if the code and this note disagree, this note governs.
+These tests are reported next to the promotion rule above; they do not change it.
+
+1. **Benchmark ("base").** A plain power-law trend: log10(price) = a + b * log10(days since 2009-01-03), ordinary least
+   squares on every daily close up to and including the forecast date (none after it). The band is lognormal with a
+   constant width: its standard deviation is the standard deviation of that fit's residuals (log10), the same at every
+   horizon. Its 5/25/50/75/95% levels are logged in `data/scorecard.csv` each day as version `base`, from the
+   2026-10-24 close on, and graded like v2 and v3, except that its log score is the exact lognormal log density of
+   ln(close).
+2. **Coverage test.** For each version, horizon (30, 90, 365 days) and band (50%, 90%): an exact two-sided binomial test
+   of the number of hits against the target rate (0.5 or 0.9). Only non-overlapping predictions count, so outcomes are
+   independent: in date order, take the first logged forecast, then the first one made at least h days later, and so on.
+   The number of such matured predictions is the effective sample size.
+3. **Skill test.** For each horizon, a Diebold-Mariano test of the per-forecast log score difference for v2 minus base,
+   v3 minus base and v3 minus v2, on all matured daily forecasts that both versions have. The variance is Newey-West
+   (Bartlett weights) with lag h - 1 days, because forecasts made up to h - 1 days apart overlap. Two-sided p-value from
+   the normal distribution. Reported: mean score difference (positive means the first version did better) and p-value.
+4. **Minimum data.** A test is shown only when its effective sample size is at least 10. Before that the site shows "not
+   enough data yet" and the date the 10th non-overlapping prediction matures if the job runs every day: 2027-08-20 (30
+   days), 2029-04-11 (90 days), 2036-10-21 (365 days).
+5. **Reading the results.** p below 0.05 on a coverage test means the band is probably mis-sized. A high p means no
+   evidence it is wrong yet, not proof it is right. No correction is made for running many tests; with 18 coverage tests
+   and 9 skill tests, about one p below 0.05 is expected by chance alone.
+6. **Backtest (past data).** The same tests on one forecast per day from 2015-01-01, each using only closes up to its own
+   date (`pipeline/scorecard_backtest.py`, output `data/scorecard_backtest.json`), labelled "backtest (past data)". These
+   p-values are optimistic: both models were designed, and the v3 scales estimated, after seeing that history.
 
 Caveats, stated in advance: predictions made on consecutive days overlap heavily, so one year of daily rows is much less
 evidence than its row count suggests, and one year covers a single phase of one cycle. The 365-day horizon only starts

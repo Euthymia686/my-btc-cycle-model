@@ -33,6 +33,12 @@
     sc_weak: "Known ways the model has been wrong or could fail. Listed up front so the results can be read fairly.",
     sc_cov: "The share of matured forecasts where the actual price landed inside the band. A good 50% band holds the price about half the time, a good 90% band about 90% of the time. Much more means the band is too wide; much less means too narrow.",
     sc_log: "A single grade for each forecast that rewards ranges that are narrow but still contain the price, and punishes misses. Higher is better. It only means something when comparing v2 with v3 on the same days.",
+    sc_tests: "Checks whether the results so far could just be luck. Each test gives a p-value: the chance of a result at least this far off if the band were sized exactly right (coverage) or if the two forecasts were equally good (skill).",
+    sc_binom: "Exact binomial test of how often the price landed inside each band versus the target (50% or 90%). p below 0.05 means the band is probably mis-sized; a high p means no evidence it's wrong yet, not proof it's right.",
+    sc_ess: "Effective sample size: the number of forecasts that do not overlap in time (for example one 30-day forecast every 30 days), so each outcome is independent. Daily forecasts that overlap mostly repeat the same information, so only these are counted. Tests are shown from 10 on.",
+    sc_dm: "Diebold-Mariano test: is one forecast's average log score really higher than another's, or could the gap be chance? Newey-West errors allow for overlapping daily forecasts. A positive difference means the first one scored better; p below 0.05 means the gap is probably real.",
+    sc_base: "The benchmark is deliberately simple: the power-law trend line fitted only on prices up to each forecast date, with a band of the same width at every horizon. A model is only useful if it beats this.",
+    sc_bt_p: "Same tests on past data. These p-values are optimistic, because the model was designed after seeing that data (and v3's band widths were estimated from it). Treat them as a sanity check, not proof.",
     v3: "v3 is the same fan as v2 with narrower bands (rescaled from the fan's own past errors), frozen on 2026-10-25 and tested side by side with v2. It replaces v2 only if it wins on live data under a rule set in advance.",
     method: "The full technical details: data sources, formulas, how the score and the fan are built, and how they were tested."
   };
