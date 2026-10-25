@@ -159,4 +159,4 @@ details.more>summary .small{display:block;margin-left:16px;font-weight:400}
 footer .disclosure{margin-top:4px}footer p{margin:6px 0}
 @media (max-width:640px){table.sumt thead{display:none}table.sumt tr{display:block;border-bottom:1px solid var(--line);padding:6px 0}table.sumt th,table.sumt td{display:block;padding:2px 4px;border:0}table.sumt td:last-child::before{content:"Graded: ";color:var(--mute)}}
 .fcnote{margin:0 0 2px;color:var(--mute);font-size:11.5px}.fcnote a{color:#7aa2ff}
-footer .donate{margin:8px 0 2px;font-size:12px}footer .donate a{color:var(--mute);text-decoration:none;border-bottom:1px dotted var(--mute)}footer .donate a:hover{color:var(--text);border-bottom-color:var(--text)}
+footer .donate{margin:8px 0 2px;font-size:12px}footer .donate a{color:var(--mute);text-decoration:none;border-bottom:1px dotted var(--mute)}footer .donate a:hover{color:var(--text);border-bottom-color:var(--text)}footer .donate .sep{color:var(--mute);margin:0 2px}footer .donate a{overflow-wrap:anywhere}

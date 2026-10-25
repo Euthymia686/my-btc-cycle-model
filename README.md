@@ -53,7 +53,7 @@ Designed and directed by Euthymia686, built with help from an AI assistant. The 
 Copyright (c) 2026 Euthymia686. This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) (see `LICENSE`).
 
 - Free for personal and other non-commercial use, including study, research and hobby projects.
-- Commercial use needs permission from the copyright holder. Open an issue on this repository to ask.
+- Commercial use needs permission from the copyright holder. Open an issue on this repository or email [btc.cycle.model@gmail.com](mailto:btc.cycle.model@gmail.com) to ask.
 - Earlier copies of this repository were published under the MIT License. Copies obtained under MIT keep those terms; this license applies from this commit on.
 
 The bundled Lightweight Charts library is (c) TradingView and stays under its own Apache-2.0 license.
