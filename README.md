@@ -10,6 +10,8 @@ A live Bitcoin cycle chart built from raw public data:
 ![hero](hero_combined.png)
 
 > **Disclaimer.** These are model ranges, not predictions. Nothing here is financial advice or a recommendation to buy or sell anything.
+>
+> Disclosure: the author holds Bitcoin-related investments. The model rules are locked and graded in public so that this cannot quietly shape the results.
 > Past cycles may not repeat, data sources can be wrong or late, and the code may contain errors. Do your own research.
 
 ## How it works
@@ -20,11 +22,23 @@ A live Bitcoin cycle chart built from raw public data:
 - `pipeline/frozen/`: locked model versions. v2 (`v2_freeze.json`, the frozen fan) and v3 (`v3/`: pre-registered rules, tests, and `FREEZE.md` with what v3 changes and the rule for promoting it over v2), both frozen 2026-10-25. `FROZEN_SHA256SUMS` lists every frozen file; the workflow fails if any of them changes. The list is timestamped in the Bitcoin blockchain with OpenTimestamps (`pipeline/timestamps/`). Two v3 research files are not published; their hashes are in `v3/withheld_sha256.txt`.
 - `pipeline/scorecard.py` and `data/scorecard.csv`: the public forward scorecard. Each daily run logs the v2 and v3 forecasts for 30, 90 and 365 days ahead and grades them when they mature (inside the 50% band, inside the 90% band, log score). Rows are only appended, once per daily close.
 - Statistical grading (method pre-registered in `pipeline/frozen/v3/FREEZE.md`, code in `pipeline/scorestats.py`): an exact binomial test of band coverage on non-overlapping forecasts, and a Diebold-Mariano test (Newey-West errors) of log score against a plain benchmark (power-law trend with a constant-width lognormal band, logged daily as version `base`) and of v3 against v2. Results are shown once at least 10 independent forecasts have matured. The same tests on past data are in `data/scorecard_backtest.json` (`pipeline/scorecard_backtest.py`); those p-values are optimistic because the models were designed after seeing that data.
+- Kill criteria (pre-registered in `pipeline/frozen/v3/FREEZE.md`): a version is retired in public if (a) its 90% band fails the coverage test with p below 0.01 on at least 10 independent forecasts, (b) the weekly close stays below the power-law floor for 8 or more weeks in a row, or (c) it loses to the plain benchmark with p below 0.05 over at least 12 independent forecasts. The scorecard shows each one's status. On past data, (b) would have fired in 2012, 2015 and late 2022.
+- `RESEARCH_LOG.md`: every variant tried, including the dropped ones, with when and why.
 - `.github/workflows/update-and-deploy.yml`: runs daily at about 00:30 UTC (or manually). It rebuilds the data, commits it if anything changed, and deploys to GitHub Pages.
+- `scripts/snapshot.sh`: each daily run saves a dated raw-data snapshot in `snapshots/` (small source files daily, about 30 KB; the large CoinMetrics and Bitstamp files weekly on Sundays, about 290 KB) and a sha256 line per raw file in `snapshots/MANIFEST.csv`.
 
 Run it locally: `pip install -r requirements.txt && bash scripts/update.sh && python -m http.server`.
 
 See `docs/ARCHITECTURE.md`, `docs/ROBUSTNESS.md` and `pipeline/SOURCES.md`.
+
+## Reproduce a past day
+1. Check out the "Daily data refresh" commit of that day (its `pipeline/cache/` holds the exact raw data that run used), or restore `pipeline/cache/` and `data/ohlc_daily.json` from that day's snapshot plus the latest weekly snapshot on or before it, and check them against `snapshots/MANIFEST.csv`.
+2. Install Python 3.12.15 and the exact versions in `requirements.txt` (`pip install -r requirements.txt`).
+3. Run `OFFLINE=1 bash scripts/update.sh`. With `OFFLINE=1` nothing is fetched; every step uses the cached raw files.
+4. Compare with that commit's `data/` files. Fields that record the run time (for example `updated_utc`) will differ.
+
+## How to cite
+See `CITATION.cff`. Releases are archived with a DOI once the repository is linked to Zenodo.
 
 ## How this was built
 

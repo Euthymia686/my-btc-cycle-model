@@ -1,0 +1,72 @@
+# Research log (forking paths)
+
+Every model variant tried for this project, including the ones that were dropped, with when and why. The point is that
+a reader can see how many paths were explored before the published versions were chosen, and discount the backtests
+accordingly. Rules for this file: entries are only added, never removed or rewritten (corrections are new entries);
+git history shows every change. All times are UTC on 2026-10-25 unless stated. Times marked "file time" come from the
+modification time of the research file, not from a commit. Everything here is a model, not a prediction, and not
+financial advice.
+
+Sources for the entries below: `cycle_signals/REPORT.md` (v1 research, generated 04:13), `pipeline/v2_spec.py` (v2),
+`pipeline/frozen/v3/PREREG.md`, `v3_spec.md`, `band_results.csv` and `fan_backtest_v3.json` (v3), `docs/ROBUSTNESS.md`,
+and this repo's git history.
+
+## 1. Cycle Heat Score (the 0-100 score)
+
+| when | variant | result | decision |
+|---|---|---|---|
+| 04:13 (report time) | **v1**: 8 signals, each scored as a percentile against all prior days, equal-weight average (weights chosen before testing) | Walk-forward score at the top: 2013 92.9, 2017 92.0, 2021 64.8, 2025 62.1. Fell to 12-25 at every cycle low. | Kept as v1 and still shown, but its weak spot is public: percentiles against all history under-react as each cycle gets less extreme. |
+| 04:13 (report time) | v1 with **fitted weights** (how much hotter each signal ran at prior tops, fitted on prior tops only) | Score at the top: 2013 92.9, 2017 91.3, 2021 63.8, 2025 63.0. No better than equal weights at the two tops it missed. | Dropped: more fitted parameters, no gain. |
+| 04:13 (report time) | v1 **rule count** (how many signals were at their own "hot" level) | Max within 60 days of the top: 2017 4 of 6, 2021 1 of 8, 2025 1 of 8. | Dropped as a headline: it missed the last two tops. |
+| 04:02 (file time) | **v2**: percentiles against the prior 8 years only (2,922 days, at least 730 needed), signals grouped into 5 families (price structure, on-chain valuation, network usage, attention, timing) and the families averaged | In-sample (hindsight) peaks: 80.0 (2013), 91.6 (2017), 69.8 (2021), 67.2 (2025); bottoms about 20-23. Still only "warm" at the last two tops. | Kept and frozen as v2 (hash 1ed15c4c). Not tuned further after seeing these numbers. |
+
+## 2. Heat thresholds (what counts as "hot")
+
+| when | variant | result | decision |
+|---|---|---|---|
+| 04:13 (report time) | v1 **calibrated** threshold: hot = lowest score within 30 days before or 7 after any prior top; warm = hot minus 15 | The hot level moved with each new top: 88 before 2021, 68 before 2025, 62 today. Fitted on 1 to 3 tops. | Kept for v1 display only, labelled as fitted on very few points. |
+| 04:02 (file time) | v2 **fixed** zones set in advance: hot 80 or more, warm 65 or more, neutral 40 or more, cool below 40 | Not fitted to any top, so they do not drift; v2 would only have said "warm" at the 2021 and 2025 tops. | Kept and frozen in v2. |
+
+## 3. Attention signal: Google Trends vs Wikipedia
+
+| when | variant | result | decision |
+|---|---|---|---|
+| 04:02 (file time) | **Google Trends** (pytrends, monthly, lagged one month) as the attention input in v1 and v2 | It is a sampled, relative index from an unofficial library, resampled on each request (SOURCES.md). On the first CI runs the score history files changed a lot between runs on the same day; re-sampled Trends values are the likely cause. | Kept in both scores, because v1 and v2 were already pre-registered with it. Swapping it now would be an unlogged change to a frozen version. |
+| 10:09 (commit 0e76671) | **Wikipedia pageviews** (Wikimedia API, English "Bitcoin" article, users only, since July 2015), heat = percentile of the 30-day average against the prior 8 years | Daily, official API, stable history. Only starts in mid-2015, so it covers fewer tops. | Added as **display only**, not part of any score. Any use in a score has to come as a new pre-registered version. |
+
+## 4. Cycle band (path of past cycles mapped onto the current one)
+
+Rules written at 08:24 before any test (`PREREG.md`), results at 08:25 to 08:27 (file times).
+
+| variant | mean abs error of the band middle (log10), cycles 2017 / 2021 / 2025 | decision |
+|---|---|---|
+| **v1 band, undampened** (each prior cycle's path at full size, rho = 1) | 0.325 / 0.152 / 0.250, mean 0.242. Middle peak 0.91x, 1.46x and 3.20x the actual top. | Dropped: overshot the last top more than 3 times. |
+| **Dampened band** (paths scaled by rho = geometric mean of past peak-excess ratios, re-estimated at each halving; one parameter) | 0.292 / 0.139 / 0.190, mean 0.207. Won under the pre-registered rule (lower in 3 of 3 cycles). | Kept as v3's band and the site's forward cycle path (display only, commit f2311b3 at 10:45). But it does not beat the plain trend line (mean 0.189), and it made the 2017 top worse, so it is a shape and timing guide, not a calibrated range. |
+| Linear decay of peak excess (sensitivity check only, never a candidate) | 0.289 / 0.138 / 0.165, but 2025 top timing off by +880 days | Dropped, as planned in advance. |
+
+## 5. Fan width (the 5-95% and 25-75% bands)
+
+| when | variant | result | decision |
+|---|---|---|---|
+| 04:02 (file time) | **Fixed corridor**: one formula with a constant 5-95% band | 90.2% inside overall, but only 20.8% and 43.2% after the 2015 freezes. | Dropped: it broke in the regime change where it mattered most. |
+| 04:02 (file time) | **v2 robust fan**: width from the model's own past forecast errors, regressed on distance from trend, recent cycles weighted more (half-life 4 years, set before looking at results) | Too wide: 98.2% inside the 90% band, 70.7% inside the 50% band (22 freezes 2015-2025). | Kept and frozen as v2 (robust.py hash d03a0e5a). |
+| 08:24 rule, 08:25 result | **v3 split-conformal scale** on the v2 fan (90% and 50% half-widths times s90 and s50, estimated only from past errors, at least 365 pairs) | Freezes 2017-2025: 50% band 70.2% to 55.8%; 90% band 99.4% to 98.6% (still too wide); no horizon bucket below 80% (rule met). Today s90 = 0.712, s50 = 0.660. | Kept and frozen as v3, scored next to v2. Not swapped into the hero chart. |
+
+## 6. Grading and kill rules (no model change)
+
+| when | what | decision |
+|---|---|---|
+| 13:14 (commit 6448540) | Forward scorecard with the promotion rule (v3 replaces v2 only after 2027-10-25 and only if it wins on all three conditions) | Frozen in `pipeline/frozen/v3/FREEZE.md`. |
+| 13:26 (commit 025f759) | Statistical grading: exact binomial coverage tests, Diebold-Mariano vs a plain power-law benchmark, minimum 10 independent results | Frozen in FREEZE.md before any result. |
+| this entry's commit | Kill criteria (a) coverage p below 0.01 on at least 10, (b) 8 or more weekly closes below the floor, (c) behind the benchmark with p below 0.05 on at least 12 | Frozen in FREEZE.md before any result. Checked on past data before freezing: (b) would have fired 4 times (2012, twice in 2015, late 2022), so it is strict. Kept as written. |
+
+## 7. Display-only changes (no effect on any score or forecast)
+
+- 11:26 (commit 756b74d): fan shading and forward path cut off at the floor line on the chart, for readability.
+- 12:49 (commit 8ecf210): plain-language labels and (i) explainers.
+
+## How to add an entry
+
+Write the idea and the rule for judging it here first, with the date, before running the test. Then add the result,
+whether it was kept or dropped, and why. A kept idea that changes a forecast or a score becomes a new frozen version
+(v4 and so on); it never edits v2 or v3.

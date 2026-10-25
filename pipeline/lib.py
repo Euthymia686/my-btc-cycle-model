@@ -12,6 +12,7 @@ HALVINGS = [pd.Timestamp(x) for x in ["2012-11-28", "2016-07-09", "2020-05-11", 
 NEXT_HALVING_BLOCK = 1_050_000
 HORIZON = pd.Timestamp("2028-12-31")   # display horizon for the projection fan (end of the next halving cycle's first year)
 STATUS = {}
+OFFLINE = os.environ.get("OFFLINE") == "1"   # rebuild mode: never fetch, use the cached raw data only
 
 # ---------------------------------------------------------------- cache helpers
 def _cpath(name): return os.path.join(CACHE, name)
@@ -26,6 +27,7 @@ def cached(name, fn):
     """Run fn(); on success cache it, on failure fall back to cache. Records status."""
     import warnings
     try:
+        if OFFLINE: raise RuntimeError("OFFLINE=1, using cache")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore"); d = fn()
         _save(name, d); STATUS[name] = {"ok": True, "from": "live"}; return d

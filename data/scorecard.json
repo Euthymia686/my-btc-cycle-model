@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-10-25T13:28:46+00:00",
+ "updated_utc": "2026-10-25T13:31:38+00:00",
  "data_through": "2026-10-24",
  "live_since": "2026-10-25",
  "targets": {
@@ -569,5 +569,270 @@
   "data_through": "2026-10-24",
   "origins": 4285,
   "built_utc": "2026-10-25T13:23:31+00:00"
+ },
+ "kill": {
+  "rules": {
+   "a_p": 0.01,
+   "a_min": 10,
+   "b_weeks": 8,
+   "c_p": 0.05,
+   "c_min": 12
+  },
+  "versions": {
+   "v2": {
+    "a": [
+     {
+      "h": 30,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     }
+    ],
+    "c": [
+     {
+      "h": 30,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     }
+    ],
+    "triggered": [],
+    "status": "not triggered"
+   },
+   "v3": {
+    "a": [
+     {
+      "h": 30,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 0,
+      "rate": null,
+      "p": null,
+      "triggered": false
+     }
+    ],
+    "c": [
+     {
+      "h": 30,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 0,
+      "mean_diff": null,
+      "p": null,
+      "triggered": false
+     }
+    ],
+    "triggered": [],
+    "status": "not triggered"
+   }
+  },
+  "b": {
+   "weeks": 0,
+   "current_run": 0,
+   "longest_run": 0,
+   "runs_at_least": 8,
+   "runs": [],
+   "last": null,
+   "triggered": false,
+   "latest_close": {
+    "date": "2026-10-24",
+    "close": 80699.3131272238,
+    "floor": 64038.06316831208
+   }
+  }
+ },
+ "kill_backtest": {
+  "rules": {
+   "a_p": 0.01,
+   "a_min": 10,
+   "b_weeks": 8,
+   "c_p": 0.05,
+   "c_min": 12
+  },
+  "versions": {
+   "v2": {
+    "a": [
+     {
+      "h": 30,
+      "eff_n": 143,
+      "rate": 0.9370629370629371,
+      "p": 0.16276491170697321,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 47,
+      "rate": 0.9361702127659575,
+      "p": 0.6241559299853693,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 11,
+      "rate": 1.0,
+      "p": 0.6164537158899999,
+      "triggered": false
+     }
+    ],
+    "c": [
+     {
+      "h": 30,
+      "eff_n": 143,
+      "mean_diff": 1.084581302917153,
+      "p": 4.020323025209796e-97,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 47,
+      "mean_diff": 0.414770813964497,
+      "p": 2.313230454696385e-07,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 11,
+      "mean_diff": -0.2973098572151899,
+      "p": 0.00023094518787372646,
+      "triggered": false
+     }
+    ],
+    "triggered": [
+     "b"
+    ],
+    "status": "triggered"
+   },
+   "v3": {
+    "a": [
+     {
+      "h": 30,
+      "eff_n": 143,
+      "rate": 0.8531468531468531,
+      "p": 0.06906376948355115,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 47,
+      "rate": 0.8936170212765957,
+      "p": 0.8078070096516092,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 11,
+      "rate": 0.7272727272727273,
+      "p": 0.08956185084999993,
+      "triggered": false
+     }
+    ],
+    "c": [
+     {
+      "h": 30,
+      "eff_n": 143,
+      "mean_diff": 1.0376475092182031,
+      "p": 1.8982400337996445e-28,
+      "triggered": false
+     },
+     {
+      "h": 90,
+      "eff_n": 47,
+      "mean_diff": 0.43656602603550293,
+      "p": 0.00011253514321390388,
+      "triggered": false
+     },
+     {
+      "h": 365,
+      "eff_n": 11,
+      "mean_diff": -0.11044354810126585,
+      "p": 0.14518880427937864,
+      "triggered": false
+     }
+    ],
+    "triggered": [
+     "b"
+    ],
+    "status": "triggered"
+   }
+  },
+  "b": {
+   "weeks": 773,
+   "current_run": 0,
+   "longest_run": 17,
+   "runs_at_least": 8,
+   "runs": [
+    {
+     "start": "2012-02-19",
+     "weeks": 17
+    },
+    {
+     "start": "2015-03-22",
+     "weeks": 16
+    },
+    {
+     "start": "2015-07-19",
+     "weeks": 15
+    },
+    {
+     "start": "2022-11-13",
+     "weeks": 9
+    }
+   ],
+   "triggered": true
+  }
  }
 }

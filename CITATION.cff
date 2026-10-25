@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this model or its scorecard, please cite it as below."
+title: "My BTC Cycle Model"
+type: software
+authors:
+  - name: "Euthymia686"
+abstract: >-
+  A pre-registered, publicly graded model of Bitcoin's halving cycle: a projection fan built from the
+  model's own past forecast errors, a Cycle Heat Score, and a cycle band. Versions are hash-locked and
+  timestamped before any result, every forecast is graded in public against a plain power-law benchmark,
+  and kill criteria are fixed in advance. Model ranges, not predictions; not financial advice.
+repository-code: "https://github.com/Euthymia686/my-btc-cycle-model"
+url: "https://euthymia686.github.io/my-btc-cycle-model/"
+license: PolyForm-Noncommercial-1.0.0
+keywords:
+  - bitcoin
+  - halving cycle
+  - power law
+  - forecast evaluation
+  - pre-registration
+  - reproducibility
+date-released: "2026-10-25"

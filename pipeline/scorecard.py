@@ -95,10 +95,10 @@ def main(p=None, now=None):
     after = [{k: r[k] for k in PRED} for r in rows[:len(before)]]
     assert after == before, "refusing to change prediction columns of existing rows"
     if added or scored or not os.path.exists(CSV): write(rows)
-    summary(rows, last)
+    summary(rows, last, p)
     print(f"scorecard: data through {last.date()}, rows +{added}, results +{scored}, total {len(rows)}")
 
-def summary(rows, last):
+def summary(rows, last, p=None):
     out = {"updated_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "data_through": str(last.date()),
            "live_since": "2026-10-25", "targets": {"in50": 0.5, "in90": 0.9}, "horizons": list(HORIZONS), "versions": {}}
     pending = [r[f"h{h}_target"] for r in rows for h in HORIZONS if not r[f"h{h}_actual"]]
@@ -135,6 +135,13 @@ def summary(rows, last):
     out["tests_live"] = tests(rows)
     bt = os.path.join(ROOT, "data", "scorecard_backtest.json")
     out["tests_backtest"] = json.load(open(bt)) if os.path.exists(bt) else None
+    if p is not None:
+        out["kill"] = kill(out["tests_live"], ST.floor_weeks(p, out["live_since"]))
+        out["kill"]["b"]["latest_close"] = {"date": str(last.date()), "close": float(p[last]), "floor": ST.floor_level(p, last)}
+        try:
+            fh = ST.floor_weeks(p, "2012-01-01"); fh.pop("last", None)
+            out["kill_backtest"] = kill(out["tests_backtest"], fh) if out["tests_backtest"] else None
+        except Exception: out["kill_backtest"] = None
     tmp = SUMMARY + ".tmp"
     with open(tmp, "w") as f: json.dump(out, f, indent=1)
     os.replace(tmp, SUMMARY)
@@ -163,6 +170,28 @@ def tests(rows, lag_days=True):
             if eff >= ST.MIN_EFF: o.update(ST.dm([A[x] - B[x] for x in ds], h - 1))
             elif ds: o["mean_diff"] = float(np.mean([A[x] - B[x] for x in ds]))
             s[f"{a}_vs_{b}"] = o
+    return out
+
+KILL = {"a_p": 0.01, "a_min": 10, "b_weeks": 8, "c_p": 0.05, "c_min": 12}
+
+def kill(t, fw):
+    """Kill criteria (frozen/v3/FREEZE.md, "Kill criteria"). t = tests(...) output, fw = scorestats.floor_weeks(...).
+    (a) 90% band coverage: binomial p < 0.01 with at least 10 independent matured forecasts, at any horizon.
+    (b) 8 or more consecutive weekly closes below the power-law floor (shared trend, so it applies to v2 and v3 alike).
+    (c) losing to the plain benchmark: DM mean log score difference < 0 with p < 0.05 over at least 12 independent forecasts."""
+    out = {"rules": KILL, "versions": {}}
+    b_hit = fw["longest_run"] >= KILL["b_weeks"]
+    for v in ("v2", "v3"):
+        a, c = [], []
+        for h in HORIZONS:
+            cv = t["coverage"][str(h)][v]; n = cv["eff_n"]; pv = cv["in90"]["p"]
+            a.append({"h": h, "eff_n": n, "rate": cv["in90"]["rate"], "p": pv, "triggered": bool(n >= KILL["a_min"] and pv is not None and pv < KILL["a_p"])})
+            s = t["skill"][str(h)][f"{v}_vs_base"]; n = s.get("eff_n", 0); pv = s.get("p"); md = s.get("mean_diff")
+            c.append({"h": h, "eff_n": n, "mean_diff": md, "p": pv,
+                      "triggered": bool(n >= KILL["c_min"] and pv is not None and md is not None and md < 0 and pv < KILL["c_p"])})
+        trig = [k for k, x in (("a", any(r["triggered"] for r in a)), ("b", b_hit), ("c", any(r["triggered"] for r in c))) if x]
+        out["versions"][v] = {"a": a, "c": c, "triggered": trig, "status": "triggered" if trig else "not triggered"}
+    out["b"] = {**fw, "triggered": b_hit}
     return out
 
 if __name__ == "__main__": main()

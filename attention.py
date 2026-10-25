@@ -12,6 +12,7 @@ API = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipe
 WIN = 2922  # 8 years of days
 
 def fetch():
+    if os.environ.get("OFFLINE") == "1": raise RuntimeError("OFFLINE=1, using cache")
     end = (dt.datetime.now(dt.timezone.utc).replace(tzinfo=None) - dt.timedelta(days=1)).strftime("%Y%m%d00")
     r = requests.get(API.format(a="2015070100", b=end), headers=UA, timeout=60); r.raise_for_status()
     s = {i["timestamp"][:8]: int(i["views"]) for i in r.json()["items"]}

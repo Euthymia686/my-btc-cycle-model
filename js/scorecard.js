@@ -47,6 +47,30 @@
       if (o && o.p != null && o.p < 0.05 && o.mean_diff < 0) out.push(`At ${h} days the plain benchmark scored better than ${v} (p ${pv(o.p)}).`); }
     return out;
   }
+  function killBlock(K, KB) {
+    if (!K || !K.versions) return "";
+    const R = K.rules || { a_p: 0.01, a_min: 10, b_weeks: 8, c_p: 0.05, c_min: 12 };
+    const st = (on) => on ? `<td class="bad">triggered</td>` : `<td class="ok">not triggered</td>`;
+    const aNote = (V) => { const r = V.a.filter((x) => x.eff_n >= R.a_min && x.p != null); if (!r.length) return `waiting for ${R.a_min} independent results (have ${Math.max(...V.a.map((x) => x.eff_n))})`; const m = r.reduce((x, y) => (y.p < x.p ? y : x)); return `lowest p ${pv(m.p)} (${m.h} days, n=${m.eff_n})`; };
+    const cNote = (V) => { const r = V.c.filter((x) => x.p != null && x.mean_diff < 0); if (!r.length) { const n = Math.max(...V.c.map((x) => x.eff_n || 0)); return n < R.c_min ? `waiting for ${R.c_min} independent results (have ${n})` : "never behind the benchmark"; } const m = r.reduce((x, y) => (y.p < x.p ? y : x)); return `behind at ${m.h} days, p ${pv(m.p)}, n=${m.eff_n}${m.eff_n < R.c_min ? " (below " + R.c_min + ")" : ""}`; };
+    const b = K.b || {}, lc = b.latest_close;
+    const bLive = `${b.current_run || 0} weeks below the floor now (longest ${b.longest_run || 0})` + (lc ? `; latest close ${usd(lc.close)} vs floor ${usd(lc.floor)}` : "");
+    const bb = (KB || {}).b; const bPast = !bb ? "--" : bb.runs && bb.runs.length ? `would have triggered ${bb.runs.length} times: ` + bb.runs.map((r) => `${r.weeks} weeks from ${fmtDay(r.start)}`).join(", ") : "never";
+    const V2 = K.versions.v2, V3 = K.versions.v3, P2 = KB && KB.versions ? KB.versions.v2 : null, P3 = KB && KB.versions ? KB.versions.v3 : null;
+    const past = (on, txt) => `<td class="${on ? "bad" : ""}">${on ? "yes" : "no"}<span class="small">, ${txt}</span></td>`;
+    const aOn = (V) => V.a.some((x) => x.triggered), cOn = (V) => V.c.some((x) => x.triggered);
+    let h = `<div class="stwrap"><table class="sc st"><thead><tr><th>criterion</th><th>v2 (live)</th><th>v3 (live)</th><th>backtest (past data)</th></tr></thead><tbody>`;
+    h += `<tr><th>(a) 90% band fails: p below ${R.a_p} on at least ${R.a_min} independent results</th>${st(aOn(V2))}${st(aOn(V3))}` +
+         (P2 ? past(aOn(P2) || aOn(P3), `v2 ${aNote(P2)}; v3 ${aNote(P3)}`) : "<td>--</td>") + `</tr>`;
+    h += `<tr><td colspan="4" class="small">Live: v2 ${aNote(V2)}; v3 ${aNote(V3)}.</td></tr>`;
+    h += `<tr><th>(b) ${R.b_weeks} or more weekly closes in a row below the power-law floor (both versions)</th>${st(b.triggered)}${st(b.triggered)}` +
+         `<td class="${bb && bb.triggered ? "bad" : ""}">${bPast}</td></tr>`;
+    h += `<tr><td colspan="4" class="small">Live: ${bLive}.</td></tr>`;
+    h += `<tr><th>(c) loses to the benchmark: p below ${R.c_p} on at least ${R.c_min} independent results</th>${st(cOn(V2))}${st(cOn(V3))}` +
+         (P2 ? past(cOn(P2) || cOn(P3), `v2 ${cNote(P2)}; v3 ${cNote(P3)}`) : "<td>--</td>") + `</tr>`;
+    h += `<tr><td colspan="4" class="small">Live: v2 ${cNote(V2)}; v3 ${cNote(V3)}.</td></tr>`;
+    return h + `</tbody></table></div><p class="small">Overall: v2 <b>${V2.status}</b>, v3 <b>${V3.status}</b>. A triggered version is retired publicly and never restored; it keeps being logged so its record stays complete.</p>`;
+  }
   function render(S) {
     const V = S.versions || {}, v2 = V.v2 || {}, v3 = V.v3 || {}, n2 = (v2.all || {}).matured || 0, n3 = (v3.all || {}).matured || 0;
     let live;
@@ -75,6 +99,7 @@
       `<p class="small">Skill against a simple benchmark ${I("sc_dm")} ${I("sc_base")}</p>${skillTable(S.tests_live || {}, true)}` +
       (S.tests_backtest ? `<p class="small"><b>Backtest (past data)</b> ${I("sc_bt_p")}: one forecast per day from ${S.tests_backtest.first_origin}, each made with data up to its own date only (${(S.tests_backtest.origins || 0).toLocaleString("en-US")} forecasts). Coverage</p>${covTable(S.tests_backtest, false)}` +
         `<p class="small">Skill (positive means the first one scored better)</p>${skillTable(S.tests_backtest, false)}` : "") +
+      `<h3>Kill criteria ${I("sc_kill")}</h3>` + killBlock(S.kill, S.kill_backtest) +
       `<h3>Known weak spots ${I("sc_weak")}</h3><ul class="weak">` +
       `<li><b>Heat peaks are shrinking.</b> The score reached about 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, so the next top may not look "hot".</li>` +
       `<li><b>The cycle path has pointed too high.</b> Even the scaled-down path ran far above the actual 2025 top, so it is a shape guide only.</li>` +

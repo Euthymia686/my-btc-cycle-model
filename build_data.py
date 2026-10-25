@@ -23,6 +23,7 @@ def bitstamp_daily():
     """Daily OHLC from Bitstamp public REST (2011-08 onward), paged 1000 bars at a time. Falls back to the last file."""
     rows, start = {}, ts("2011-08-18")
     try:
+        if os.environ.get("OFFLINE") == "1": raise RuntimeError("OFFLINE=1, keeping the last file")
         while True:
             r = requests.get("https://www.bitstamp.net/api/v2/ohlc/btcusd/", params={"step": 86400, "limit": 1000, "start": start}, headers=UA, timeout=30)
             r.raise_for_status(); o = r.json()["data"]["ohlc"]

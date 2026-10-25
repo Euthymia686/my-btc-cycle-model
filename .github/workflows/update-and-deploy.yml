@@ -18,7 +18,7 @@ concurrency:
 
 env:
   # sha256 of pipeline/frozen/FROZEN_SHA256SUMS (the list of every v2 and v3 frozen file, timestamped 2026-10-25)
-  FROZEN_LIST_SHA256: 59797285034fa563d54baae9a115765abc3547573684c5e351db670b8271cbbc
+  FROZEN_LIST_SHA256: 591f2ccae6bd3575694bf2e7e28cc4d73bea67f970fdb739de6b401f0578a565
 
 jobs:
   guard:
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.15"
           cache: pip
       - run: pip install -r requirements.txt
       - name: Rebuild data (failure-tolerant; keeps last data on source errors)
@@ -50,16 +50,18 @@ jobs:
           git diff --exit-code -- pipeline/frozen pipeline/v2_spec.py pipeline/robust.py
           echo "$FROZEN_LIST_SHA256  pipeline/frozen/FROZEN_SHA256SUMS" | sha256sum -c
           sha256sum -c pipeline/frozen/FROZEN_SHA256SUMS
+      - name: Save the dated raw-data snapshot (daily small files, weekly large files; failure-tolerant)
+        run: bash scripts/snapshot.sh || echo "::warning::snapshot failed"
       - name: Upgrade the OpenTimestamps proof once Bitcoin confirms it (failure-tolerant)
         run: |
-          pip install -q opentimestamps-client || true
+          pip install -q opentimestamps-client==0.7.2 || true
           for f in pipeline/timestamps/*.ots; do ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"; done
           rm -f pipeline/timestamps/*.ots.bak
       - name: Commit refreshed data if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps
+          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps snapshots
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "Daily data refresh $(date -u +%F)" && git push; fi
 
   deploy:

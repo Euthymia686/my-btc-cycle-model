@@ -1,0 +1,12 @@
+{
+  "title": "My BTC Cycle Model",
+  "upload_type": "software",
+  "creators": [{"name": "Euthymia686"}],
+  "description": "<p>A pre-registered, publicly graded model of where Bitcoin sits in its roughly four-year halving cycle. It publishes a projection fan (5/25/50/75/95% ranges) built from the model's own past forecast errors, a Cycle Heat Score built from public market, on-chain, usage, attention and halving-timing data, and a cycle band. Model versions are frozen with sha256 hashes and OpenTimestamps proofs before any result, every daily forecast is logged and graded in public against a plain power-law benchmark (exact binomial coverage tests and Diebold-Mariano tests), kill criteria for retiring a version are fixed in advance, and every variant tried is listed in RESEARCH_LOG.md. These are model ranges, not predictions, and not financial advice. Disclosure: the author holds Bitcoin-related investments. Licensed under the PolyForm Noncommercial License 1.0.0 (free for non-commercial use; commercial use needs permission). Live site: https://euthymia686.github.io/my-btc-cycle-model/</p>",
+  "license": "polyform-noncommercial-1.0.0",
+  "keywords": ["bitcoin", "halving cycle", "power law", "forecast evaluation", "pre-registration", "probabilistic forecasting", "calibration", "Diebold-Mariano test", "reproducibility", "on-chain data"],
+  "related_identifiers": [
+    {"identifier": "https://github.com/Euthymia686/my-btc-cycle-model", "relation": "isSupplementTo", "scheme": "url"},
+    {"identifier": "https://euthymia686.github.io/my-btc-cycle-model/", "relation": "isDocumentedBy", "scheme": "url"}
+  ]
+}

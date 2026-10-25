@@ -4,9 +4,9 @@ v3 is frozen as of 2026-10-25 and runs alongside v2. From this date both are sco
 `data/scorecard.csv`. Nothing in this folder may change. Any change means a new version (v4) with a new freeze date.
 The workflow fails if any frozen file changes (see `pipeline/frozen/FROZEN_SHA256SUMS`). That list is timestamped in the
 Bitcoin blockchain with OpenTimestamps: `pipeline/timestamps/FROZEN_SHA256SUMS.ots` (check with
-`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`). The first list, stamped about an hour
-earlier the same day before the grading method below was added, is kept with its own proof as
-`pipeline/timestamps/FROZEN_SHA256SUMS.first.txt` and `.first.txt.ots`.
+`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`). Two earlier lists stamped the same day,
+before any forecast matured, are kept with their own proofs: `pipeline/timestamps/FROZEN_SHA256SUMS.first.txt` (before the
+grading method below was added) and `FROZEN_SHA256SUMS.second.txt` (before the kill criteria were added), each with its `.ots`.
 
 ## What is frozen
 
@@ -108,3 +108,27 @@ These tests are reported next to the promotion rule above; they do not change it
 Caveats, stated in advance: predictions made on consecutive days overlap heavily, so one year of daily rows is much less
 evidence than its row count suggests, and one year covers a single phase of one cycle. The 365-day horizon only starts
 to mature on 2027-10-25. A pass is evidence, not proof.
+
+## Kill criteria (pre-registered 2026-10-25, before any result)
+
+Added the same day, before any forecast matured. A version (v2 or v3) is declared broken and retired in public if any one
+of these happens on live data (forecasts logged from 2026-10-24 on). Retired means: the site says so next to the version,
+it is never restored or re-tuned, and it keeps being logged and graded so its record stays complete. A replacement is a
+new version with its own freeze date. Code: `kill()` in `pipeline/scorecard.py`, `floor_level` and `floor_weeks` in
+`pipeline/scorestats.py`; if the code and this note disagree, this note governs.
+
+- **(a) Coverage fails.** At any horizon (30, 90 or 365 days), the exact two-sided binomial test of the 90% band (method
+  item 2 above) gives p < 0.01 on at least 10 independent (non-overlapping) matured forecasts.
+- **(b) Price breaks the floor.** 8 or more consecutive weekly closes below the power-law floor. Weekly close = the daily
+  CoinMetrics close dated each Sunday (UTC), from 2026-10-25 on. Floor at that date = the benchmark's trend (method item 1,
+  OLS on closes up to and including that date) shifted down by the 5% quantile of that fit's log10 residuals, the orange
+  floor line on the site. Both versions use this trend, so (b) retires v2 and v3 together.
+- **(c) Loses to the benchmark.** At any horizon, the Diebold-Mariano test of version minus base (method item 3) has a
+  negative mean log score difference with p < 0.05 over at least 12 independent forecasts (effective sample size as in
+  item 2).
+
+The site shows each criterion's live status ("not triggered" or "triggered") and, for context only, whether it would have
+fired on past data. Checked on 2026-10-25 before freezing, with the same code: on weekly closes since 2012-01-01, (b) would
+have fired 4 times (17 weeks from 2012-02-19, 16 from 2015-03-22, 15 from 2015-07-19, 9 from 2022-11-13). So (b) is a strict
+test that earlier bear markets would have failed. On the backtest (one forecast per day from 2015), (a) and (c) would not
+have fired; the closest case is v2 at 365 days, behind the benchmark with p 0.0002 but only 11 independent forecasts.
