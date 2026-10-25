@@ -94,7 +94,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp -r index.html favicon.svg .nojekyll css js data hero_combined.png _site/
+          cp -r index.html favicon.svg og-image.png .nojekyll css js data hero_combined.png _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
