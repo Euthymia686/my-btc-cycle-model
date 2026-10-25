@@ -168,3 +168,4 @@ details.faq>summary::before{content:"+";display:inline-block;width:16px;margin-l
 details.faq[open]>summary::before{content:"\2212"}
 details.faq>p{margin:0 0 10px 16px;font-size:14px;line-height:1.5;max-width:760px}
 .faqbody a{color:#7aa2ff}
+.tile .d a{color:#7aa2ff}

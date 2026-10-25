@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
 <meta name="twitter:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
 <meta name="twitter:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
-<link rel="stylesheet" href="css/style.css?v=20261026faq">
+<link rel="stylesheet" href="css/style.css?v=20261026credits">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -161,7 +161,8 @@
         <li><b>History of changes:</b> <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/RESEARCH_LOG.md" rel="noopener">research log</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/IDEAS.md" rel="noopener">idea log</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">source code on GitHub</a></li>
         <li><b>Cite:</b> My BTC Cycle Model, DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> (<a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/CITATION.cff" rel="noopener">CITATION.cff</a>)</li>
       </ul>
-      <p class="small credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; alternative.me Fear &amp; Greed Index, Deribit and OKX public funding rates (crowd euphoria).</p>
+      <p class="small credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; Bitstamp (daily price history) &middot; mempool.space (blocks) &middot; <a href="https://docs.coinmetrics.io/packages/coin-metrics-community-data" rel="noopener">Coin Metrics</a> Community data (daily price, supply, MVRV, active addresses; transformed, <a href="https://creativecommons.org/licenses/by-nc/4.0/" rel="noopener">CC BY-NC 4.0</a>) &middot; Price data by <a href="https://www.coingecko.com/" rel="noopener">CoinGecko</a> &middot; <a href="https://www.google.com/trends" rel="noopener">Google Trends</a> (score input) &middot; <a href="https://alternative.me/crypto/fear-and-greed-index/" rel="noopener">alternative.me</a> Fear &amp; Greed Index, Deribit and OKX public funding rates (crowd euphoria) &middot; Strategy.com, SEC EDGAR and Yahoo Finance (MSTR context).</p>
+      <p class="small credits">Prior work: time power-law trend after Giovanni Santostasi (2018) and Harold Christopher Burger (2019) &middot; Mayer Multiple (Trace Mayer) &middot; MVRV (Murad Mahmudov and David Puell, 2018) &middot; MVRV Z-score (Awe &amp; Wonder, 2018) &middot; Pi Cycle Top (Philip Swift, 2019) &middot; stock-to-flow, discussed in Common questions (PlanB, 2019).</p>
     </div>
   </details>
 </section>
@@ -169,17 +170,17 @@
 <footer>
   <p class="nfa" id="disclaimer"><b>Disclaimer:</b> For education and information only. This is not financial, investment or trading advice and is not tailored to anyone. Forecasts and backtests are hypothetical model output; they can be wrong, and past cycles don't guarantee future results. Provided as is, without warranty; use at your own risk.</p>
   <p class="small disclosure"><b>Disclosure:</b> The author holds long Bitcoin-related investments that benefit if Bitcoin rises, and may buy or sell at any time without notice. Built with AI assistance.</p>
-  <p class="small copy">&copy; 2026 Euthymia686 &middot; free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>) &middot; DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">GitHub</a> &middot; <a href="#verify" data-open="verify">verify &amp; data sources</a> &middot; charts by <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> (Apache-2.0)</p>
+  <p class="small copy">&copy; 2026 Euthymia686 &middot; free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>) &middot; DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">GitHub</a> &middot; <a href="#verify" data-open="verify">verify &amp; data sources</a> &middot; charts by <a href="https://www.tradingview.com/" rel="noopener">TradingView</a> Lightweight Charts&trade; (Apache-2.0, <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/js/vendor/NOTICE-lightweight-charts.txt" rel="noopener">notice</a>)</p>
   <!-- Contact + optional tip link (Ko-fi). Footer only, kept away from the forecasts. To hide the tip link again, add the hidden attribute to #donateLink. -->
   <p class="donate" id="donate"><a id="contactLink" href="mailto:btc.cycle.model@gmail.com"><span aria-hidden="true">&#9993;</span> Contact: btc.cycle.model@gmail.com</a><span class="sep" aria-hidden="true"> &middot; </span><a id="donateLink" href="https://ko-fi.com/euthymia686" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#9749;</span> Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261026faq"></script>
-<script src="js/explain.js?v=20261026faq"></script>
-<script src="js/model.js?v=20261026faq"></script>
-<script src="js/feeds.js?v=20261026faq"></script>
-<script src="js/hero.js?v=20261026faq"></script>
-<script src="js/app.js?v=20261026faq"></script>
-<script src="js/scorecard.js?v=20261026faq"></script>
-<script src="js/nav.js?v=20261026faq"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261026credits"></script>
+<script src="js/explain.js?v=20261026credits"></script>
+<script src="js/model.js?v=20261026credits"></script>
+<script src="js/feeds.js?v=20261026credits"></script>
+<script src="js/hero.js?v=20261026credits"></script>
+<script src="js/app.js?v=20261026credits"></script>
+<script src="js/scorecard.js?v=20261026credits"></script>
+<script src="js/nav.js?v=20261026credits"></script>
 </body>
 </html>
