@@ -162,9 +162,9 @@ footer .disclosure{margin-top:4px}footer p{margin:6px 0}
 footer .donate{margin:8px 0 2px;font-size:12px}footer .donate a{color:var(--mute);text-decoration:none;border-bottom:1px dotted var(--mute)}footer .donate a:hover{color:var(--text);border-bottom-color:var(--text)}footer .donate .sep{color:var(--mute);margin:0 2px}footer .donate a{overflow-wrap:anywhere}
 .faqbody{padding-top:2px}
 details.faq{border-top:1px solid var(--line)}details.faq:first-child{border-top:0}
-details.faq>summary{cursor:pointer;list-style:none;padding:8px 0 8px 16px;text-indent:-16px;font-size:14px;font-weight:600;color:var(--text)}
+details.faq>summary{cursor:pointer;list-style:none;padding:8px 0 8px 16px;font-size:14px;font-weight:600;color:var(--text)}
 details.faq>summary::-webkit-details-marker{display:none}
-details.faq>summary::before{content:"+";display:inline-block;width:16px;color:var(--mute);font-weight:400}
+details.faq>summary::before{content:"+";display:inline-block;width:16px;margin-left:-16px;color:var(--mute);font-weight:400}
 details.faq[open]>summary::before{content:"\2212"}
 details.faq>p{margin:0 0 10px 16px;font-size:14px;line-height:1.5;max-width:760px}
 .faqbody a{color:#7aa2ff}
