@@ -1,5 +1,7 @@
 # My BTC Cycle Model
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23643772.svg)](https://doi.org/10.5281/zenodo.23643772)
+
 Live site: https://euthymia686.github.io/my-btc-cycle-model/
 
 A live Bitcoin cycle chart built from raw public data:
@@ -38,7 +40,7 @@ See `docs/ARCHITECTURE.md`, `docs/ROBUSTNESS.md` and `pipeline/SOURCES.md`.
 4. Compare with that commit's `data/` files. Fields that record the run time (for example `updated_utc`) will differ.
 
 ## How to cite
-See `CITATION.cff`. Releases are archived with a DOI once the repository is linked to Zenodo.
+See `CITATION.cff`. Releases are archived on Zenodo. DOI for all versions: [10.5281/zenodo.23643772](https://doi.org/10.5281/zenodo.23643772). First release (v3-freeze-2026-10-25): [10.5281/zenodo.23643773](https://doi.org/10.5281/zenodo.23643773).
 
 ## How this was built
 

@@ -9,6 +9,14 @@ abstract: >-
   model's own past forecast errors, a Cycle Heat Score, and a cycle band. Versions are hash-locked and
   timestamped before any result, every forecast is graded in public against a plain power-law benchmark,
   and kill criteria are fixed in advance. Model ranges, not predictions; not financial advice.
+doi: "10.5281/zenodo.23643772"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23643772"
+    description: "Concept DOI, all versions"
+  - type: doi
+    value: "10.5281/zenodo.23643773"
+    description: "v3-freeze-2026-10-25"
 repository-code: "https://github.com/Euthymia686/my-btc-cycle-model"
 url: "https://euthymia686.github.io/my-btc-cycle-model/"
 license: PolyForm-Noncommercial-1.0.0
