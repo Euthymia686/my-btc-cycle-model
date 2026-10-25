@@ -49,6 +49,19 @@ jobs:
           python-version: "3.12.15"
           cache: pip
       - run: pip install -r requirements.txt
+      # Yahoo Finance, Deribit and OKX raw files may not be republished, so they are not in git. The runner keeps
+      # them between runs in the Actions cache; on a cache miss update.sh simply fetches them fresh.
+      - name: Restore private raw data (not published)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            pipeline/cache/yahoo_btc.json
+            pipeline/cache/yahoo_mstr.json
+            pipeline/cache/crowd_deribit.json
+            pipeline/cache/crowd_okx.json
+            pipeline/cache/crowd_bitmex.json
+          key: raw-private-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: raw-private-
       - name: Rebuild data (failure-tolerant; keeps last data on source errors)
         run: bash scripts/update.sh
       - name: Guard - v2, v3 and band frozen files must not change during the run
@@ -62,6 +75,17 @@ jobs:
         run: python scripts/check_append_only.py HEAD
       - name: Save the dated raw-data snapshot (daily small files, weekly large files; failure-tolerant)
         run: bash scripts/snapshot.sh || echo "::warning::snapshot failed"
+      - name: Save private raw data for the next run (not published)
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: |
+            pipeline/cache/yahoo_btc.json
+            pipeline/cache/yahoo_mstr.json
+            pipeline/cache/crowd_deribit.json
+            pipeline/cache/crowd_okx.json
+            pipeline/cache/crowd_bitmex.json
+          key: raw-private-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Daily hash-chain record + OpenTimestamps stamp (never fails the run; a missed stamp is retried next day)
         run: |
           pip install -q opentimestamps-client==0.7.2 || true

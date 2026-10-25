@@ -16,3 +16,12 @@ preview_*.png
 hero_live.png
 hero_fan.png
 hero_score.png
+
+# third-party raw data whose terms do not allow republishing (Yahoo Finance, Deribit, OKX, BitMEX).
+# Kept only on the runner (actions/cache) and in the owner's private backup; their sha256 is still
+# written to snapshots/MANIFEST.csv every day.
+pipeline/cache/yahoo_btc.json
+pipeline/cache/yahoo_mstr.json
+pipeline/cache/crowd_deribit.json
+pipeline/cache/crowd_okx.json
+pipeline/cache/crowd_bitmex.json
