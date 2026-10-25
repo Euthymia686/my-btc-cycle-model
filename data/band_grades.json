@@ -1,0 +1,182 @@
+{
+ "asof": "2026-10-24",
+ "status": {
+  "top": {
+   "final": false,
+   "outcome_class": "pending (window opens 2028-01-02)"
+  },
+  "low": {
+   "final": false
+  }
+ },
+ "events": {
+  "floor_breaks": [],
+  "K1_close_above_band_high": null
+ },
+ "claims": {
+  "band": {
+   "label": "Main claim: today's blue band (frozen snapshot)",
+   "timing": {
+    "predicted": "2029-09-25",
+    "source": "band peak date"
+   },
+   "height": {
+    "point": 481433.72526703856,
+    "range": [
+     355060.9816211749,
+     653031.7985836079
+    ],
+    "width_log10": 0.2646313798146213,
+    "source": "band at peak date"
+   },
+   "low": {
+    "point": 276258.16385415324,
+    "range": [
+     226608.88484787385,
+     336640.18099024537
+    ],
+    "date": "2030-06-04",
+    "source": "band at its post-peak low date"
+   }
+  },
+  "C1": {
+   "label": "Competitor 1: ensemble-corrected band (frozen snapshot)",
+   "timing": {
+    "predicted": "2029-09-25",
+    "source": "same peak date as the band (not an independent timing claim)"
+   },
+   "height": {
+    "point": 562145.0320450972,
+    "range": [
+     261056.5399532882,
+     1210492.7044138701
+    ],
+    "width_log10": 0.6662275987420542,
+    "source": "equal-weight ensemble"
+   },
+   "low": {
+    "point": 189256.2522745972,
+    "range": [
+     134754.37061149377,
+     265801.61268602975
+    ],
+    "date": "2030-06-04",
+    "source": "equal-weight ensemble"
+   }
+  },
+  "C2": {
+   "label": "Competitor 2: S1 size law (frozen snapshot value)",
+   "height": {
+    "point": 329016.971968213,
+    "range": [
+     189445.34648047577,
+     571416.3470058544
+    ],
+    "width_log10": 0.47946871869651564,
+    "source": "S1 at freeze, provisional 2025-cycle low"
+   }
+  },
+  "C3": {
+   "label": "Competitor 3: S3 on-chain size law (frozen snapshot value)",
+   "height": {
+    "point": 432862.4268159753,
+    "range": [
+     193972.60194302187,
+     965960.5463458915
+    ],
+    "width_log10": 0.697218997021686,
+    "source": "S3 at freeze, provisional 2025-cycle low"
+   }
+  },
+  "C4": {
+   "label": "Competitor 4: lengthening-cycle timing",
+   "timing": {
+    "predicted": "2029-12-27",
+    "source": "halving + 625 d (linear trend in halving-to-top days)"
+   }
+  }
+ },
+ "comparisons": {
+  "timing": null,
+  "height": null,
+  "low": null
+ },
+ "notes": [],
+ "benchmarks": {
+  "trend": {
+   "height": {
+    "point": 290860.03026308585,
+    "range": [
+     null,
+     null
+    ],
+    "width_log10": null,
+    "source": "trend line at the band peak date"
+   },
+   "low": {
+    "point": 181411.09,
+    "range": [
+     null,
+     null
+    ],
+    "date": null,
+    "source": "5% trend floor at the band low date"
+   }
+  },
+  "unscaled2": {
+   "timing": {
+    "predicted": "2029-09-25",
+    "source": "rho = 1 band peak"
+   },
+   "height": {
+    "point": 595062.55,
+    "range": [
+     null,
+     null
+    ],
+    "width_log10": null,
+    "source": "rho = 1 band peak"
+   },
+   "low": {
+    "point": 232140.22,
+    "range": [
+     null,
+     null
+    ],
+    "date": null,
+    "source": "rho = 1 band low"
+   }
+  },
+  "last_cycle": {
+   "timing": {
+    "predicted": "2029-07-13",
+    "source": "last cycle unscaled peak"
+   },
+   "height": {
+    "point": 397091.9,
+    "range": [
+     null,
+     null
+    ],
+    "width_log10": null,
+    "source": "last cycle unscaled"
+   },
+   "low": {
+    "point": 198463.86,
+    "range": [
+     null,
+     null
+    ],
+    "date": null,
+    "source": "last cycle unscaled low"
+   }
+  },
+  "timing_rule": {
+   "timing": {
+    "predicted": "2029-10-05",
+    "source": "halving + mean of last two halving-to-top gaps"
+   }
+  }
+ },
+ "verdict_main": "pending"
+}

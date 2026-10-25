@@ -47,7 +47,7 @@ This fails if any earlier row of `data/band_log.csv`, `data/band_prices.csv`, `d
 ## 6. Re-run the grading yourself
 ```
 cd pipeline
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band python frozen/band/grade_band.py frozen/band /tmp/my_grades.json ../data/band_prices.csv
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band python -P frozen/band/grade_band.py frozen/band /tmp/my_grades.json ../data/band_prices.csv
 diff <(python -m json.tool /tmp/my_grades.json) <(python -m json.tool ../data/band_grades.json)
 ```
 The grades are computed only from the frozen snapshots in `pipeline/frozen/band/` and the price log. Nothing typed by hand enters them.

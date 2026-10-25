@@ -16,7 +16,8 @@ $PY crowd.py || echo "::warning::crowd.py (crowd euphoria gauge, display only) f
 # locked fan range table for the scorecard section (display only; reads the frozen fan file, never writes under frozen/)
 ( cd pipeline && $PY fan_locked.py >/dev/null ) || echo "::warning::fan_locked.py (display only) failed - previous file kept"
 # Blue band pre-registration (PREREG_BAND.md): append-only price/band logs, then grading. Frozen code, run in place, writes only under data/.
-( cd pipeline && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band $PY frozen/band/band_log_daily.py ) || echo "::warning::band_log_daily.py failed - logs unchanged, retried next run"
-( cd pipeline && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band $PY frozen/band/grade_band.py frozen/band ../data/band_grades.json ../data/band_prices.csv >/dev/null ) || echo "::warning::grade_band.py failed - previous grades kept"
+# -P keeps the script folder off sys.path, so `lib` is pipeline/lib.py (live data cache), as when the snapshot was frozen.
+( cd pipeline && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band $PY -P frozen/band/band_log_daily.py ) || echo "::warning::band_log_daily.py failed - logs unchanged, retried next run"
+( cd pipeline && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:frozen/band $PY -P frozen/band/grade_band.py frozen/band ../data/band_grades.json ../data/band_prices.csv >/dev/null ) || echo "::warning::grade_band.py failed - previous grades kept"
 for f in history model fan fan2 meta mstr ohlc_daily health hero_bg; do test -s "data/$f.json" || { echo "::error::data/$f.json missing"; exit 1; }; done
 echo "update done"

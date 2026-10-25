@@ -68,14 +68,16 @@ jobs:
           python scripts/stamp_daily.py || true
       - name: Upgrade the OpenTimestamps proofs once Bitcoin confirms them (failure-tolerant)
         run: |
-          for f in pipeline/timestamps/*.ots pipeline/timestamps/chain/*.ots; do
-            [ -e "$f" ] || continue ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"; done
-          rm -f pipeline/timestamps/*.ots.bak pipeline/timestamps/chain/*.ots.bak
+          for f in pipeline/timestamps/*.ots pipeline/timestamps/chain/*.ots pipeline/frozen/band/*.ots; do
+            [ -e "$f" ] || continue
+            ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"
+          done
+          rm -f pipeline/timestamps/*.ots.bak pipeline/timestamps/chain/*.ots.bak pipeline/frozen/band/*.ots.bak
       - name: Commit refreshed data if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps snapshots
+          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps snapshots pipeline/frozen/band/*.ots
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "Daily data refresh $(date -u +%F)" && git push; fi
 
   deploy:
