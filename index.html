@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025c">
+<link rel="stylesheet" href="css/style.css?v=20261025d">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -15,9 +15,10 @@
     <span class="sub">live cycle signals &middot; model output, not predictions</span>
   </div>
   <div class="ticker">
-    <div class="px-label">BTC/USD own index <span class="hint" title="Median of the live prices from the exchanges with a green or amber dot">(median)</span></div>
+    <div class="px-label">BTC/USD own index <span class="hint" title="Median of the exchanges whose last tick is under 15 s old; an exchange more than 0.5% away from the others is left out">(median)</span></div>
     <div class="px" id="px">--</div>
     <div class="chg" id="chg">&nbsp;</div>
+    <div class="pxat" id="pxAt">&nbsp;</div>
   </div>
   <div class="feeds" id="feeds"></div>
 </header>
@@ -46,32 +47,6 @@
   </div>
 </section>
 
-<section class="panel">
-  <h2>Cycle Heat Score history <span class="small">v1 and pre-registered v2, live</span></h2>
-  <div id="heroScore" class="chart herof"></div>
-  <div class="legend" id="heroScoreLegend"></div>
-  <div class="out kv" id="heroScoreOut"></div>
-</section>
-
-
-<section class="panel">
-  <div class="toolbar">
-    <div class="group" id="tf">
-      <button data-tf="1m">1m</button><button data-tf="1D" class="on">1D</button><button data-tf="1W">1W</button>
-    </div>
-    <div class="group" id="ov">
-      <label><input type="checkbox" data-ov="ma200" checked> 200D MA</label>
-      <label><input type="checkbox" data-ov="ma1400" checked> 200W MA</label>
-      <label><input type="checkbox" data-ov="trend" checked> Trend line</label>
-      <label><input type="checkbox" data-ov="band"> Trend floor/ceiling</label>
-      <label><input type="checkbox" data-ov="marks" checked> Past tops/lows</label>
-    </div>
-    <div class="group"><button id="logBtn" class="on">Log</button><button id="fitBtn">Fit</button></div>
-  </div>
-  <div id="chart" class="chart"></div>
-  <div class="legend" id="legend"></div>
-</section>
-
 <section>
   <h2>Signals <span class="small">value &middot; heat (percentile vs all prior days) &middot; zone</span></h2>
   <div class="tiles" id="tiles"></div>
@@ -92,8 +67,9 @@
 <section class="panel method">
   <h2>Method</h2>
   <ol>
-    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets (a source counts if it updated in the last 90 s). If a socket drops, it reconnects with back-off and its REST ticker is polled meanwhile.</li>
-    <li><b>Signals</b> are recomputed every second with the live price as today's daily close: Mayer Multiple (price / 200-day MA), price / 200-week (1400-day) MA, price / my power-law trend fit (refit including today), Pi Cycle ratio (111DMA / 2&times;350DMA), MVRV Z (live market cap = price &times; supply; realized cap from the latest daily print), plus halving-cycle timing. Address activity (daily) and search interest (monthly) only change when their sources publish.</li>
+    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets . An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. If no exchange has ticked for 15 s the price is marked <b>STALE</b> with the time of its last tick.</li>
+    <li><b>Signals</b> are recomputed every second with the live price as today's daily close: Mayer Multiple (price / 200-day MA), price / 200-week (1400-day) MA, price / my power-law trend fit (refit including today), Pi Cycle ratio (111DMA / 2&times;350DMA), MVRV Z (live market cap = price &times; supply; realized cap from the latest daily print), plus halving-cycle timing. Address activity (daily) and Google search interest (monthly) only change when their sources publish.</li>
+    <li><b>Wikipedia attention (display only):</b> daily views of the English Wikipedia "Bitcoin" article (Wikimedia pageviews API, users only, since July 2015). Heat = percentile of the 30-day average against the prior 8 years. It is shown next to the signals but is <b>not</b> part of either score; the pre-registered scores keep Google Trends.</li>
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
     <li><b>Cycle Heat Score</b> = plain average of the 8 heats. Zones: hot = lowest score seen around any past top; warm = hot &minus; 15; neutral 40+; cool below 40.</li>
     <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target.</li>
@@ -104,13 +80,13 @@
 
 <footer>
   <p class="nfa"><b>Not financial advice.</b> Everything on this page is model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat. Do your own research.</p>
-  <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends &middot; Strategy.com and SEC EDGAR (MSTR holdings) &middot; Yahoo Finance (MSTR price, delayed). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
+  <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; Wikimedia pageviews API (Wikipedia attention) &middot; Strategy.com and SEC EDGAR (MSTR holdings) &middot; Yahoo Finance (MSTR price, delayed). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
   <p class="small" id="built"></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025c"></script>
-<script src="js/model.js?v=20261025c"></script>
-<script src="js/feeds.js?v=20261025c"></script>
-<script src="js/hero.js?v=20261025c"></script>
-<script src="js/app.js?v=20261025c"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025d"></script>
+<script src="js/model.js?v=20261025d"></script>
+<script src="js/feeds.js?v=20261025d"></script>
+<script src="js/hero.js?v=20261025d"></script>
+<script src="js/app.js?v=20261025d"></script>
 </body>
 </html>

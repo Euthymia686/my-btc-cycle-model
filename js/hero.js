@@ -1,5 +1,5 @@
-/* Hero charts: (A) combined "My BTC Cycle Model" chart and (C) Cycle Heat Score detail, plus model-health panel.
-   Both use WEEKLY points (lightweight-charts spaces points by index, so mixing daily history with a weekly forecast would distort time). */
+/* Hero chart: combined "My BTC Cycle Model" chart (with a live tail from the last weekly close to the live price), plus model-health panel.
+   It uses WEEKLY points (lightweight-charts spaces points by index, so mixing daily history with a weekly forecast would distort time). */
 (function () {
   "use strict";
   const DAY = 86400;
@@ -74,12 +74,37 @@
     }
     const histA = ser(LC.LineSeries, { lineWidth: mobile ? 2 : 2.5, lastValueVisible: false, crosshairMarkerVisible: true, color: "#9ca3af" });
     histA.priceScale().applyOptions({ mode: LC.PriceScaleMode.Logarithmic, scaleMargins: { top: 0.09, bottom: 0.04 } });
-    const histAData = weekly(mobile ? "2017-01-01" : "2014-01-01", (i, t) => { const s = scoreByT.get(t); return { value: closes[i], color: heatColor(s), s }; });
+    const wk0 = weekStart(BM.utcDay(Date.now()));
+    const histAData = weekly(mobile ? "2017-01-01" : "2014-01-01", (i, t) => { const s = scoreByT.get(t); return { value: closes[i], color: heatColor(s), s }; }).filter((x) => x.time < wk0);
     for (let i = 1; i < histAData.length; i++) if (histAData[i].s == null) histAData[i].color = histAData[i - 1].color;
     histA.setData(histAData.map(({ time, value, color }) => ({ time, value, color })));
     // only the price and fan drive autoscale (backgrounds extend far above/below)
     for (const sr of [gA.ceil, gA.floorM, gA.bandHi, gA.bandLo, lA.ceil, lA.mid, lA.floor, lA.bandMd]) sr.applyOptions({ autoscaleInfoProvider: () => null });
-    const mkA = LC.createSeriesMarkers(histA, []);
+    let histEnd = histAData.length ? histAData[histAData.length - 1].time : wk0 - 7 * DAY, histEndV = histAData.length ? histAData[histAData.length - 1].value : null;
+    /* Live tail: from the last weekly close through this week's daily closes to the live price, coloured by score, redrawn every tick.
+       Drawn as a series primitive at fractional x inside the current week's slot, so the weekly time spacing is not distorted. */
+    const tail = { pts: [], label: "", col: "#6b7280",
+      attached(p) { this.chart = p.chart; this.series = p.series; this.req = p.requestUpdate; }, detached() {}, updateAllViews() {},
+      paneViews() { return [tailView]; } };
+    const tailView = { zOrder: () => "top", renderer: () => ({ draw(target) {
+      if (!tail.pts.length || !tail.series) return;
+      const ts = tail.chart.timeScale(), x0 = ts.timeToCoordinate(histEnd), x1 = ts.timeToCoordinate(histEnd + 7 * DAY);
+      if (x0 == null || x1 == null) return;
+      const X = (T) => x0 + (T - (histEnd + 7 * DAY)) / (7 * DAY) * (x1 - x0), Y = (v) => tail.series.priceToCoordinate(v);
+      const P = tail.pts.map((q) => ({ x: X(q.T), y: Y(q.v), c: q.c })).filter((q) => q.y != null);
+      target.useMediaCoordinateSpace(({ context: g, mediaSize }) => {
+        g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.lineWidth = mobile ? 2 : 2.5;
+        for (let i = 1; i < P.length; i++) { g.strokeStyle = P[i].c; g.beginPath(); g.moveTo(P[i - 1].x, P[i - 1].y); g.lineTo(P[i].x, P[i].y); g.stroke(); }
+        const e = P[P.length - 1]; if (!e) { g.restore(); return; }
+        g.beginPath(); g.arc(e.x, e.y, mobile ? 4 : 5, 0, 2 * Math.PI); g.fillStyle = tail.col; g.fill(); g.lineWidth = 2; g.strokeStyle = "#ffffff"; g.stroke();
+        g.font = (mobile ? "11px" : "12px") + " -apple-system, Segoe UI, Roboto, sans-serif"; const w = g.measureText(tail.label).width + 10, h = 18;
+        let bx = Math.min(e.x - w / 2, mediaSize.width - w - 2), by = e.y - 30; bx = Math.max(2, bx); if (by < 2) by = e.y + 12;
+        g.fillStyle = "rgba(255,255,255,0.92)"; g.strokeStyle = "#d1d5db"; g.lineWidth = 1; g.beginPath(); g.rect(bx, by, w, h); g.fill(); g.stroke();
+        g.fillStyle = "#1f2937"; g.textBaseline = "middle"; g.fillText(tail.label, bx + 5, by + h / 2 + 0.5);
+        g.restore();
+      });
+    } }) };
+    histA.attachPrimitive(tail); window.__app.heroChart = A;
     const liveA = histA.createPriceLine({ price: 1, color: "#3b82f6", lineWidth: 1, lineStyle: 3, lineVisible: false, axisLabelVisible: true, axisLabelColor: "#3b82f6", axisLabelTextColor: "#ffffff", title: "" });
     halvingLines(A, $("heroC"));
     A.timeScale().fitContent();
@@ -103,31 +128,11 @@
       setTimeout(() => overlays.forEach((g) => g()), 0);
     }
     let rsT = null, lastW = 0;
-    A.timeScale().subscribeSizeChange((w) => { if (Math.abs(w - lastW) < 2) return; lastW = w; clearTimeout(rsT); rsT = setTimeout(fitA, 120); });
+    // re-fit only when the container is resized (window/rotation); the time scale's own size also changes when price-axis labels
+    // widen or narrow during a zoom, and re-fitting on that would snap the user's zoom back
+    new ResizeObserver((es) => { const w = Math.round(es[0].contentRect.width); if (!lastW) { lastW = w; return; } if (Math.abs(w - lastW) < 2) return; lastW = w; clearTimeout(rsT); rsT = setTimeout(fitA, 120); }).observe($("heroC"));
     const heroEl = $("heroC"); heroEl.addEventListener("dblclick", fitA);
     const fitBtn = $("heroFit"); if (fitBtn) fitBtn.addEventListener("click", fitA);
-
-    /* ===== (C) heat score detail ===== */
-    const Cc = LC.createChart($("heroScore"), opts());
-    const btcC = Cc.addSeries(LC.LineSeries, { priceScaleId: "left", color: "rgba(229,231,235,0.18)", lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, priceFormat: priceFmt });
-    btcC.priceScale().applyOptions({ visible: false, mode: LC.PriceScaleMode.Logarithmic });
-    const sF = { type: "price", precision: 1, minMove: 0.1 };
-    const v1C = Cc.addSeries(LC.LineSeries, { color: "#e5e7eb", lineWidth: 2, priceFormat: sF, lastValueVisible: true, priceLineVisible: false, title: "v1" });
-    const wfC = Cc.addSeries(LC.LineSeries, { color: "#6b7280", lineWidth: 1, lineStyle: 2, priceFormat: sF, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false });
-    const v2C = Cc.addSeries(LC.LineSeries, { color: "#22d3ee", lineWidth: 1.5, priceFormat: sF, lastValueVisible: true, priceLineVisible: false, title: "v2" });
-    v1C.priceScale().applyOptions({ scaleMargins: { top: 0.05, bottom: 0.05 } });
-    v1C.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) });
-    const wkly = (from, T, arr) => { const t0 = BM.tsOf(from), o = []; T.forEach((t, i) => { if (t < t0 || arr[i] == null) return; const k = weekStart(t);
-      if (o.length && o[o.length - 1].time === k) o[o.length - 1].value = arr[i]; else o.push({ time: k, value: arr[i] }); }); return o; };
-    v1C.setData(wkly("2012-01-01", H.t, H.score)); wfC.setData(wkly("2012-01-01", H.t, H.score_wf)); v2C.setData(wkly("2012-01-01", H.t, H.score_v2));
-    btcC.setData(wkly("2012-01-01", cT, closes));
-    v1C.createPriceLine({ price: C.score_hot, color: ZC.hot, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "v1 hot" });
-    v1C.createPriceLine({ price: C.score_warm, color: ZC.warm, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: "v1 warm" });
-    v2C.createPriceLine({ price: M.v2.params.zones.hot, color: "#22d3ee", lineWidth: 1, lineStyle: 3, axisLabelVisible: true, title: "v2 hot" });
-    const mkC = LC.createSeriesMarkers(v2C, []);
-    Cc.timeScale().fitContent();
-    $("heroScoreLegend").innerHTML = [["#e5e7eb", "v1 score (8 heats vs all history)"], ["#6b7280", "v1 walk-forward backtest"], ["#22d3ee", `v2 score, pre-registered ${M.v2.frozen_on} (5 families, 8-year window)`], ["rgba(229,231,235,.4)", "BTC (faint, log)"]]
-      .map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
 
     const pct = (x) => x == null ? "--" : (100 * x).toFixed(1) + "%";
     /* ===== model health panel (static parts) ===== */
@@ -137,19 +142,22 @@
     function update(p, now, calc, v2, mnav) {
       const wk = weekStart(BM.utcDay(now)), col = heatColor(calc.score);
       if (firstRender || now - lastFan > (mobile ? 15000 : 5000)) { const fc = computeFan(p, now); setBandsA(fc); lastFan = now; if (firstRender) fitA(); firstRender = false; }
-      histA.update({ time: wk, value: p, color: col });
-      mkA.setMarkers([{ time: wk, position: "aboveBar", color: "#1f2937", shape: "circle", text: `now ${usdK(p)} · ${f(calc.score, 0)} ${calc.scoreZone}` }]);
+      // week rolled over while open: move completed weeks from the tail into the weekly history
+      while (histEnd + 7 * DAY < wk) { const k = histEnd + 7 * DAY; let v = null, s = null;
+        for (let i = cT.length - 1; i >= 0 && cT[i] >= k; i--) if (weekStart(cT[i]) === k) { v = closes[i]; s = scoreByT.get(cT[i]); break; }
+        if (v == null) v = p; histA.update({ time: k, value: v, color: s != null ? heatColor(s) : col }); histEnd = k; histEndV = v; }
+      const pts = [{ T: histEnd + 7 * DAY, v: histEndV ?? p, c: col }];
+      for (let i = 0; i < cT.length; i++) if (cT[i] >= wk && cT[i] < BM.utcDay(now)) { const s = scoreByT.get(cT[i]); pts.push({ T: cT[i] + DAY, v: closes[i], c: s != null ? heatColor(s) : col }); }
+      pts.push({ T: now / 1000, v: p, c: col });
+      tail.pts = pts; tail.col = col; tail.label = `now ${usdK(p)} · ${f(calc.score, 0)} ${calc.scoreZone}`; tail.req && tail.req();
+      window.__app.tail = { x: null, p, n: pts.length };
       liveA.applyOptions({ price: p });
       { const qe = fanCache.qe; $("heroAlt").textContent = `Projection fan at its end (Dec 31 2028), recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }
       const today = BM.utcDay(now);
-      v1C.update({ time: wk, value: calc.score }); if (isFinite(v2.score)) v2C.update({ time: wk, value: v2.score });
-      btcC.update({ time: wk, value: p }); if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }
-      const frT = weekStart(BM.tsOf(M.v2.frozen_on)); mkC.setMarkers(frT <= today ? [{ time: frT, position: "aboveBar", color: "#22d3ee", shape: "arrowDown", text: "v2 frozen" }] : []);
+      if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }
       // one-line summary under the combined chart
       const ath = Math.max(...closes, p), athI = closes.lastIndexOf(Math.max(...closes)), athT = p >= ath ? today : cT[athI];
       $("heroLine").innerHTML = `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (v2 <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b>) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`;
-      $("heroScoreOut").innerHTML = `<div><span>v1 (live)</span><b style="color:${ZC[calc.scoreZone]}">${f(calc.score, 1)} ${calc.scoreZone}</b></div><div><span>v2 pre-registered (live)</span><b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b></div>`
-        + Object.entries(v2.fam).map(([k, v]) => `<div><span>v2 family · ${k.replace("_", " ")}</span><b>${f(v, 1)}</b></div>`).join("");
       // live position of today's price inside the frozen fan
       const FZ = FAN2.frozen; if (FZ) { const j = FZ.today.t.indexOf(today); if (j >= 0) { const q = { q5: FZ.today.q5[j], q25: FZ.today.q25[j], q50: FZ.today.q50[j], q75: FZ.today.q75[j], q95: FZ.today.q95[j] };
         $("hLive").innerHTML = `Live price is at model percentile <b>${f(BM.fanPos(q, p), 0)}</b> of the frozen fan for today (5-95%: ${usdK(q.q5)}-${usdK(q.q95)}; inside the 90% band: <b>${p >= q.q5 && p <= q.q95 ? "yes" : "NO"}</b>).`; }
