@@ -10,7 +10,7 @@
   const f = (v, d = 2) => v == null || !isFinite(v) ? "--" : Number(v).toFixed(d);
   const isoDay = (sec) => new Date(sec * 1000).toISOString().slice(0, 10);
   const ago = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 90 ? s + "s ago" : s < 5400 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
-  const load = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
+  const load = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); }).then(Feeds.clean);   // strings in data files are escaped (shown as text, never as HTML)
 
   const [M, H, FAN2, HEALTH, META] = await Promise.all(["model", "history", "fan2", "health", "meta"].map(load));
   const [BG, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("hero_fwd").catch(() => null)]);
@@ -36,7 +36,9 @@
     const cb = await Promise.race([Feeds.getJSON("https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400"),
       new Promise((_, rej) => setTimeout(() => rej(new Error("timeout (3.5 s), page continues with the daily files")), 3500))]);
     const today0 = BM.utcDay(Date.now());
-    cb.sort((a, b) => a[0] - b[0]).forEach(([t, lo, hi, op, cl]) => {
+    if (!Array.isArray(cb)) throw new Error("unexpected candle response");
+    cb.filter((r) => Array.isArray(r)).map((r) => r.slice(0, 5).map(Number)).filter((r) => Number.isInteger(r[0]) && Feeds.num(r[4]) && Feeds.num(r[3]))   // finite numbers only
+      .sort((a, b) => a[0] - b[0]).forEach(([t, lo, hi, op, cl]) => {
       if (t === today0) todayOpen = op;
       if (t > cT[cT.length - 1] && t < today0) { cT.push(t); closes.push(cl); gapFilled++; }
     });

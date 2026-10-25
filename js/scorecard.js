@@ -3,6 +3,7 @@
   "use strict";
   const el = document.getElementById("scorecard"); if (!el) return;
   const I = (k) => (window.Explain ? window.Explain.i(k) : "");
+  const CLEAN = (x) => window.Feeds.clean(x);   // strings from data files are HTML-escaped on load (js/feeds.js)
   const pct = (v) => v == null || !isFinite(v) ? "--" : (100 * v).toFixed(1) + "%";
   const usd = (v) => v == null || !isFinite(v) ? "--" : "$" + Math.round(v).toLocaleString("en-US");
   const fmtDay = (s) => { const d = new Date(s + "T00:00:00Z"); return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }); };
@@ -115,7 +116,7 @@
   /* Graded forecast range, locked 2026-10-25 (data/fan_locked.json, from pipeline/fan_locked.py): fixed numbers read from the
      frozen fan file, v3 = same fan with the frozen v3 scales. Not recomputed with the live price. Moved here from the main chart. */
   const lf = document.getElementById("lockedFan");
-  if (lf) fetch("data/fan_locked.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("fan_locked " + r.status); return r.json(); }).then((F) => {
+  if (lf) fetch("data/fan_locked.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("fan_locked " + r.status); return r.json(); }).then(CLEAN).then((F) => {
     const K = (v) => v == null || !isFinite(v) ? "--" : "$" + Math.round(v / 1000).toLocaleString("en-US") + "K";
     const row = (r, v) => `<tr><td>${fmtDay(r.date)}</td><td>${v}</td>${["q5", "q25", "q50", "q75", "q95"].map((k) => `<td${k === "q50" ? ' class="med"' : ""}>${K(r[v][k])}</td>`).join("")}</tr>`;
     lf.innerHTML = `<h3>Graded forecast range, locked ${F.frozen_on} ${I("lockedfan")}</h3>` +
@@ -128,7 +129,7 @@
   /* Blue cycle band pre-registration (data/band_grades.json, from pipeline/frozen/band/grade_band.py; rules in PREREG_BAND.md).
      Display of the frozen claims and their grades only; nothing here is computed in the browser. */
   const bs = document.getElementById("bandScore");
-  if (bs) fetch("data/band_grades.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("band_grades " + r.status); return r.json(); }).then((G) => {
+  if (bs) fetch("data/band_grades.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("band_grades " + r.status); return r.json(); }).then(CLEAN).then((G) => {
     const K = (v) => v == null || !isFinite(v) ? "--" : "$" + Math.round(v / 1000).toLocaleString("en-US") + "K";
     const st = G.status || {}, top = st.top || {}, low = st.low || {}, C = G.claims || {};
     const res = (x) => !x || x.hit == null ? "pending" : (x.hit ? "hit" : "miss");
@@ -149,7 +150,7 @@
       `<p class="small">The band drawn on the main chart is recomputed daily; this table grades the copy frozen on 2026-10-25, whose code and values are fixed by sha256 and timestamped. The competitors are secondary and cannot replace the main claim after the fact. Historical pattern test, not a price target. ` +
       `Rules: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/band/PREREG_BAND.md" rel="noopener">PREREG_BAND.md</a> · how to check: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/VERIFY.md" rel="noopener">VERIFY.md</a> · raw: <a href="data/band_log.csv">band_log.csv</a>, <a href="data/band_prices.csv">band_prices.csv</a>, <a href="data/band_grades.json">band_grades.json</a>.</p>`;
   }).catch(() => { bs.innerHTML = ""; });
-  const getJ = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
+  const getJ = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); }).then(CLEAN);
   const pS = getJ("scorecard"), pG = getJ("band_grades").catch(() => null), pF = getJ("fan_locked").catch(() => null);
   pS.then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
   /* Plain-language summary at the top of the scorecard: one row per pre-registered prediction, its status and when it is graded.

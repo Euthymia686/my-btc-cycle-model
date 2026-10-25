@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.kraken.com wss://ws.kraken.com https://www.bitstamp.net wss://ws.bitstamp.net https://api.gemini.com https://api.binance.us https://api.crypto.com https://blockchain.info https://api.coingecko.com https://mempool.space wss://mempool.space https://blockstream.info; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: where Bitcoin is in its ~4-year cycle, with a Cycle Heat Score recomputed every second, locked rules, Bitcoin timestamps and a public scorecard.">
@@ -21,7 +22,7 @@
 <meta name="twitter:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
 <meta name="twitter:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
 <meta name="twitter:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
-<link rel="stylesheet" href="css/style.css?v=20261025contact">
+<link rel="stylesheet" href="css/style.css?v=20261025harden">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -143,13 +144,13 @@
   <!-- Contact + optional tip link (Ko-fi). Footer only, kept away from the forecasts. To hide the tip link again, add the hidden attribute to #donateLink. -->
   <p class="donate" id="donate"><a id="contactLink" href="mailto:btc.cycle.model@gmail.com"><span aria-hidden="true">&#9993;</span> Contact: btc.cycle.model@gmail.com</a><span class="sep" aria-hidden="true"> &middot; </span><a id="donateLink" href="https://ko-fi.com/euthymia686" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#9749;</span> Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025contact"></script>
-<script src="js/explain.js?v=20261025contact"></script>
-<script src="js/model.js?v=20261025contact"></script>
-<script src="js/feeds.js?v=20261025contact"></script>
-<script src="js/hero.js?v=20261025contact"></script>
-<script src="js/app.js?v=20261025contact"></script>
-<script src="js/scorecard.js?v=20261025contact"></script>
-<script src="js/nav.js?v=20261025contact"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025harden"></script>
+<script src="js/explain.js?v=20261025harden"></script>
+<script src="js/model.js?v=20261025harden"></script>
+<script src="js/feeds.js?v=20261025harden"></script>
+<script src="js/hero.js?v=20261025harden"></script>
+<script src="js/app.js?v=20261025harden"></script>
+<script src="js/scorecard.js?v=20261025harden"></script>
+<script src="js/nav.js?v=20261025harden"></script>
 </body>
 </html>

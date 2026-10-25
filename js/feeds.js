@@ -5,6 +5,14 @@
 (function (root) {
   const FRESH_MS = 15000, SILENCE_MS = 10000, OUTLIER = 0.005, POLL_MS = 10000, WS_GRACE_MS = 5000;
   const num = (v) => { const x = parseFloat(v); return isFinite(x) && x > 0 ? x : null; };
+  /* Safety: nothing read from the network may be inserted as HTML. Prices and block numbers are coerced to finite numbers
+     (num, int); strings in our own data/*.json files are HTML-escaped once on load (clean), so a tampered file shows as text. */
+  const int = (v) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? Math.floor(x) : null; };
+  const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC[c]);
+  const clean = (x) => typeof x === "string" ? esc(x) : Array.isArray(x) ? x.map(clean)
+    : x && typeof x === "object" ? Object.fromEntries(Object.entries(x).map(([k, v]) => [esc(k), clean(v)]))
+    : typeof x === "number" || typeof x === "boolean" || x == null ? x : null;
   const SOURCES = [
     { id: "coinbase", name: "Coinbase", url: "wss://advanced-trade-ws.coinbase.com",
       subscribe: [{ type: "subscribe", product_ids: ["BTC-USD"], channel: "ticker" }, { type: "subscribe", product_ids: ["BTC-USD"], channel: "heartbeats" }],
@@ -135,9 +143,9 @@
       ws.onclose = () => { if (!opened) this.wsFails++; if (this.ws === ws) { this.ws = null; this.retry(); } }; ws.onerror = () => {};
     }
     retry() { if (this.retryT) return; const wait = Math.min(60000, 2000 * Math.pow(2, this.tries++)); this.retryT = setTimeout(() => { this.retryT = null; this.connect(); }, wait); }
-    set(h, t, via, isNew, src) { if (!h || (this.height && h < this.height)) return; const changed = h !== this.height; this.height = h; if (t || changed) this.blockTime = t || null; this.at = Date.now(); this.via = via; this.src = src; if (changed) this.onBlock && this.onBlock(this, isNew); }
+    set(h, t, via, isNew, src) { h = int(h); t = int(t); if (!h || (this.height && h < this.height)) return; const changed = h !== this.height; this.height = h; if (t || changed) this.blockTime = t || null; this.at = Date.now(); this.via = via; this.src = src; if (changed) this.onBlock && this.onBlock(this, isNew); }
     async poll() { if (this.busy) return; this.busy = true;
-      try { for (const s of BLOCK_REST) { try { const r = await s.get(); this.restErr[s.name] = null; this.set(r.h, r.t, this.ws && this.ws.readyState === 1 ? this.via || "rest" : "rest", false, s.name); return; } catch (e) { this.restErr[s.name] = why(e); } } }
+      try { for (const s of BLOCK_REST) { try { const r = await s.get(); if (!int(r.h)) throw new SyntaxError("bad block height"); this.restErr[s.name] = null; this.set(r.h, r.t, this.ws && this.ws.readyState === 1 ? this.via || "rest" : "rest", false, s.name); return; } catch (e) { this.restErr[s.name] = why(e); } } }
       finally { this.busy = false; } }
     watch() { const now = Date.now();
       if (this.ws && now - (this.lastMsg || this.openedAt) > 120000) this.connect();   // mempool pushes stats every few seconds; 2 min of silence = dead socket
@@ -155,5 +163,5 @@
     window.addEventListener("online", () => go("online")); window.addEventListener("focus", () => go("focus"));
     window.addEventListener("pageshow", (e) => { if (e.persisted) go("pageshow"); });
   }
-  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, getJSON, combine, onWake, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
+  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, getJSON, combine, onWake, num, int, esc, clean, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
 })(this);
