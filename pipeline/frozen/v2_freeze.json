@@ -1,0 +1,41 @@
+{
+ "frozen_on": "2026-10-25",
+ "frozen_utc": "2026-10-25T04:03:20+00:00",
+ "v2_spec_sha256": "1ed15c4c00d49512ceacfeb6b00ca5d4dba2ba665f3ace9e1bc4ad3b6a1e2162",
+ "robust_sha256": "d03a0e5a6dd831065a17262e5c30a7012df6f344ebc303fd0c19a080bc3f1acc",
+ "fan_file": "fan_2026-10-25.json",
+ "fan_sha256": "0c1d1ddebbac8e44c529c4c3e6090d3fd935be3584d230b3a2b40b1c47da2a3d",
+ "v2_params": {
+  "window_days": 2922,
+  "min_obs": 730,
+  "timing_mu": 494.0,
+  "timing_sd": 71.4,
+  "min_families": 3,
+  "families": {
+   "price_structure": [
+    "mayer",
+    "p200w",
+    "trend_mult",
+    "pi_ratio"
+   ],
+   "onchain_valuation": [
+    "mvrv_z"
+   ],
+   "network_usage": [
+    "activity"
+   ],
+   "attention": [
+    "trends"
+   ],
+   "timing": [
+    "cycle_day"
+   ]
+  },
+  "zones": {
+   "hot": 80,
+   "warm": 65,
+   "neutral": 40
+  }
+ },
+ "rule": "v2 and the frozen fan are judged only on data after frozen_on. Edits => new version + new freeze."
+}

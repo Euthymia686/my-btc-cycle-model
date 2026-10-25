@@ -1,0 +1,18 @@
+# personal / per-run files (never published)
+pipeline/state.json
+pipeline/journal.csv
+pipeline/REPORT.md
+pipeline/out/*.pdf
+pipeline/out/a_*.png
+pipeline/out/b_*.png
+pipeline/out/c_*.png
+pipeline/out/d_*.png
+*.tmp
+__pycache__/
+.env
+.venv/
+venv/
+preview_*.png
+hero_live.png
+hero_fan.png
+hero_score.png
