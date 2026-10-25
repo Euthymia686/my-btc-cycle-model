@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025p">
+<link rel="stylesheet" href="css/style.css?v=20261025r">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -17,7 +17,7 @@
 </header>
 
 <section class="panel hero">
-  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub">BTC price colored by Cycle Heat Score · the model's range of outcomes to Dec 2028, then only the trend corridor and past-cycle path to 2030 (not graded) · model ranges, not predictions</span></h2>
+  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub">BTC price colored by Cycle Heat Score · trend corridor · blue cycle band, continued to 2030 from past cycles scaled down (a shape guide, not a forecast) · the graded forecast range is in the scorecard section</span></h2>
   <div id="heroC" class="chart heroc"></div>
   <div class="heroline" id="heroLine">connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
@@ -27,8 +27,8 @@
     <ul>
       <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. The blue tag on the right axis and the dot at the end of the line are the live price; the small status next to "Reset view" says whether it is live, polling, STALE or the last daily close. Hover or tap the chart for the price and score of any week.</li>
       <li><b>The gray corridor</b> runs from the orange <b>floor</b> line up to the dotted <b>ceiling</b> line, around the dashed <b>trend</b> line. All three come from one long-term curve fitted to Bitcoin's whole history. Price has rarely left this corridor, but nothing guarantees it stays inside.</li>
-      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues, scaled down because each cycle has peaked less far above trend, through the next possible top in 2029 and the fall after it into 2030. It runs only as far as the previous cycles' data reaches (late 2030 for now). It is a shape guide only, not a forecast, and it is not graded: last cycle it pointed far above the actual 2025 top.</li>
-      <li><b>The faint purple fan</b> is the model's range of outcomes to the end of 2028, the locked forecast that the scorecard grades. It stops at the dashed "locked forecast ends Dec 2028" line; after that line the chart shows only the corridor and the cycle path, which are context, not forecasts. If the model is right, price lands in the darker middle about half the time (25-75%) and inside the whole fan about 90% of the time (5-95%). It widens further out because the future is less certain. Its shading stops at the floor line for readability.</li>
+      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues in the same style, built from the same past cycles but scaled down because each cycle has peaked less far above trend. It shows the next possible top (around 2029, marked with a small dot) and the fall after it (around 2030, second dot); the hover/tap text and the legend give the month and the band's middle and range at each. It runs only as far as the previous cycles' data reaches (late 2030 for now, one more day each day). It is a shape guide only, not a forecast, and it is not graded: last cycle it pointed far above the actual 2025 top.</li>
+      <li><b>The graded forecast range is not on this chart.</b> The model's locked range of outcomes (the "fan", frozen on 2026-10-25, to the end of 2028) is the part that gets graded. It is shown as a small table in the <a href="#scorecardSec">scorecard section</a>, next to its public grades, so it is not confused with the blue shape guide here.</li>
       <li><b>Heat zones</b> (cool, neutral, warm, hot) say how stretched price and on-chain data look compared with all of history. Hot readings have clustered near past cycle tops and cool ones near past bottoms.</li>
       <li><b>Track record:</b> in the backtest the score peaked around 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, just above the hot line, which was itself set from those tops. Peaks have come down, so a top can come without the score going "hot".</li>
       <li><b>What this is not:</b> a trade timing signal or buy/sell advice. It is a slow gauge of where we are in the cycle that changes over weeks and months. For entries and exits, pair it with your own short-term tools (moving averages, RSI and so on).</li>
@@ -61,6 +61,7 @@
 
 <section class="panel" id="scorecardSec">
   <h2>Scorecard <button type="button" class="info" data-k="scorecard" aria-label="What is this?">i</button> <span class="small">every forecast is written down and graded in public: did the price land inside the ranges? v2 vs v3 <button type="button" class="info" data-k="v3" aria-label="What is this?">i</button></span></h2>
+  <div id="lockedFan" class="lockedfan"></div>
   <div id="scorecard" class="scorecard"><p class="small">Loading the scorecard...</p></div>
 </section>
 
@@ -84,8 +85,8 @@
     <li><b>Crowd euphoria (display only):</b> a contrarian gauge of trader excitement, 0-100. It is the average of the 7-day average Crypto Fear &amp; Greed Index (alternative.me, daily since Feb 2018) and a 0-100 score of the BTC perpetual-futures funding rate (what leveraged longs pay shorts; 7-day average, annualized; Deribit, with OKX as a backup). The funding score runs through 0 at -10% a year, 20 at 0%, 45 at 10% (about the normal level), 65 at 20%, 85 at 40% and 100 at 80%. Zones: calm under 25, normal 25-55, excited 55-75, euphoric 75 and up, chosen as display conventions, not fitted. It is <b>not</b> part of the Cycle Heat Score or any graded version; using it in a score would need a new locked version, reviewed no earlier than 2027-10-25.</li>
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
     <li><b>Cycle Heat Score</b> = plain average of the 8 heats. Zones: hot = lowest score seen around any past top; warm = hot &minus; 15; neutral 40+; cool below 40.</li>
-    <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. On the chart it is drawn faintly, behind the forward cycle path, and it ends at its locked horizon of Dec 31 2028 (marked by a dashed line); it is never extended past that. Fan shading is cut off at the floor line for readability; the model's 5% quantile can sit below the floor, and the floor is not guaranteed.</li>
-    <li><b>Cycle band / forward cycle path (display only):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the v3-candidate "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is drawn to the end of 2030, as far as the prior cycles' data reaches (each day of new data extends it by a day), together with the power-law corridor. It is a shape guide from past cycles, not a forecast, and it is not part of either score. In the 2024 cycle even the dampened path ran well above the actual 2025 top.</li>
+    <li><b>Projection fan (the graded forecast range):</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. It is not drawn on the main chart; the locked copy (frozen 2026-10-25, horizon Dec 31 2028) and its v3 version are shown as a table in the scorecard section, and the scorecard grades the daily 30/90/365-day forecasts. The model's 5% level can sit below the floor line, and the floor is not guaranteed.</li>
+    <li><b>Cycle band / forward cycle path (display only):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the v3-candidate "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is drawn to the end of 2030, as far as the prior cycles' data reaches (each day of new data extends it by a day), together with the power-law corridor. The possible next top is the highest band middle after the next (estimated) halving, and the low after it is the lowest band middle after that top; both are found from the data on each load, not typed in. It is a shape guide from past cycles, not a forecast, and it is not part of either score or the scorecard. In the 2024 cycle even the dampened path ran well above the actual 2025 top.</li>
     <li><b>Score v2 (pre-registered 2026-10-25):</b> heat = percentile vs the prior 8 years only; signals grouped into 5 independent families (price structure, on-chain valuation, network usage, attention, timing), score = mean of families; zones fixed at 80/65/40. Its code is frozen by sha256 and logged daily next to v1. See ROBUSTNESS.md.</li>
     <li><b>Backtest (walk-forward):</b> the score reached 92-93 at the 2013 and 2017 tops but only ~65-68 at the 2021 and 2025 tops; it fell to 12-25 at every cycle low. It is a description of how stretched the market is versus history, not a sell timer.</li>
   </ol>
@@ -102,12 +103,12 @@
   <!-- Donate placeholder: hidden until the owner provides a link. To enable, set the href and remove the hidden attribute. -->
   <p class="donate" id="donate" hidden><a id="donateLink" href="#" rel="noopener">Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025p"></script>
-<script src="js/explain.js?v=20261025p"></script>
-<script src="js/model.js?v=20261025p"></script>
-<script src="js/feeds.js?v=20261025p"></script>
-<script src="js/hero.js?v=20261025p"></script>
-<script src="js/app.js?v=20261025p"></script>
-<script src="js/scorecard.js?v=20261025p"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025r"></script>
+<script src="js/explain.js?v=20261025r"></script>
+<script src="js/model.js?v=20261025r"></script>
+<script src="js/feeds.js?v=20261025r"></script>
+<script src="js/hero.js?v=20261025r"></script>
+<script src="js/app.js?v=20261025r"></script>
+<script src="js/scorecard.js?v=20261025r"></script>
 </body>
 </html>

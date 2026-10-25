@@ -8,7 +8,7 @@ A live Bitcoin cycle chart built from raw public data:
 - **Projection fan** (5/25/50/75/95%): a power-law trend refit daily, widened by how wrong that trend has actually been out of sample. A copy frozen on 2026-10-25 is kept unchanged and scored only on later data.
 - **Cycle Heat Score** (0-100): valuation, on-chain, usage, attention and halving-timing signals, each turned into a percentile against its own history.
 - **Cycle band**: where the two previous halving cycles sat at the same day since halving.
-- **Chart to 2030**: the time axis, the trend corridor and the scaled-down forward cycle path run to the end of 2030 to show the next possible top and the fall after it. The locked fan stops at Dec 31 2028 (dashed line); past that the chart is context only, not a graded forecast.
+- **Chart to 2030**: the time axis, the trend corridor and the blue cycle band run to the end of 2030. After now the band is the past cycles scaled down, a shape guide (not a forecast, not graded) that shows the next possible top and the low after it. The graded forecast range (the locked fan) is not on the chart; it is shown as a table in the site's scorecard section.
 - **Crowd euphoria** (display only): Fear & Greed Index plus BTC perpetual funding rates (`crowd.py`), a contrarian gauge that is not part of any score. Ideas for future versions are logged in `IDEAS.md`.
 
 ![hero](hero_combined.png)

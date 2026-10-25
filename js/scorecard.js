@@ -109,6 +109,19 @@
       `<p class="small">Promotion rule, set ${S.live_since || "2026-10-25"} before any result: v3 replaces v2 only if, from ${S.promotion_check_earliest || "2027-10-25"} on, it has the better log score <b>and</b> its 90% band is closer to 90% <b>and</b> it stays at or above 80% at every horizon. ` +
       `Raw data: <a href="data/scorecard.csv">scorecard.csv</a> · rules: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/v3/FREEZE.md" rel="noopener">FREEZE.md</a> · updated ${S.data_through ? "with data through " + S.data_through : "daily"}.</p>`;
   }
+  /* Graded forecast range, locked 2026-10-25 (data/fan_locked.json, from pipeline/fan_locked.py): fixed numbers read from the
+     frozen fan file, v3 = same fan with the frozen v3 scales. Not recomputed with the live price. Moved here from the main chart. */
+  const lf = document.getElementById("lockedFan");
+  if (lf) fetch("data/fan_locked.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("fan_locked " + r.status); return r.json(); }).then((F) => {
+    const K = (v) => v == null || !isFinite(v) ? "--" : "$" + Math.round(v / 1000).toLocaleString("en-US") + "K";
+    const row = (r, v) => `<tr><td>${fmtDay(r.date)}</td><td>${v}</td>${["q5", "q25", "q50", "q75", "q95"].map((k) => `<td${k === "q50" ? ' class="med"' : ""}>${K(r[v][k])}</td>`).join("")}</tr>`;
+    lf.innerHTML = `<h3>Graded forecast range, locked ${F.frozen_on} ${I("lockedfan")}</h3>` +
+      `<p class="small">Where the model expected the price to be, written down on ${F.frozen_on} (from the ${F.data_through} close) and never changed. Fixed numbers from the frozen fan file, not recomputed with the live price. If the model is right, the price on that date lands in the 25%-75% range about half the time and in the 5%-95% range about 90% of the time.</p>` +
+      `<div class="stwrap"><table class="sc lf"><thead><tr><th>date</th><th>version</th><th>5%</th><th>25%</th><th>median</th><th>75%</th><th>95%</th></tr></thead><tbody>` +
+      F.rows.map((r) => row(r, "v2") + row(r, "v3")).join("") + `</tbody></table></div>` +
+      `<p class="small">v3 is the same fan with narrower bands (frozen scales ${F.s90} and ${F.s50}); which one is better is decided by the scorecard below. This range was drawn on the main chart until 2026-10-25; it is now shown here so it is not mixed up with the blue cycle band (a shape guide). Model ranges, not predictions; not financial advice. ` +
+      `Frozen file: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/${F.fan_file}" rel="noopener">${F.fan_file}</a> <span class="mono">sha256 ${F.fan_sha256.slice(0, 12)}...</span></p>`;
+  }).catch(() => { lf.innerHTML = ""; });
   fetch("data/scorecard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("scorecard " + r.status); return r.json(); })
     .then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
 })();

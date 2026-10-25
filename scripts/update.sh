@@ -13,5 +13,7 @@ $PY crowd.py || echo "::warning::crowd.py (crowd euphoria gauge, display only) f
 ( cd pipeline && $PY forward_band.py >/dev/null ) || echo "::warning::forward_band.py (display only) failed - previous file kept"
 ( cd pipeline && $PY hero_png.py >/dev/null ) || echo "::warning::hero_png.py failed - previous PNG kept"
 ( cd pipeline && $PY scorecard.py ) || echo "::warning::scorecard.py failed - previous scorecard kept"
+# locked fan range table for the scorecard section (display only; reads the frozen fan file, never writes under frozen/)
+( cd pipeline && $PY fan_locked.py >/dev/null ) || echo "::warning::fan_locked.py (display only) failed - previous file kept"
 for f in history model fan fan2 meta mstr ohlc_daily health hero_bg; do test -s "data/$f.json" || { echo "::error::data/$f.json missing"; exit 1; }; done
 echo "update done"

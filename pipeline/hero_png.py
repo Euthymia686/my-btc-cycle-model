@@ -1,8 +1,9 @@
 """Render the one-figure 'My BTC Cycle Model' hero PNG (high resolution).
-Top: weekly BTC price coloured by Cycle Heat Score (v1) over the trend corridor / floor / ceiling / trend line / cycle band,
-plus the FROZEN projection fan (frozen/fan_2026-10-25.json) to Dec 31 2028. The axis runs to the end of 2030: after Dec 2028 only the
-corridor and the dampened forward cycle path (data/hero_fwd.json from forward_band.py, display only) are drawn, not a graded forecast.
-No model changes: uses charts.fits / cycle_band (same as chart a), the frozen fan file and state.json. Model output, not predictions."""
+Weekly BTC price coloured by Cycle Heat Score (v1) over the trend corridor / floor / ceiling / trend line / cycle band. After now the
+blue band continues in the same style (dampened forward cycle band, data/hero_fwd.json from forward_band.py, display only) as far as the
+prior cycles' data reaches (late 2030), with light notes on its possible next top and the low after it, computed from the data each run.
+The graded forecast range (the frozen fan) is NOT drawn here since 2026-10-25 (display change only); the site shows it in the scorecard
+section. No model changes: uses charts.fits / cycle_band (same as chart a) and state.json. Model output, not predictions."""
 import json, os, sys, warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt, matplotlib.dates as mdates
@@ -12,8 +13,6 @@ import lib, charts
 
 OUTS = [os.path.join(lib.HERE, "out", "hero_combined.png"), os.path.join(lib.HERE, "..", "hero_combined.png")]
 st = json.load(open(os.path.join(lib.HERE, "state.json")))
-rec = json.load(open(os.path.join(lib.HERE, "frozen", "v2_freeze.json")))
-FF = json.load(open(os.path.join(lib.HERE, "frozen", rec["fan_file"])))
 HOT, WARM = st["score"]["hot_at"], st["score"]["warm_at"]
 
 cm = lib.coinmetrics(); df, _ = lib.build_signals(cm, lib.google_trends())
@@ -22,7 +21,7 @@ H = json.load(open(os.path.join(lib.HERE, "..", "data", "history.json")))
 score = pd.Series(H["score"], index=pd.to_datetime(H["t"], unit="s"), dtype=float)
 
 START, END = pd.Timestamp("2015-01-01"), pd.Timestamp("2031-01-20")
-DISPLAY_END = pd.Timestamp("2030-12-31")   # display only; the frozen fan still ends at lib.HORIZON (Dec 31 2028)
+DISPLAY_END = pd.Timestamp("2030-12-31")   # display only
 now = pd.Timestamp(st["date"]); px = st["btc"]["price"]; sc_now = st["score"]["value"]; zone_now = st["score"]["zone"]
 # weekly price + weekly score (last value of each week), then the live point
 wk = p.loc[START:].resample("W").last().dropna(); wk = wk[wk.index < now]
@@ -44,9 +43,10 @@ ax.plot(dates, t * 10 ** q["mid"], color="#6b7280", lw=1.0, ls="--", zorder=1, l
 ax.plot(dates, t * 10 ** q["floor"], color="#d97706", lw=1.4, alpha=0.8, zorder=1, label="Trend floor (5%)")
 band = charts.cycle_band(p, a, b, res, pd.date_range("2016-07-15", DISPLAY_END, freq="D"))
 nowp = pd.Timestamp(st["date"]); pb = band.loc[:nowp]
-ax.fill_between(pb.index, pb.lo, pb.hi, color="#3b82f6", alpha=0.10, lw=0, zorder=1, label="Cycle band (prior 2 cycles, same day since halving)")
+ax.fill_between(pb.index, pb.lo, pb.hi, color="#3b82f6", alpha=0.11, lw=0, zorder=1, label="Cycle band (prior 2 cycles, same day since halving)")
 ax.plot(pb.index, pb.md, color="#3b82f6", lw=0.9, alpha=0.55, zorder=1, label="Cycle band middle")
-# forward cycle path after now (display only): the dampened band from data/hero_fwd.json, blended in log space over the first
+fwinfo = None
+# forward cycle band after now (display only): the dampened band from data/hero_fwd.json, blended in log space over the first
 # 8 weeks from the past band, as on the live site. Ends where the prior cycles' data ends (no extrapolation).
 try:
     FW = json.load(open(os.path.join(lib.HERE, "..", "data", "hero_fwd.json")))
@@ -57,17 +57,21 @@ try:
     for k in ("lo", "md", "hi"):
         bk = bref[k].values; fw[k] = np.where(np.isfinite(bk), np.exp((1 - w) * np.log(np.where(np.isfinite(bk), bk, 1)) + w * np.log(fw[k].values)), fw[k].values)
     fw = pd.concat([pb.iloc[[-1]], fw])
-    ax.fill_between(fw.index, fw.lo, fw.hi, color="#3b82f6", alpha=0.13, lw=0, zorder=1, label=f"Cycle path ahead (past cycles scaled down, rho {FW['rho']:.2f}): shape guide only")
+    ax.fill_between(fw.index, fw.lo, fw.hi, color="#3b82f6", alpha=0.11, lw=0, zorder=1, label=f"Cycle band ahead (past cycles scaled down, rho {FW['rho']:.2f}): shape guide, not a forecast")
     ax.plot(fw.index, fw.md, color="#3b82f6", lw=0.9, alpha=0.55, zorder=1)
+    # possible next top = highest band middle after the next (estimated) halving; low after it = lowest band middle after that top
+    nh = pd.Timestamp(st["btc"]["next_halving_est"]); f2 = fw.loc[nh:]; ipk = f2.md.idxmax(); f3 = f2.loc[ipk:].iloc[1:]
+    fwinfo = {"end": fw.index[-1], "peak": (ipk, f2.loc[ipk])}
+    if len(f3): ilo = f3.md.idxmin(); fwinfo["low"] = (ilo, f3.loc[ilo])
+    K = lambda v: f"${v/1e3:,.0f}K"
+    for k, dy, dx, lab in (("peak", 1.75, -170, "possible next top"), ("low", 0.6, -280, "low after it")):
+        if k not in fwinfo: continue
+        d, v = fwinfo[k]; ax.scatter([d], [v.md], s=16, color="#2563eb", alpha=0.7, zorder=4)
+        ax.annotate(f"{lab}: ~{d.strftime('%b %Y')}\nmiddle ~{K(v.md)} (band {K(v.lo)}-{K(v.hi)})", (d, v.md), xytext=(d + pd.Timedelta(days=dx), v.md * dy),
+                    ha="center", va="center", fontsize=8.5, color="#1e3a8a", alpha=0.85, arrowprops=dict(arrowstyle="-", color="#93c5fd", lw=0.7),
+                    bbox=dict(fc="white", ec="none", alpha=0.8, pad=1.5), zorder=6)
 except Exception as e:
     print("forward cycle path not drawn:", e)
-
-# ---- frozen projection fan (violet), opens at today's price
-fd = pd.to_datetime(FF["dates"]); F = {k: np.array(FF[k], float) for k in ("q5", "q25", "q50", "q75", "q95")}
-fd = fd.insert(0, now); F = {k: np.insert(v, 0, px) for k, v in F.items()}
-ax.fill_between(fd, F["q5"], F["q95"], color="#7c3aed", alpha=0.10, lw=0, zorder=2, label=f"Projection fan 5-95% (frozen {rec['frozen_on']})")
-ax.fill_between(fd, F["q25"], F["q75"], color="#7c3aed", alpha=0.20, lw=0, zorder=2, label="Projection fan 25-75%")
-ax.plot(fd, F["q50"], color="#6d28d9", lw=1.1, ls=(0, (2, 2)), zorder=3, label="Fan median")
 
 # ---- heat-coloured weekly price line
 x = mdates.date2num(wk.index.to_pydatetime()); y = wk.values
@@ -75,17 +79,11 @@ segs = np.stack([np.column_stack([x[:-1], y[:-1]]), np.column_stack([x[1:], y[1:
 lc = LineCollection(segs, cmap=cmap, norm=plt.Normalize(0, 100), linewidths=2.4, zorder=5, capstyle="round")
 lc.set_array(((ws.values[:-1] + ws.values[1:]) / 2)); ax.add_collection(lc)
 ax.scatter([now], [px], s=110, color=cmap(sc_now / 100), edgecolor="#111827", lw=1.6, zorder=7)
-ax.annotate(f"now ${px:,.0f}\nscore {sc_now:.0f} ({zone_now})", (now, px), xytext=(-14, -44), textcoords="offset points", ha="right",
-            fontsize=10, fontweight="bold", color="#111827", bbox=dict(fc="white", ec="#d1d5db", lw=0.6, pad=2.5, alpha=0.95), zorder=8)
 
 # ---- halvings
 for h in [pd.Timestamp(d) for d in ["2016-07-09", "2020-05-11", "2024-04-20"]] + [pd.Timestamp(st["btc"]["next_halving_est"])]:
     for A in (ax,): A.axvline(h, color="#6b7280", ls=":", lw=0.9, zorder=1)
     ax.text(h, 105, ("est. halving " if h.year == 2028 else " halving"), fontsize=8.5, color="#6b7280", va="bottom", ha=("right" if h.year == 2028 else "left"))
-E = lib.HORIZON
-# boundary of the locked (graded) forecast: after this only the corridor and the cycle path are shown
-ax.axvline(E, color="#7c3aed", ls=(0, (4, 3)), lw=0.9, alpha=0.55, zorder=2)
-ax.text(E, 2.6e6, " locked forecast\n ends Dec 2028", fontsize=8.5, color="#6d28d9", va="top", ha="left")
 
 # ---- right price axis, dense plain-dollar ticks (live-site style) + tag pill for the live price
 TICKS = [100, 170, 300, 500, 850, 1500, 2500, 4200, 7000, 12000, 20000, 35000, 60000, 100000, 170000, 300000, 500000, 850000, 1500000, 2500000]
@@ -102,11 +100,6 @@ def pill(y, text, fc, tc="white"):
                 fontsize=9.5, color=tc, fontweight="bold", annotation_clip=False, bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.25", fc=fc, ec="none"))
 pill(px, f"${px:,.0f}", "#3b82f6")
 
-# ---- fan values at the end-2028 horizon: small box inside the plot, lower right (clear of the axis tags)
-ie = int(np.argmin(np.abs(fd - E)))
-ax.text(0.985, 0.215, f"Projection fan at end of 2028 (model range)\n5%  ${F['q5'][ie]/1e3:,.0f}K   \u00b7   median  ${F['q50'][ie]/1e3:,.0f}K   \u00b7   95%  ${F['q95'][ie]/1e3:,.0f}K",
-        transform=ax.transAxes, ha="right", va="bottom", fontsize=9.5, color="#5b21b6", linespacing=1.5,
-        bbox=dict(fc="white", ec="#ddd6fe", lw=0.8, boxstyle="round,pad=0.5"), zorder=9)
 h_, l_ = ax.get_legend_handles_labels()
 ax.legend(h_, l_, loc="upper left", fontsize=8, ncol=2, frameon=True, framealpha=0.95, edgecolor="#e5e7eb")
 
@@ -121,9 +114,11 @@ fig.text(0.035, 0.922, f"BTC ${px:,.0f}  \u00b7  Cycle Heat Score {sc_now:.0f} (
          f"{st['btc']['days_since_peak']} days since the ${st['btc']['ath']/1e3:,.0f}K peak  \u00b7  {st['run_utc'][:16].replace('T', ' ')} UTC",
          fontsize=11, color="#374151")
 fig.text(0.89, 0.945, "Model ranges, not predictions.\nNot financial advice.", fontsize=10, color="#b91c1c", fontweight="bold", ha="right", va="center")
-fig.text(0.035, 0.042, f"Fan: decay-weighted forecast-error bands, frozen {rec['frozen_on']} (sha256 {rec['fan_sha256'][:12]}...), widen with horizon. "
-         f"Corridor/trend: log10(price) = {a:.3f} + {b:.3f} x log10(days since 2009-01-03), 5%/95% residuals. Price weekly; colour = Cycle Heat Score (v1) that week.", fontsize=7.5, color="#9ca3af")
 import textwrap
+note = ("Forward blue band: past cycles scaled down, a shape guide, not a forecast" + (f" (ends {fwinfo['end'].date()}, as far as the prior cycles' data reaches)" if fwinfo else "")
+        + ". The graded forecast range (fan) is shown in the scorecard section, not on this chart.")
+fig.text(0.035, 0.058, textwrap.fill(note, 200), fontsize=8.5, color="#4b5563", va="bottom")
+fig.text(0.035, 0.042, f"Corridor/trend: log10(price) = {a:.3f} + {b:.3f} x log10(days since 2009-01-03), 5%/95% residuals. Price weekly; colour = Cycle Heat Score (v1) that week.", fontsize=7.5, color="#9ca3af")
 fig.text(0.035, 0.008, textwrap.fill(charts.FOOT, 190), fontsize=7, color="#9ca3af", va="bottom")
 for o in OUTS: fig.savefig(o, facecolor="white")
 print("wrote", OUTS)
