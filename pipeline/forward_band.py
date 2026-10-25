@@ -1,4 +1,4 @@
-"""Display-only: the DAMPENED cycle band (v3-candidate rule, pipeline/v3/v3_spec.md section A) for the hero chart's forward part.
+"""Display-only: the DAMPENED cycle band (v3-candidate rule, pipeline/frozen/v3/v3_spec.md section A) for the hero chart's forward part.
 Same construction as charts.cycle_band (same full-data trend fit, two prior cycles at the same day-since-halving +-10 d,
 15-day smoothing); the only difference is that each prior cycle's log-residuals are scaled by rho^(k-j), where rho is the
 geometric mean of the ratio of successive peak excesses over the COMPLETED cycles (data start, 2012, 2016, 2020 cycles).

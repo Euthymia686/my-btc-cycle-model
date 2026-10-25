@@ -1,0 +1,4 @@
+# SHA-256 of v3 research files that are not published (they also contain unrelated private notes).
+# Originally listed in v3_hashes.txt as fan_test.py and ../out/v3_candidate_band.png. Fixed as of 2026-10-25.
+c88391c8031d6860f95737d9f8de6375b5bc7377749a8c810c169e6b6a7d3ccd  fan_test.py
+efb78f5cb46a9c791bb469db6a962d2ac340fd03492433d580431d84944d2881  v3_candidate_band.png

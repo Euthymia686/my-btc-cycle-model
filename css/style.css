@@ -94,3 +94,11 @@ button.info:hover,button.info.on{background:#3b82f6;border-color:#3b82f6;color:#
 .howto ul{margin:8px 0 10px;padding:0 14px 0 30px}.howto li{margin:5px 0;line-height:1.45}
 .nfa-mini{margin:8px 2px 0;font-size:12.5px;color:#374151}
 @media (max-width:520px){.feedwrap{justify-content:flex-start}.howto{font-size:13px}.howto ul{padding-left:22px}}
+
+/* scorecard */
+.scorecard h3{font-size:13px;margin:10px 0 4px;color:#d1d4dc}.scgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table.sc{border-collapse:collapse;font-size:13px;margin:4px 0}table.sc th,table.sc td{padding:3px 10px 3px 0;text-align:left;vertical-align:top}
+table.sc thead th{color:var(--mute);font-weight:500}table.sc td.ok{color:var(--up)}table.sc td.meh{color:var(--warm)}table.sc td.bad{color:var(--down)}table.sc td.na{color:var(--mute)}
+.scorecard .first{font-size:13px;margin:4px 0}.scorecard ul.weak{margin:4px 0 6px;padding-left:18px;font-size:13px}.scorecard ul.weak li{margin:3px 0}
+@media (max-width:760px){.scgrid{grid-template-columns:1fr;gap:4px}}
+.scorecard a{color:#7aa2ff}

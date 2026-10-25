@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Daily refresh. Every step is failure-tolerant: if a source or step fails, the previous files stay in place.
-# Never touches pipeline/frozen/, pipeline/v2_spec.py, pipeline/robust.py or pipeline/v3/v3_spec.md (checked by the workflow).
+# Never touches pipeline/frozen/ (v2 and v3), pipeline/v2_spec.py or pipeline/robust.py (checked by the workflow).
 set -u; cd "$(dirname "$0")/.."; PY=${PY:-python}
 ( cd pipeline && $PY signals.py ) || echo "::warning::signals.py failed"
 ( cd pipeline && $PY backtest.py >/dev/null ) || echo "::warning::backtest.py failed"
@@ -9,5 +9,6 @@ $PY build_data.py --cycle-dir pipeline || echo "::warning::build_data.py failed 
 $PY attention.py || echo "::warning::attention.py (Wikipedia, display only) failed - previous file kept"
 ( cd pipeline && $PY hero_png.py >/dev/null ) || echo "::warning::hero_png.py failed - previous PNG kept"
 ( cd pipeline && $PY forward_band.py >/dev/null ) || echo "::warning::forward_band.py (display only) failed - previous file kept"
+( cd pipeline && $PY scorecard.py ) || echo "::warning::scorecard.py failed - previous scorecard kept"
 for f in history model fan fan2 meta mstr ohlc_daily health hero_bg; do test -s "data/$f.json" || { echo "::error::data/$f.json missing"; exit 1; }; done
 echo "update done"

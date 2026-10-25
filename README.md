@@ -17,12 +17,17 @@ A live Bitcoin cycle chart built from raw public data:
 - `data/*.json`: daily files rebuilt by `build_data.py` from `pipeline/`.
 - `pipeline/`: data fetch and models (CoinMetrics Community, CoinGecko, Yahoo Finance, Google Trends, Strategy.com / SEC EDGAR). If a source fails, the last cached copy in `pipeline/cache/` is used.
 - `pipeline/frozen/`, `pipeline/v2_spec.py`, `pipeline/robust.py`: pre-registered, hash-checked. They are never edited; any change becomes a new version.
-- `pipeline/v3/`: v3 research candidate (dampened cycle band + calibrated fan width), pre-registered in `PREREG.md`. It is not used on the site. Some research scripts and plots listed in `v3_hashes.txt` are not published in this repository.
+- `pipeline/frozen/`: locked model versions. v2 (`v2_freeze.json`, the frozen fan) and v3 (`v3/`: pre-registered rules, tests, and `FREEZE.md` with what v3 changes and the rule for promoting it over v2), both frozen 2026-10-25. `FROZEN_SHA256SUMS` lists every frozen file; the workflow fails if any of them changes. The list is timestamped in the Bitcoin blockchain with OpenTimestamps (`pipeline/timestamps/`). Two v3 research files are not published; their hashes are in `v3/withheld_sha256.txt`.
+- `pipeline/scorecard.py` and `data/scorecard.csv`: the public forward scorecard. Each daily run logs the v2 and v3 forecasts for 30, 90 and 365 days ahead and grades them when they mature (inside the 50% band, inside the 90% band, log score). Rows are only appended, once per daily close.
 - `.github/workflows/update-and-deploy.yml`: runs daily at about 00:30 UTC (or manually). It rebuilds the data, commits it if anything changed, and deploys to GitHub Pages.
 
 Run it locally: `pip install -r requirements.txt && bash scripts/update.sh && python -m http.server`.
 
 See `docs/ARCHITECTURE.md`, `docs/ROBUSTNESS.md` and `pipeline/SOURCES.md`.
+
+## How this was built
+
+Designed and directed by Euthymia686, built with help from an AI assistant. The model rules, data sources and code are all public in this repo, locked versions are hash-checked, and every forecast is graded on the public scorecard, so you can judge the work by its track record rather than by who or what wrote it.
 
 ## License
 

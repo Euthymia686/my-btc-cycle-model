@@ -27,6 +27,13 @@
     levels: "Today's value of the trend line, and the realized price: the average price at which all coins last moved, a rough \"average holder cost\".",
     health: "A running check that the model still works on new data. The fan from the freeze date is kept unchanged, and over time about 90% of daily prices should land inside its 90% band. \"OK\" means the frozen files have not been altered.",
     fresh: "Which numbers change every second, and which only update daily or monthly, with the date of the latest data for each.",
+    scorecard: "A public report card. Every day the site writes down what each model version expects for the price 30, 90 and 365 days later, as a range. When that day arrives, the forecast is graded. Nothing is deleted or edited afterwards, so anyone can check the record in the raw file.",
+    sc_live: "Only forecasts made after the freeze on 2026-10-25, graded on prices that did not exist when they were made. This is the honest test. It starts empty and fills in as forecasts mature.",
+    sc_backtest: "How the same rules would have done on past data, by pretending to stand at earlier dates and checking against what happened next. Useful, but easier to pass than the live test, because the rules were designed while looking at that history.",
+    sc_weak: "Known ways the model has been wrong or could fail. Listed up front so the results can be read fairly.",
+    sc_cov: "The share of matured forecasts where the actual price landed inside the band. A good 50% band holds the price about half the time, a good 90% band about 90% of the time. Much more means the band is too wide; much less means too narrow.",
+    sc_log: "A single grade for each forecast that rewards ranges that are narrow but still contain the price, and punishes misses. Higher is better. It only means something when comparing v2 with v3 on the same days.",
+    v3: "v3 is the same fan as v2 with narrower bands (rescaled from the fan's own past errors), frozen on 2026-10-25 and tested side by side with v2. It replaces v2 only if it wins on live data under a rule set in advance.",
     method: "The full technical details: data sources, formulas, how the score and the fan are built, and how they were tested."
   };
   const pop = document.createElement("div"); pop.id = "tipPop"; pop.setAttribute("role", "tooltip"); pop.hidden = true;

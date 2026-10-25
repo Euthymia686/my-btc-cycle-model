@@ -1,0 +1,49 @@
+{
+ "source": "walk-forward backtest of the v3 fan width rule (PREREG.md section B), run 2026-10-25 before the freeze; copied from the research output fan_results.json (that file is not published because it also holds private notes)",
+ "freezes": "every 1 Jan and 1 Jul, 2017-2025; each freeze scored on every later day up to about 3 years ahead",
+ "pooled_2017on": {
+  "in90_raw": 0.994,
+  "in50_raw": 0.702,
+  "in90_cal": 0.986,
+  "in50_cal": 0.558,
+  "days": 19113
+ },
+ "by_horizon": {
+  "0-1y": {
+   "in90_raw": 0.982,
+   "in50_raw": 0.608,
+   "in90_cal": 0.959,
+   "in50_cal": 0.486,
+   "days": 6570
+  },
+  "1-2y": {
+   "in90_raw": 1.0,
+   "in50_raw": 0.715,
+   "in90_cal": 1.0,
+   "in50_cal": 0.549,
+   "days": 6251
+  },
+  "2-3y": {
+   "in90_raw": 1.0,
+   "in50_raw": 0.787,
+   "in90_cal": 1.0,
+   "in50_cal": 0.642,
+   "days": 6292
+  }
+ },
+ "worst_freeze_in90": {
+  "raw": 0.967,
+  "cal": 0.931,
+  "cal_worst_at": "2020-07-01"
+ },
+ "v3_tails": {
+  "above95": 0.009,
+  "below5": 0.005
+ },
+ "scales_now": {
+  "s90": 0.712,
+  "s50": 0.66,
+  "pairs": 23713
+ },
+ "keys": "in90_raw / in50_raw = v2 fan (unscaled); in90_cal / in50_cal = v3 fan (scaled); days = scored (freeze, day) pairs"
+}
