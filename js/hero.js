@@ -114,7 +114,7 @@
       if (!pr.point || pr.time == null || pr.point.x < 0 || pr.point.y < 0) { tip.style.display = "none"; return; }
       const t = pr.time, d = pr.seriesData.get(histA); let h = "";
       if (t > histEnd && tipLive) { const L = tipLive, lbl = L.via === "close" ? "last close" : L.via === "stale" ? "stale" : "now";
-        if (t < histEnd + 14 * DAY) h = `<b>${lbl} ${usd(L.p, 0)}</b><br>score <b style="color:${heatColor(L.s)}">${f(L.s, 1)} ${L.z}</b>`;
+        if (t <= histEnd + 14 * DAY) h = `<b>${lbl} ${usd(L.p, 0)}</b><br>score <b style="color:${heatColor(L.s)}">${f(L.s, 1)} ${L.z}</b>`;
         else if (fanCache) { const r = fanCache.rows.find((x) => x.t === t); if (r) h = `${fmtD(t)}<br>fan median ${usdK(r.q.q50)}<br>5-95%: ${usdK(r.q.q5)} - ${usdK(r.q.q95)}`; } }
       else { const v = d && d.value != null ? d.value : vByW.get(t), s = sByW.get(t);
         if (v != null) h = `week of ${fmtD(t)}<br><b>${usd(v, 0)}</b> close<br>score <b style="color:${heatColor(s)}">${s == null ? "n/a" : f(s, 1) + " " + zoneOf(s)}</b>`; }
