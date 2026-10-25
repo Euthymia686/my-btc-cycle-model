@@ -12,7 +12,7 @@
   }
 
   function init(ctx) {
-    const { LC, BM, M, H, MS, FAN2, HEALTH, BG, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C } = ctx;
+    const { LC, BM, M, H, MS, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C } = ctx;
     const P = FAN2.params, g0 = BM.tsOf(M.genesis), mobile = window.matchMedia("(max-width: 700px)").matches;
     const weekStart = (t) => { const d = new Date(t * 1000).getUTCDay(); return t - ((d + 6) % 7) * DAY; };
     const endT = BM.tsOf(FAN2.end);   // public display horizon of the projection fan (Dec 31 2028)
@@ -49,7 +49,7 @@
     }
 
     /* ===== (A) combined chart (light theme): heat-coloured weekly price over trend corridor / cycle band / fan ===== */
-    const KA = { corr: "#f1f2f5", band: "#dde8fb", fanO: "#efe9fc", fanI: "#ddd0f8", bg: "#ffffff" };
+    const KA = { corr: "#f1f2f5", band: "#dde8fb", fanO: "#f7f4fd", fanI: "#efe9fb", bg: "#ffffff" };   // fan kept faint: it sits behind the forward cycle path
     const oA = opts(); oA.layout = { ...oA.layout, background: { type: "solid", color: "#ffffff" }, textColor: "#4b5563" };
     oA.grid = { vertLines: { color: "#eef0f3" }, horzLines: { color: "#eef0f3" } }; oA.rightPriceScale = { borderColor: "#d1d5db" }; oA.timeScale = { ...oA.timeScale, borderColor: "#d1d5db" };
     const A = LC.createChart($("heroC"), oA);
@@ -60,12 +60,14 @@
     const bgT = BG ? BG.t : [];
     const gA = { ceil: AR(KA.corr), bandHi: AR(KA.band), bandLo: AR(KA.corr), floorM: AR(KA.bg) };
     const fA = { q95: AR(KA.fanO), q75: AR(KA.fanI), q25: AR(KA.fanO), q5: AR(KA.bg) };
-    const lA = { ceil: LN("#9ca3af", 1, 1), mid: LN("#6b7280", 1, 2), floor: LN("#d97706", 1.5, 0), bandMd: LN("rgba(59,130,246,.55)", 1, 0), q50: LN("#6d28d9", 1, 1) };
+    const lA = { ceil: LN("#9ca3af", 1, 1), mid: LN("#6b7280", 1, 2), floor: LN("#d97706", 1.5, 0), bandMd: LN("rgba(59,130,246,.55)", 1, 0), q50: LN("rgba(109,40,217,.45)", 1, 1) };
     if (BG) {   // floor mask only covers history, so the fan can show below the floor
       const D = (k, from) => bgT.map((t, i) => ({ time: t, value: BG[k][i] })).filter((x) => x.value != null && (!from || x.time >= from));
       const nowW = weekStart(BM.utcDay(Date.now())); gA.ceil.setData(D("ceil")); gA.floorM.setData(D("floor").filter((x) => x.time <= nowW)); lA.ceil.setData(D("ceil")); lA.mid.setData(D("mid")); lA.floor.setData(D("floor"));
-      gA.bandHi.setData(D("band_hi")); lA.bandMd.setData(D("band_md"));
-      gA.bandLo.setData(D("band_lo"));
+      // the past cycle band stops at this week; from here on the dampened forward path (below) takes over
+      const past = (k) => D(k).filter((x) => x.time <= nowW);
+      gA.bandHi.setData(past("band_hi")); lA.bandMd.setData(past("band_md"));
+      gA.bandLo.setData(past("band_lo"));
     }
     function setBandsA(fc) {
       for (const k of ["q25", "q75", "q95"]) fA[k].setData(fc.rows.map((r) => ({ time: r.t, value: r.q[k] })));
@@ -105,12 +107,37 @@
       });
     } }) };
     histA.attachPrimitive(tail); window.__app.heroChart = A;
+    /* Forward cycle path (display only): dampened cycle band from data/hero_fwd.json, drawn from this week to the end of the fan,
+       same light-blue band + middle line as the past band, over the (faint) fan. The first 8 weeks blend in log space from the
+       past band's value to the dampened one, so the two meet without a step at "now". */
+    const fwd = { pts: [], attached(p) { this.chart = p.chart; this.series = p.series; this.req = p.requestUpdate; }, detached() {}, updateAllViews() {}, paneViews() { return [fwdView]; } };
+    if (FWD && BG) {
+      const nowW = weekStart(BM.utcDay(Date.now())), bi = new Map(BG.t.map((t, i) => [t, i])), BLEND = 8;
+      const mix = (b, d, w) => b == null ? d : Math.exp((1 - w) * Math.log(b) + w * Math.log(d));
+      FWD.t.forEach((t, i) => { if (t < nowW || t > endT + 6 * DAY || FWD.md[i] == null) return; const j = bi.get(t), w = Math.min(1, (t - nowW) / (7 * DAY) / BLEND);
+        fwd.pts.push({ t, lo: mix(j != null ? BG.band_lo[j] : null, FWD.lo[i], w), md: mix(j != null ? BG.band_md[j] : null, FWD.md[i], w), hi: mix(j != null ? BG.band_hi[j] : null, FWD.hi[i], w) }); });
+      window.__app.fwd = { n: fwd.pts.length, first: fwd.pts[0], rho: FWD.rho };
+    }
+    const fwdView = { zOrder: () => "normal", renderer: () => ({ draw(target) {
+      if (fwd.pts.length < 2 || !fwd.series) return;
+      const ts = fwd.chart.timeScale(), sr = fwd.series;
+      const P = fwd.pts.map((q) => ({ x: ts.timeToCoordinate(q.t), lo: sr.priceToCoordinate(q.lo), md: sr.priceToCoordinate(q.md), hi: sr.priceToCoordinate(q.hi) })).filter((q) => q.x != null && q.lo != null && q.hi != null);
+      if (P.length < 2) return;
+      target.useMediaCoordinateSpace(({ context: g }) => {
+        g.save(); g.beginPath(); P.forEach((q, i) => i ? g.lineTo(q.x, q.hi) : g.moveTo(q.x, q.hi)); for (let i = P.length - 1; i >= 0; i--) g.lineTo(P[i].x, P[i].lo); g.closePath();
+        g.fillStyle = "rgba(214,227,250,0.85)"; g.fill();
+        g.beginPath(); P.forEach((q, i) => i ? g.lineTo(q.x, q.md) : g.moveTo(q.x, q.md)); g.strokeStyle = "rgba(59,130,246,.55)"; g.lineWidth = 1; g.stroke(); g.restore();
+      });
+    } }) };
+    fA.q5.attachPrimitive(fwd);   // after the fan areas, before the trend/floor/ceiling lines (same layering as the past band)
     const liveA = histA.createPriceLine({ price: 1, color: "#3b82f6", lineWidth: 1, lineStyle: 3, lineVisible: false, axisLabelVisible: true, axisLabelColor: "#3b82f6", axisLabelTextColor: "#ffffff", title: "" });
     halvingLines(A, $("heroC"));
     A.timeScale().fitContent();
     $("heroCLegend").innerHTML = `<span class="scale"><b>Line colour = Cycle Heat Score</b> <i class="grad"></i><span class="ticks"><span>0 cool</span><span>40</span><span>${C.score_warm} warm</span><span>${C.score_hot}+ hot</span></span></span>`
       + `<span><i style="background:#d1d5db"></i>trend corridor 5-95%</span><span><i style="background:#6b7280"></i>trend (dashed) / ceiling (dotted)</span><span><i style="background:#d97706"></i>floor</span>`
-      + `<span><i style="background:#93c5fd"></i>cycle band (prior 2 cycles)</span><span><i style="background:${KA.fanI}"></i>projection fan 25-75% / 5-95%, median dotted</span>`
+      + `<span><i style="background:#93c5fd"></i>cycle band (prior 2 cycles)</span>`
+      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Display only, not in the score."><i style="background:#93c5fd"></i>cycle path (past cycles, dampened) — shape guide</span>` : "")
+      + `<span><i style="background:#ddd0f8"></i>probability range (fan) 25-75% / 5-95%, median dotted</span>`
       + `<span><i style="background:#9ca3af"></i>halvings</span>`;
     document.querySelector("#heroCLegend .grad").style.background = `linear-gradient(90deg, ${[0, 20, 30, 40, C.score_warm, C.score_hot, 90].map((s) => heatColor(s) + " " + s + "%").join(",")})`;
 
@@ -139,7 +166,7 @@
     renderHealth(ctx);
 
     let lastFan = 0, firstRender = true, firstPlace = true;
-    function update(p, now, calc, v2, mnav) {
+    function update(p, now, calc, v2, mnav, via) {
       const wk = weekStart(BM.utcDay(now)), col = heatColor(calc.score);
       if (firstRender || now - lastFan > (mobile ? 15000 : 5000)) { const fc = computeFan(p, now); setBandsA(fc); lastFan = now; if (firstRender) fitA(); firstRender = false; }
       // week rolled over while open: move completed weeks from the tail into the weekly history
@@ -149,9 +176,9 @@
       const pts = [{ T: histEnd + 7 * DAY, v: histEndV ?? p, c: col }];
       for (let i = 0; i < cT.length; i++) if (cT[i] >= wk && cT[i] < BM.utcDay(now)) { const s = scoreByT.get(cT[i]); pts.push({ T: cT[i] + DAY, v: closes[i], c: s != null ? heatColor(s) : col }); }
       pts.push({ T: now / 1000, v: p, c: col });
-      tail.pts = pts; tail.col = col; tail.label = `now ${usdK(p)} · ${f(calc.score, 0)} ${calc.scoreZone}`; tail.req && tail.req();
+      tail.pts = pts; tail.col = !via || via === "live" ? col : "#9ca3af"; tail.label = `${via === "close" ? "last close" : via === "stale" ? "stale" : "now"} ${usdK(p)} · ${f(calc.score, 0)} ${calc.scoreZone}`; tail.req && tail.req();
       window.__app.tail = { x: null, p, n: pts.length };
-      liveA.applyOptions({ price: p });
+      { const live = !via || via === "live", c = live ? "#3b82f6" : "#9ca3af"; liveA.applyOptions({ price: p, color: c, axisLabelColor: c }); }
       { const qe = fanCache.qe; $("heroAlt").textContent = `Projection fan at its end (Dec 31 2028), recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }
       const today = BM.utcDay(now);
       if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }

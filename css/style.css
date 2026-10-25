@@ -73,3 +73,7 @@ button.mini{font-size:11px;padding:1px 8px;margin-left:6px;vertical-align:middle
 .tile .note{display:block;font-size:10.5px;color:var(--mute);margin-top:4px;font-style:italic}
 .tile .spark{display:block;width:100%;height:34px;margin-top:6px;color:#c084fc}.tile .sparkax{display:flex;justify-content:space-between;font-size:10px;color:var(--mute)}
 @media (max-width:520px){.tile#t_cycle_day{grid-column:1/-1}}
+.diag{flex:1 1 100%;font-size:10.5px;color:var(--mute);text-align:right;line-height:1.35}
+.px .pxlbl{font-size:13px;font-weight:500}
+.pxat .mode{font-weight:600}.pxat .m-stream{color:#16a34a}.pxat .m-poll{color:#2563eb}.pxat .m-stale{color:#f59e0b}.pxat .m-close{color:var(--mute)}
+@media (max-width:520px){.diag{text-align:left}}

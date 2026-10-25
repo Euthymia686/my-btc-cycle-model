@@ -13,15 +13,20 @@
   const load = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
 
   const [M, H, FAN2, HEALTH, MS, META] = await Promise.all(["model", "history", "fan2", "health", "mstr", "meta"].map(load));
-  const [BG, W] = await Promise.all([load("hero_bg").catch(() => null), load("wiki").catch(() => null)]);   // optional files
-  $("built").textContent = `Daily data files built ${META.built_utc.replace("T", " ").slice(0, 16)} UTC (on-chain as of ${M.last_daily}). Live prices and blocks stream directly from the exchanges and mempool.space into your browser.`;
+  const [BG, W, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("wiki").catch(() => null), load("hero_fwd").catch(() => null)]);   // optional files
+  $("built").textContent = `Daily data files built ${META.built_utc.replace("T", " ").slice(0, 16)} UTC (on-chain as of ${M.last_daily}). Live prices and blocks come directly from the exchanges and mempool.space into your browser (WebSocket streaming, HTTPS polling as fallback).`;
 
   /* ---------- live feeds (start connecting right away, in parallel with the optional gap-fill below) ---------- */
   let lastTick = null, prevShown = null;
   const feeds = Feeds.SOURCES.map((s) => new Feeds.Feed(s, () => {}));
+  const pollers = Feeds.POLL_SOURCES.map((s) => new Feeds.Poller(s)), allSrc = feeds.concat(pollers), t0 = Date.now();
+  let polling = false;   // polling mode: fewer than 2 exchange WebSockets delivering prices (checked every second in tick)
+  function setPolling() { const ok = feeds.filter((x) => x.wsFresh()).length;
+    const want = ok < 2 && (Date.now() - t0 > Feeds.WS_GRACE_MS || feeds.every((x) => x.diag().ws === "blocked"));
+    if (want !== polling) { polling = want; pollers.forEach((x) => x.setActive(want)); } }
   const blocks = new Feeds.Blocks((b, isNew) => { if (isNew) flash($("height")); });
-  window.__app.feeds = feeds; window.__app.wakes = [];
-  Feeds.onWake((why) => { window.__app.wakes.push(why); feeds.forEach((x) => x.wake()); blocks.wake(); setTimeout(() => { try { tick(true); } catch (e) {} }, 50); });
+  window.__app.feeds = feeds; window.__app.pollers = pollers; window.__app.blocks = blocks; window.__app.wakes = [];
+  Feeds.onWake((why) => { window.__app.wakes.push(why); allSrc.forEach((x) => x.wake()); blocks.wake(); setTimeout(() => { try { tick(true); } catch (e) {} }, 50); });
 
   /* ---------- daily history: CoinMetrics closes, gap-filled from Coinbase daily candles if the files are a few days old ---------- */
   const closes = H.close.slice(), cT = H.t.slice();
@@ -38,17 +43,24 @@
 
   /* index price: median of feeds with a tick < 15 s old, outliers (> 0.5% from the others) dropped. Never presents an old price as live. */
   function indexPrice() {
-    const c = Feeds.combine(feeds);
-    if (c) { lastTick = { p: c.p, at: c.at, used: c.used.map((x) => x.src.name), dropped: c.dropped.map((x) => x.src.name), disagree: c.disagree }; return { p: c.p, n: c.used.length, via: "live" }; }
+    const c = Feeds.combine(allSrc);
+    if (c) { lastTick = { p: c.p, at: c.at, used: c.used.map((x) => x.src.name), dropped: c.dropped.map((x) => x.src.name), disagree: c.disagree, streaming: c.streaming }; return { p: c.p, n: c.used.length, via: "live" }; }
     if (lastTick) return { p: lastTick.p, n: 0, via: "stale" };
     return { p: closes[closes.length - 1], n: 0, via: "close" };   // no tick yet: the model runs on the last daily close, the header says so
   }
   const hms = (ms) => new Date(ms).toISOString().slice(11, 19);
+  const diagTxt = (d) => [d.ws ? "WebSocket " + d.ws : null, "REST " + d.rest].filter(Boolean).join(" / ");
   function renderFeeds() {
     const out = new Set(lastTick && priceVia === "live" ? lastTick.dropped : []);
-    $("feeds").innerHTML = feeds.map((x) => { const st = out.has(x.src.name) ? "out" : x.status();
-      return `<span class="feed${st === "stale" || st === "down" || st === "out" ? " off" : ""}" title="${x.src.name}: ${x.via === "rest" ? "REST fallback" : "WebSocket"}, ${x.at ? "last tick " + hms(x.at) + " UTC (" + ago(Date.now() - x.at) + ")" : "waiting"}${st === "out" ? " · not in the index: > 0.5% from the other exchanges" : st === "stale" ? " · not in the index: no tick for > 15 s, reconnecting" : ""}"><span class="dot ${st}"></span>${x.src.name} <b>${x.price ? usd(x.price, 0) : "--"}</b></span>`; }).join("")
-      + `<span class="feed" title="mempool.space blocks"><span class="dot ${blocks.status()}"></span>Blocks <b>${blocks.height ? blocks.height.toLocaleString() : "--"}</b></span>`;
+    const shown = allSrc.filter((x) => feeds.includes(x) || x.active || x.at);
+    $("feeds").innerHTML = shown.map((x) => { const st = out.has(x.src.name) ? "out" : x.status(), d = x.diag();
+      return `<span class="feed${st === "stale" || st === "down" || st === "out" ? " off" : ""}" title="${x.src.name}: ${diagTxt(d)}; ${x.at ? "last price " + hms(x.at) + " UTC (" + ago(Date.now() - x.at) + ") via " + (x.via === "ws" ? "WebSocket" : "REST") : "no price yet"}${st === "out" ? " · not in the index: > 0.5% from the others" : st === "stale" ? " · not in the index: no price for > 15 s" : ""}"><span class="dot ${st}"></span>${x.src.name} <b>${x.price ? usd(x.price, 0) : "--"}</b></span>`; }).join("")
+      + `<span class="feed" title="Blocks: mempool.space ${diagTxt(blocks.diag())}${blocks.src ? "; last from " + blocks.src : ""}"><span class="dot ${blocks.status()}"></span>Blocks <b>${blocks.height ? blocks.height.toLocaleString() : "--"}</b></span>`;
+    // per-source diagnostic line (also useful when a work network blocks crypto sites)
+    const parts = feeds.map((x) => { const d = x.diag(); return `${x.src.name}: WS ${d.ws}, REST ${d.rest}`; })
+      .concat(pollers.filter((x) => x.active || x.restTries).map((x) => `${x.src.name}: REST ${x.diag().rest}`))
+      .concat([`Blocks: WS ${blocks.diag().ws}, REST ${blocks.diag().rest}`]);
+    $("diag").textContent = "feed check · " + parts.join(" · ");
   }
   function flash(el) { el.style.transition = "none"; el.style.color = "#22c55e"; requestAnimationFrame(() => { el.style.transition = "color 2s"; el.style.color = ""; }); }
 
@@ -69,7 +81,7 @@
   function tile(id, { title, val, zone, heat, desc, kind }) {
     const el = $("t_" + id); if (!el) return; const z = zone || "n/a";
     const upd = kind === "daily" || kind === "monthly" ? `<div class="upd">updated ${kind}, last: ${(desc.match(/\d{4}-\d{2}(-\d{2})?/) || [lastClose()])[0]}</div>`
-      : priceVia === "close" ? `<div class="upd">live feed connecting · showing the last daily close (${lastClose()})</div>`
+      : priceVia === "close" ? `<div class="upd">no live price reachable · showing the last daily close (${lastClose()})</div>`
       : priceVia === "stale" && kind === "live" ? `<div class="upd">price STALE · last tick ${hms(lastTick.at)} UTC, reconnecting</div>` : "";
     if (kind === "live" && priceVia === "close") kind = "daily"; else if (kind === "live" && priceVia === "stale") kind = "stale";
     el.className = "tile z-" + (z === "n/a" ? "na" : z);
@@ -133,13 +145,13 @@
   }
 
   /* ---------- hero charts (js/hero.js) ---------- */
-  const hero = window.Hero.init({ LC, BM, M, H, MS, FAN2, HEALTH, BG, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C });
+  const hero = window.Hero.init({ LC, BM, M, H, MS, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C });
 
   /* ---------- freshness table ---------- */
   function renderFresh(n) {
-    const rows = [["Own index price", priceVia === "live" ? `${badge("live")} median of ${lastTick.used.length}/3 exchanges with a tick < 15 s old (${lastTick.used.join(", ")})${lastTick.dropped.length ? `; ${lastTick.dropped.join(", ")} left out (> 0.5% from the others)` : ""}; last tick ${hms(lastTick.at)} UTC`
-        : priceVia === "stale" ? `${badge("stale")} no exchange tick in the last 15 s; showing the last tick (${hms(lastTick.at)} UTC), reconnecting` : `${badge("daily")} live feeds connecting; the model runs on the last daily close (${lastClose()})`],
-      ["Blocks / halving countdown", `${badge(blocks.status() === "down" ? "daily" : "live")} mempool.space ${blocks.status() === "live" ? "WebSocket" : "REST"}; last block ${blocks.blockTime ? ago(Date.now() - blocks.blockTime * 1000) : "--"}`],
+    const rows = [["Own index price", priceVia === "live" ? `${badge("live")} ${lastTick.streaming ? "streaming (WebSocket)" : "polling HTTPS every 10 s"}: median of ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""} with a price < 15 s old (${lastTick.used.join(", ")})${lastTick.dropped.length ? `; ${lastTick.dropped.join(", ")} left out (> 0.5% from the others)` : ""}; last tick ${hms(lastTick.at)} UTC`
+        : priceVia === "stale" ? `${badge("stale")} no price from any source in the last 15 s; showing the last one (${hms(lastTick.at)} UTC), retrying` : `${badge("daily")} no live source reachable yet; the model runs on the last daily close (${lastClose()})`],
+      ["Blocks / halving countdown", `${badge(blocks.status() === "down" ? "daily" : "live")} ${blocks.src || "mempool.space"} ${blocks.status() === "live" ? "WebSocket" : "REST"}; last block ${blocks.blockTime ? ago(Date.now() - blocks.blockTime * 1000) : "--"}`],
       ["Mayer, 200W MA, trend, Pi Cycle", `${badge("live")} live price as today's close + daily closes to ${isoDay(cT[cT.length - 1])}${gapFilled ? ` (${gapFilled} recent days from Coinbase candles)` : ""}`],
       ["MVRV Z", `${badge("live")} market cap live; ${badge("daily")} realized cap ${M.realized_cap_asof}`],
       ["Address activity", `${badge("daily")} as of ${M.fixed.activity.asof} (on-chain, published daily)`],
@@ -154,23 +166,26 @@
   /* ---------- main tick ---------- */
   let lastFresh = 0;
   function tick(force) {
-    const now = Date.now(), { p, n, via } = indexPrice(); priceVia = n ? "live" : via; try { renderFeeds(); } catch (e) {}
-    if (!p) { $("px").textContent = "connecting..."; return; }
+    const now = Date.now(); setPolling(); const { p, n, via } = indexPrice(); priceVia = n ? "live" : via; try { renderFeeds(); } catch (e) {}
+    if (!p) { $("px").textContent = "--"; return; }
     const sect = (name, fn) => { try { return fn(); } catch (e) { const k = name + ": " + e.message; if (!window.__app.errors.includes(k)) { window.__app.errors.push(k); console.error(name, e); } } };
     // UTC day rolled over while the page was open: yesterday's last index becomes a provisional daily close
     const today = BM.utcDay(now);
     if (today - DAY > cT[cT.length - 1]) { cT.push(today - DAY); closes.push(prevShown || p); todayOpen = p; }
     calc = BM.compute(M, closes, p, now); window.__app.ticks++; window.__app.last = { price: p, sources: n, via: priceVia, score: calc.score, t: now, tickAt: lastTick && lastTick.at, used: lastTick && lastTick.used, dropped: lastTick && lastTick.dropped };
     const px = $("px"); px.classList.remove("up", "down"); px.classList.toggle("fallback", priceVia === "close"); px.classList.toggle("stale", priceVia === "stale");
-    if (priceVia === "close") px.textContent = "connecting...";
+    const closeLbl = new Date(cT[cT.length - 1] * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+    if (priceVia === "close") px.innerHTML = `<span class="pxlbl">last close</span> ${usd(p, 0)} <span class="pxlbl">(${closeLbl})</span>`;
     else { px.innerHTML = usd(p, 0) + (priceVia === "stale" ? ` <span class="badge stale">STALE</span>` : ""); if (priceVia === "live" && prevShown && p !== prevShown) px.classList.add(p > prevShown ? "up" : "down"); }
     if (priceVia === "live") prevShown = p;
     const open = todayOpen;
-    if (priceVia === "close") $("chg").innerHTML = `<span class="small">live feeds connecting · model shown on the last daily close ${usd(p, 0)} (${lastClose()})</span>`;
-    else if (priceVia === "stale") $("chg").innerHTML = `<span class="small">last exchange tick ${ago(now - lastTick.at)} · reconnecting</span>`;
+    const tried = now - t0 > 12000, wsBlocked = feeds.every((x) => x.diag().ws === "blocked"), restBlocked = allSrc.every((x) => x.restErr && !x.at);
+    if (priceVia === "close") $("chg").innerHTML = `<span class="small">${!tried ? "not live yet · trying exchange WebSockets, then HTTPS polling" : `not live · ${wsBlocked ? "WebSockets blocked" : "no WebSocket price"}${restBlocked ? ", HTTPS price APIs blocked too (network filter?)" : ", polling HTTPS"}`} · model shown on the last daily close</span>`;
+    else if (priceVia === "stale") $("chg").innerHTML = `<span class="small">STALE · last price ${ago(now - lastTick.at)} · retrying</span>`;
     else if (open) { const ch = p / open - 1; $("chg").innerHTML = `<span style="color:${ch >= 0 ? "#26a69a" : "#ef5350"}">${ch >= 0 ? "+" : ""}${(ch * 100).toFixed(2)}%</span> <span class="small">vs 00:00 UTC open ${usd(open, 0)}</span>`; }
     else $("chg").innerHTML = "&nbsp;";
-    $("pxAt").textContent = lastTick ? `last tick ${hms(lastTick.at)} UTC · ${ago(now - lastTick.at)}${priceVia === "live" ? ` · ${lastTick.used.length} of 3 exchanges` + (lastTick.dropped.length ? ` (${lastTick.dropped.join(", ")} > 0.5% off, left out)` : "") + (lastTick.disagree ? " · exchanges disagree" : "") : ""}` : "waiting for the first exchange tick";
+    const mode = priceVia === "live" ? (lastTick.streaming ? "live (streaming)" : `live (polling every ${Feeds.POLL_MS / 1000}s)`) : priceVia === "stale" ? "STALE" : "not live";
+    $("pxAt").innerHTML = `<b class="mode m-${priceVia === "live" ? (lastTick.streaming ? "stream" : "poll") : priceVia}">${mode}</b> · ` + (lastTick ? `last tick ${hms(lastTick.at)} UTC · ${ago(now - lastTick.at)}${priceVia === "live" ? ` · ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""}` + (lastTick.dropped.length ? ` (${lastTick.dropped.join(", ")} > 0.5% off, left out)` : "") + (lastTick.disagree ? " · sources disagree" : "") : ""}` : "no live price yet");
     sect("score", () => {
     $("score").textContent = f(calc.score, 1); $("score").className = "score z-" + calc.scoreZone;
     $("scoreZone").textContent = calc.scoreZone; $("scoreZone").className = "zone z-" + calc.scoreZone;
@@ -182,9 +197,9 @@
     const ath = Math.max(...closes, p), dd = p / ath - 1; $("dd").textContent = `${(dd * 100).toFixed(1)}% (peak ${usd(ath, 0)})`;
     });
     const mnav = sect("tiles", () => renderTiles(calc));
-    sect("hero", () => { const v2 = BM.computeV2(M, calc); window.__app.last.v2 = v2.score; hero.update(p, now, calc, v2, mnav); });
+    sect("hero", () => { const v2 = BM.computeV2(M, calc); window.__app.last.v2 = v2.score; hero.update(p, now, calc, v2, mnav, priceVia); });
     if (force || now - lastFresh > 5000) { sect("freshness", renderFresh); lastFresh = now; }
-    document.title = `${priceVia === "close" ? "connecting" : usd(p, 0) + (priceVia === "stale" ? " (stale)" : "")} · score ${f(calc.score, 0)} · My BTC Cycle Model`;
+    document.title = `${priceVia === "close" ? "last close " + usd(p, 0) : usd(p, 0) + (priceVia === "stale" ? " (stale)" : "")} · score ${f(calc.score, 0)} · My BTC Cycle Model`;
   }
   tick(true);
   setInterval(() => { try { tick(); } catch (e) { window.__app.errors.push("tick: " + e.message); } }, 1000);
