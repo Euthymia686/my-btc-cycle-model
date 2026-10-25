@@ -1,4 +1,5 @@
-"""Display-only attention signal: English Wikipedia daily pageviews of the "Bitcoin" article.
+"""Attention data: English Wikipedia daily pageviews of the "Bitcoin" article. Not shown on the site since 2026-10-25
+(superseded there by the crowd euphoria gauge); still collected as a candidate for the yearly signal review.
 Source: Wikimedia REST pageviews API (per-article, en.wikipedia, all-access, agent=user, daily), data from 2015-07-01.
 Heat = percentile of the 30-day average vs the prior 8 years of 30-day averages (prior data only, so it is walk-forward).
 NOT an input of the Cycle Heat Score (v1/v2 are unchanged and keep using Google Trends). Writes data/wiki.json.

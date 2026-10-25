@@ -13,7 +13,7 @@
   const load = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
 
   const [M, H, FAN2, HEALTH, META] = await Promise.all(["model", "history", "fan2", "health", "meta"].map(load));
-  const [BG, W, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("wiki").catch(() => null), load("hero_fwd").catch(() => null)]);
+  const [BG, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("hero_fwd").catch(() => null)]);
   const CR = await load("crowd").catch(() => null);   // display-only crowd euphoria gauge (optional file)   // optional files
   $("built").textContent = `Daily data files built ${META.built_utc.replace("T", " ").slice(0, 16)} UTC (on-chain as of ${M.last_daily}). Live prices and blocks come directly from the exchanges and mempool.space into your browser (WebSocket streaming, HTTPS polling as fallback).`;
 
@@ -94,7 +94,7 @@
   let calc = null;
 
   /* ---------- tiles ---------- */
-  const TILE_ORDER = ["cycle_day", "mayer", "p200w", "trend_mult", "mvrv_z", "pi_ratio", "wiki", "crowd", "activity", "levels"];
+  const TILE_ORDER = ["cycle_day", "mayer", "p200w", "trend_mult", "mvrv_z", "pi_ratio", "crowd", "activity", "levels"];
   $("tiles").innerHTML = TILE_ORDER.map((s) => `<div class="tile" id="t_${s}"></div>`).join("");
   const badge = (k) => `<span class="badge ${k}">${k.toUpperCase()}</span>`;
   let priceVia = "live";
@@ -113,7 +113,7 @@
     const el = $("t_" + id); if (!el) return; el.className = "tile z-na";
     el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)}</span><span class="zn">n/a</span></div><div class="val pending">not available right now</div><div class="upd">updated daily, last: ${M.last_daily}</div>`;
     window.__app.errors.push("tile " + id + ": " + (e && e.message)); }
-  const TITLES = { cycle_day: "Cycle timing", mayer: "Price / 200-day avg", p200w: "Price / 200-week avg", trend_mult: "Price / long-term trend", mvrv_z: "Market value vs holder cost", pi_ratio: "Pi Cycle top ratio", wiki: "Wikipedia attention", crowd: "Crowd euphoria", activity: "Network activity", levels: "Trend line & realized price" };
+  const TITLES = { cycle_day: "Cycle timing", mayer: "Price / 200-day avg", p200w: "Price / 200-week avg", trend_mult: "Price / long-term trend", mvrv_z: "Market value vs holder cost", pi_ratio: "Pi Cycle top ratio", crowd: "Crowd euphoria", activity: "Network activity", levels: "Trend line & realized price" };
   for (const id of Object.keys(TITLES)) { const el = $("t_" + id); if (el) { el.className = "tile z-na"; el.innerHTML = `<div class="t"><span>${TITLES[id]} ${Explain.i(id)}</span></div><div class="val pending">loading...</div>`; } }
   function renderTiles(c) {
     const H_ = c.heat, Z = c.zones, T = c.thr, hotP = (s, base) => T[s] ? ` (hot &asymp; ${usdK(T[s].hot * base)})` : "";
@@ -126,9 +126,6 @@
     try { tile("mvrv_z", { title: TITLES.mvrv_z, kind: "live", val: f(c.vals.mvrv_z), zone: Z.mvrv_z, heat: H_.mvrv_z, desc: `${z("mvrv_z")} &middot; warm &ge; ${f(T.mvrv_z.warm)} &middot; hot &ge; ${f(T.mvrv_z.hot)} (&asymp; ${usdK(zHotP)}) &middot; MVRV Z-score: market value live, holder cost (realized cap) daily, ${M.realized_cap_asof}` }); } catch (e) { tileFailed("mvrv_z", TITLES["mvrv_z"], e); }
     try { tile("pi_ratio", { title: TITLES.pi_ratio, kind: "live", val: f(c.vals.pi_ratio, 3), zone: Z.pi_ratio, heat: H_.pi_ratio, desc: `${z("pi_ratio")} &middot; warm &ge; ${f(T.pi_ratio.warm, 3)} &middot; hot &ge; ${f(T.pi_ratio.hot, 3)} &middot; 1.00 = the 111-day avg crossing 2&times; the 350-day avg` }); } catch (e) { tileFailed("pi_ratio", TITLES["pi_ratio"], e); }
     const ac = M.fixed.activity;
-    try { if (!W) throw new Error("data/wiki.json not available"); const wz = BM.zone(W.heat, 80, 65);
-      tile("wiki", { title: TITLES.wiki, kind: "daily", val: `${Math.round(W.ma30).toLocaleString("en-US")} <span class="sm">views/day (30-day avg)</span>`, zone: wz, heat: W.heat,
-        desc: `heat ${f(W.heat, 0)} = percentile vs the prior 8 years &middot; English Wikipedia "Bitcoin" article, as of ${W.asof}${sparkline()}<span class="note">display only: not in the Cycle Heat Score, which still uses Google Trends (${(M.fixed.trends.month || "").slice(0, 7)}, heat ${f(M.fixed.trends.heat, 0)}). Zones 80/65/40, not calibrated.</span>` }); } catch (e) { tileFailed("wiki", TITLES["wiki"], e); }
     try { if (!CR || CR.gauge == null) throw new Error("data/crowd.json not available");
       const czCls = { calm: "cool", normal: "neutral", excited: "warm", euphoric: "hot" }[CR.zone] || "n/a", fu = CR.funding || {}, fg = CR.fng || {};
       tile("crowd", { title: TITLES.crowd, kind: "daily", val: `${f(CR.gauge, 0)} <span class="sm">/ 100 &middot; ${CR.zone}</span>`, zone: czCls, zlabel: CR.zone, heat: CR.gauge,
@@ -147,18 +144,7 @@
     const y75 = (h - 2 - 0.75 * (h - 4)).toFixed(1), yr = new Date((t0 + from * DAY) * 1000).getUTCFullYear();
     return (crowdSVG = `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Crowd euphoria gauge, last 3 years"><line x1="0" x2="${w}" y1="${y75}" y2="${y75}" stroke="#ef5350" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" opacity=".6"/><polyline fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" points="${pts.join(" ")}"/></svg><span class="sparkax"><span>${yr}</span><span>dashed = 75</span><span>${CR.asof.slice(0, 7)}</span></span>`);
   }
-  /* Wikipedia 30-day average, last 3 years, as an inline SVG sparkline (log scale) */
-  let sparkSVG = null;
-  function sparkline() {
-    if (sparkSVG != null) return sparkSVG;
-    const t0 = BM.tsOf(W.t0), n = W.ma30_daily.length, from = Math.max(0, n - 3 * 365), pts = [];
-    for (let i = from; i < n; i++) if (W.ma30_daily[i] > 0) pts.push([i, Math.log10(W.ma30_daily[i])]);
-    if (pts.length < 2) return (sparkSVG = "");
-    const lo = Math.min(...pts.map((q) => q[1])), hi = Math.max(...pts.map((q) => q[1])), w = 220, h = 34;
-    const xy = pts.map(([i, v]) => `${((i - from) / (n - 1 - from) * w).toFixed(1)},${(h - 2 - (v - lo) / (hi - lo || 1) * (h - 4)).toFixed(1)}`).join(" ");
-    const yr = (k) => new Date((t0 + k * DAY) * 1000).getUTCFullYear();
-    return (sparkSVG = `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Wikipedia views, 30-day average, last 3 years"><polyline fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" points="${xy}"/></svg><span class="sparkax"><span>${yr(from)}</span><span>30-day avg, log scale</span><span>${W.asof.slice(0, 7)}</span></span>`);
-  }
+
   /* Cycle timing: everything from the live block height */
   function cycleTiming(c) {
     const lo = Math.min(...C.top_days), hi = Math.max(...C.top_days), now = Date.now(), day = (ms) => new Date(ms).toISOString().slice(0, 10);
@@ -187,7 +173,6 @@
       ["MVRV Z", `${badge("live")} market cap live; ${badge("daily")} realized cap ${M.realized_cap_asof}`],
       ["Address activity", `${badge("daily")} as of ${M.fixed.activity.asof} (on-chain, published daily)`],
       ["Crowd euphoria (display only)", CR ? `${badge("daily")} as of ${CR.asof} (Fear &amp; Greed ${CR.fng && CR.fng.asof}, alternative.me; funding ${CR.funding && CR.funding.asof}, Deribit with OKX backup)` : `${badge("daily")} not available`],
-      ["Wikipedia attention (display only)", W ? `${badge("daily")} as of ${W.asof} (Wikimedia pageviews API, ~1 day lag)` : `${badge("daily")} not available`],
       ["Google search interest (score input)", `${badge("monthly")} ${(M.fixed.trends.month || "").slice(0, 7)} (Google Trends monthly)`],
       ["Score calibration", `past tops ${C.prior_tops.join(", ")}`]];
     $("fresh").innerHTML = rows.map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");

@@ -6,7 +6,8 @@ set -u; cd "$(dirname "$0")/.."; PY=${PY:-python}
 ( cd pipeline && $PY backtest.py >/dev/null ) || echo "::warning::backtest.py failed"
 ( cd pipeline && $PY signals.py >/dev/null ) || echo "::warning::signals.py (2nd pass) failed"
 $PY build_data.py --cycle-dir pipeline || echo "::warning::build_data.py failed - site keeps previous data"
-$PY attention.py || echo "::warning::attention.py (Wikipedia, display only) failed - previous file kept"
+# Wikipedia pageviews: no longer shown on the site; still collected (pipeline/cache, data/wiki.json) for the yearly signal review
+$PY attention.py || echo "::warning::attention.py (Wikipedia pageviews, collected for the yearly review, not shown) failed - previous file kept"
 $PY crowd.py || echo "::warning::crowd.py (crowd euphoria gauge, display only) failed - previous file kept"
 # forward_band.py first: hero_png.py draws its forward cycle path from data/hero_fwd.json
 ( cd pipeline && $PY forward_band.py >/dev/null ) || echo "::warning::forward_band.py (display only) failed - previous file kept"

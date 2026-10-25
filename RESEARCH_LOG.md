@@ -66,6 +66,7 @@ Rules written at 08:24 before any test (`PREREG.md`), results at 08:25 to 08:27 
 - 11:26 (commit 756b74d): fan shading and forward path cut off at the floor line on the chart, for readability.
 - 12:49 (commit 8ecf210): plain-language labels and (i) explainers.
 - 2026-10-25 (commit with the crowd gauge): chart time axis, power-law corridor and dampened forward cycle path extended to the end of 2030 (the cycle path stops where the prior cycles' data ends, late 2030 for now); the locked fan still ends Dec 31 2028, marked by a dashed line. The live-price header block was removed (the live price stays on the chart, with a small status indicator), and the MSTR premium (mNAV) tile was removed from the site (the pipeline still writes `data/mstr.json`). New display-only "Crowd euphoria" tile (`crowd.py`, `data/crowd.json`): Fear & Greed plus annualized BTC perpetual funding. No score, fan or locked file changed.
+- 2026-10-25: Wikipedia attention indicator removed from the site (display only, superseded by the crowd euphoria gauge). Data still collected for the yearly signal review (`attention.py` still writes `pipeline/cache/wiki_bitcoin.json` and `data/wiki.json`; the site no longer loads them).
 
 ## 8. Idea log (candidates for the next yearly review, 2027-10-25)
 

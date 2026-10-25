@@ -116,3 +116,10 @@ table.sc.st{font-size:12px}table.sc.st td,table.sc.st th{padding:2px 8px 2px 0}.
 #tipPop{white-space:pre-line}
 /* boundary of the locked (graded) forecast, Dec 2028 */
 #heroC .vline.lock{border-left:1px dashed rgba(124,58,237,.55)}#heroC .vline.lock span{color:rgba(109,40,217,.85);top:18px}
+
+/* chart header: title left, live status + Reset view right on the same row, subtitle on its own line below */
+.panel.hero h2.herohead{display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:2px}
+.herohead .htitle{flex:1 1 auto;min-width:0}
+.herohead .hctl{display:inline-flex;align-items:center;gap:8px;margin-left:auto;white-space:nowrap}
+.herohead .hctl .livewrap{margin-left:0}
+.herohead .hsub{flex-basis:100%;font-weight:400}
