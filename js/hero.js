@@ -150,11 +150,11 @@
     const liveA = histA.createPriceLine({ price: 1, color: "#3b82f6", lineWidth: 1, lineStyle: 3, lineVisible: false, axisLabelVisible: true, axisLabelColor: "#3b82f6", axisLabelTextColor: "#ffffff", title: "" });
     halvingLines(A, $("heroC"));
     A.timeScale().fitContent();
-    $("heroCLegend").innerHTML = `<span class="scale"><b>Line colour = Cycle Heat Score</b> <i class="grad"></i><span class="ticks"><span>0 cool</span><span>40</span><span>${C.score_warm} warm</span><span>${C.score_hot}+ hot</span></span></span>`
-      + `<span><i style="background:#d1d5db"></i>trend corridor 5-95%</span><span><i style="background:#6b7280"></i>trend (dashed) / ceiling (dotted)</span><span><i style="background:#d97706"></i>floor</span>`
-      + `<span><i style="background:#93c5fd"></i>cycle band (prior 2 cycles)</span>`
-      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Display only, not in the score."><i style="background:#93c5fd"></i>cycle path (past cycles, dampened) — shape guide</span>` : "")
-      + `<span><i style="background:#ddd0f8"></i>probability range (fan) 25-75% / 5-95%, median dotted</span>`
+    $("heroCLegend").innerHTML = `<span class="scale"><b>Line color = Cycle Heat Score</b> <i class="grad"></i><span class="ticks"><span>0 cool</span><span>40</span><span>${C.score_warm} warm</span><span>${C.score_hot}+ hot</span></span></span>`
+      + `<span><i style="background:#d1d5db"></i>trend corridor</span><span><i style="background:#6b7280"></i>trend (dashed) / ceiling (dotted)</span><span><i style="background:#d97706"></i>floor</span>`
+      + `<span><i style="background:#93c5fd"></i>past cycle band (prior 2 cycles)</span>`
+      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Display only, not in the score."><i style="background:#93c5fd"></i>cycle path ahead (past cycles, scaled down): shape guide only</span>` : "")
+      + `<span><i style="background:#ddd0f8"></i>range of outcomes (fan): middle 50% / 90%, median dotted</span>`
       + `<span><i style="background:#9ca3af"></i>halvings</span>`;
     document.querySelector("#heroCLegend .grad").style.background = `linear-gradient(90deg, ${[0, 20, 30, 40, C.score_warm, C.score_hot, 90].map((s) => heatColor(s) + " " + s + "%").join(",")})`;
 
@@ -197,12 +197,12 @@
       tipLive = { p, s: calc.score, z: calc.scoreZone, via };
       window.__app.tail = { x: null, p, n: pts.length };
       { const live = !via || via === "live", c = live ? "#3b82f6" : "#9ca3af"; liveA.applyOptions({ price: p, color: c, axisLabelColor: c }); }
-      { const qe = fanCache.qe; $("heroAlt").textContent = `Projection fan at its end (Dec 31 2028), recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }
+      { const qe = fanCache.qe; $("heroAlt").textContent = `Range of outcomes (fan) at Dec 31 2028, recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }
       const today = BM.utcDay(now);
       if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }
       // one-line summary under the combined chart
       const ath = Math.max(...closes, p), athI = closes.lastIndexOf(Math.max(...closes)), athT = p >= ath ? today : cT[athI];
-      $("heroLine").innerHTML = `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (v2 <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b>) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`;
+      $("heroLine").innerHTML = `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (stricter v2 score <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b> ${Explain.i("v2")}) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`;
       // live position of today's price inside the frozen fan
       const FZ = FAN2.frozen; if (FZ) { const j = FZ.today.t.indexOf(today); if (j >= 0) { const q = { q5: FZ.today.q5[j], q25: FZ.today.q25[j], q50: FZ.today.q50[j], q75: FZ.today.q75[j], q95: FZ.today.q95[j] };
         $("hLive").innerHTML = `Live price is at model percentile <b>${f(BM.fanPos(q, p), 0)}</b> of the frozen fan for today (5-95%: ${usdK(q.q5)}-${usdK(q.q95)}; inside the 90% band: <b>${p >= q.q5 && p <= q.q95 ? "yes" : "NO"}</b>).`; }

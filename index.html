@@ -5,70 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025g">
+<link rel="stylesheet" href="css/style.css?v=20261025h">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
 <header class="top">
   <div class="brand">
     <h1>My BTC Cycle Model</h1>
-    <span class="sub">live cycle signals &middot; model output, not predictions</span>
+    <span class="sub">where Bitcoin is in its ~4-year cycle, live &middot; model output, not financial advice</span>
   </div>
   <div class="ticker">
-    <div class="px-label">BTC/USD own index <span class="hint" title="Median of the sources whose last price is under 15 s old (exchange WebSockets; HTTPS polling every 10 s of up to 8 public APIs if the sockets are blocked); a source more than 0.5% away from the others is left out">(median)</span></div>
+    <div class="px-label">BTC/USD price <span class="hint" title="Median of the sources whose last price is under 15 s old (exchange WebSockets; HTTPS polling every 10 s of up to 8 public APIs if the sockets are blocked); a source more than 0.5% away from the others is left out">(middle of several exchanges)</span> <button type="button" class="info" data-k="price" aria-label="What is this?">i</button></div>
     <div class="px" id="px">--</div>
     <div class="chg" id="chg">&nbsp;</div>
     <div class="pxat" id="pxAt">&nbsp;</div>
   </div>
-  <div class="feeds" id="feeds"></div>
-  <div class="diag" id="diag"></div>
+  <div class="feedwrap"><div class="feeds" id="feeds"></div><button type="button" class="info" data-k="feeds" aria-label="What is this?">i</button></div>
+  <div class="diagwrap"><div class="diag" id="diag"></div><button type="button" class="info" data-k="diag" aria-label="What is this?">i</button></div>
 </header>
 
 <section class="panel hero">
-  <h2>My BTC Cycle Model <span class="small">BTC price coloured by Cycle Heat Score, with the model's projection fan to Dec 2028 · live, model ranges, not predictions</span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></h2>
+  <h2>My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button> <span class="small">BTC price colored by Cycle Heat Score, with the model's range of outcomes to Dec 2028 · live, model ranges, not predictions</span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></h2>
   <div id="heroC" class="chart heroc"></div>
   <div class="heroline" id="heroLine">connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
   <div class="small heroalt" id="heroAlt"></div>
+  <details class="howto" id="howto">
+    <summary>How to read this chart</summary>
+    <ul>
+      <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. Hover or tap the chart for the price and score of any week.</li>
+      <li><b>The gray corridor</b> runs from the orange <b>floor</b> line up to the dotted <b>ceiling</b> line, around the dashed <b>trend</b> line. All three come from one long-term curve fitted to Bitcoin's whole history. Price has rarely left this corridor, but nothing guarantees it stays inside.</li>
+      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues, scaled down because each cycle has peaked less far above trend. It is a shape guide only, not a forecast: last cycle it pointed far above the actual 2025 top.</li>
+      <li><b>The faint purple fan</b> is the model's range of outcomes to the end of 2028. If the model is right, price lands in the darker middle about half the time (25-75%) and inside the whole fan about 90% of the time (5-95%). It widens further out because the future is less certain. Its shading stops at the floor line for readability.</li>
+      <li><b>Heat zones</b> (cool, neutral, warm, hot) say how stretched price and on-chain data look compared with all of history. Hot readings have clustered near past cycle tops and cool ones near past bottoms.</li>
+      <li><b>Track record:</b> in the backtest the score peaked around 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, just above the hot line, which was itself set from those tops. Peaks have come down, so a top can come without the score going "hot".</li>
+      <li><b>What this is not:</b> a trade timing signal or buy/sell advice. It is a slow gauge of where we are in the cycle that changes over weeks and months. For entries and exits, pair it with your own short-term tools (moving averages, RSI and so on).</li>
+    </ul>
+  </details>
+  <p class="nfa-mini"><b>Not financial advice.</b> Model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat.</p>
 </section>
 
 <section class="scorebar">
   <div class="score-main">
-    <div class="lbl">Cycle Heat Score <span class="badge live">LIVE</span></div>
+    <div class="lbl">Cycle Heat Score <span class="badge live">LIVE</span> <button type="button" class="info" data-k="score" aria-label="What is this?">i</button></div>
     <div class="score-row"><span class="score" id="score">--</span><span class="zone" id="scoreZone">--</span></div>
     <div class="meter"><div class="meter-fill" id="meterFill"></div><div class="meter-mark" id="markWarm"></div><div class="meter-mark hot" id="markHot"></div></div>
     <div class="small" id="scoreNote"></div>
   </div>
   <div class="score-side">
-    <div><span class="k">Signals at their hot level</span><span class="v" id="nHot">--</span></div>
-    <div><span class="k">Halving-cycle day</span><span class="v" id="cycDay">--</span></div>
-    <div><span class="k">Block height</span><span class="v" id="height">--</span></div>
-    <div><span class="k">Next halving (block 1,050,000)</span><span class="v" id="halving">--</span></div>
-    <div><span class="k">Drawdown from peak</span><span class="v" id="dd">--</span></div>
+    <div><span class="k">Signals at their hot level <button type="button" class="info" data-k="nhot" aria-label="What is this?">i</button></span><span class="v" id="nHot">--</span></div>
+    <div><span class="k">Days since halving <button type="button" class="info" data-k="cycday" aria-label="What is this?">i</button></span><span class="v" id="cycDay">--</span></div>
+    <div><span class="k">Latest block <button type="button" class="info" data-k="height" aria-label="What is this?">i</button></span><span class="v" id="height">--</span></div>
+    <div><span class="k">Next halving (block 1,050,000) <button type="button" class="info" data-k="halving" aria-label="What is this?">i</button></span><span class="v" id="halving">--</span></div>
+    <div><span class="k">Below all-time high <button type="button" class="info" data-k="dd" aria-label="What is this?">i</button></span><span class="v" id="dd">--</span></div>
   </div>
 </section>
 
 <section>
-  <h2>Signals <span class="small">value &middot; heat (percentile vs all prior days) &middot; zone</span></h2>
+  <h2>Signals <button type="button" class="info" data-k="signals" aria-label="What is this?">i</button> <span class="small">each tile: current value &middot; heat bar (0-100, how high vs all past days) &middot; zone</span></h2>
   <div class="tiles" id="tiles"></div>
 </section>
 
 <section class="two one">
   <div class="panel">
-    <h2>Model health <span class="small">is the model still tracking? checked daily against a frozen copy</span></h2>
+    <h2>Model health <button type="button" class="info" data-k="health" aria-label="What is this?">i</button> <span class="small">is the model still working on new data? checked daily against a frozen copy</span></h2>
     <div id="health" class="health"></div>
   </div>
 </section>
 
 <section class="panel">
-  <h2>What updates live, and what doesn't</h2>
+  <h2>What updates live, and what doesn't <button type="button" class="info" data-k="fresh" aria-label="What is this?">i</button></h2>
   <div id="fresh" class="fresh"></div>
 </section>
 
 <section class="panel method">
-  <h2>Method</h2>
+  <h2>Method <button type="button" class="info" data-k="method" aria-label="What is this?">i</button> <span class="small">technical details</span></h2>
   <ol>
-    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets . An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. <b>Fallback:</b> if fewer than 2 sockets deliver a price within ~5 s (e.g. a network that blocks WebSockets), the page switches to HTTPS polling every 10 s of the three exchanges plus Gemini, Binance.US, Crypto.com, Blockchain.com and CoinGecko (all public, CORS-enabled, different domains), with the same median and 0.5% outlier rule; the header then says <b>live (polling every 10s)</b> instead of <b>live (streaming)</b>. Blocks fall back from mempool.space to blockstream.info to blockchain.info. If nothing has priced for 15 s the price is marked <b>STALE</b>; if nothing was reachable at all, the header shows the <b>last daily close</b> in gray and the feed-check line says which connections failed.</li>
+    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets. An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. <b>Fallback:</b> if fewer than 2 sockets deliver a price within ~5 s (e.g. a network that blocks WebSockets), the page switches to HTTPS polling every 10 s of the three exchanges plus Gemini, Binance.US, Crypto.com, Blockchain.com and CoinGecko (all public, CORS-enabled, different domains), with the same median and 0.5% outlier rule; the header then says <b>live (polling every 10s)</b> instead of <b>live (streaming)</b>. Blocks fall back from mempool.space to blockstream.info to blockchain.info. If nothing has priced for 15 s the price is marked <b>STALE</b>; if nothing was reachable at all, the header shows the <b>last daily close</b> in gray and the feed-check line says which connections failed.</li>
     <li><b>Signals</b> are recomputed every second with the live price as today's daily close: Mayer Multiple (price / 200-day MA), price / 200-week (1400-day) MA, price / my power-law trend fit (refit including today), Pi Cycle ratio (111DMA / 2&times;350DMA), MVRV Z (live market cap = price &times; supply; realized cap from the latest daily print), plus halving-cycle timing. Address activity (daily) and Google search interest (monthly) only change when their sources publish.</li>
     <li><b>Wikipedia attention (display only):</b> daily views of the English Wikipedia "Bitcoin" article (Wikimedia pageviews API, users only, since July 2015). Heat = percentile of the 30-day average against the prior 8 years. It is shown next to the signals but is <b>not</b> part of either score; the pre-registered scores keep Google Trends.</li>
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
@@ -84,11 +97,15 @@
   <p class="nfa"><b>Not financial advice.</b> Everything on this page is model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat. Do your own research.</p>
   <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; Wikimedia pageviews API (Wikipedia attention) &middot; Strategy.com and SEC EDGAR (MSTR holdings) &middot; Yahoo Finance (MSTR price, delayed). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
   <p class="small" id="built"></p>
+  <p class="small copy">Copyright 2026 Euthymia686. Free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>).</p>
+  <!-- Donate placeholder: hidden until the owner provides a link. To enable, set the href and remove the hidden attribute. -->
+  <p class="donate" id="donate" hidden><a id="donateLink" href="#" rel="noopener">Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025g"></script>
-<script src="js/model.js?v=20261025g"></script>
-<script src="js/feeds.js?v=20261025g"></script>
-<script src="js/hero.js?v=20261025g"></script>
-<script src="js/app.js?v=20261025g"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025h"></script>
+<script src="js/explain.js?v=20261025h"></script>
+<script src="js/model.js?v=20261025h"></script>
+<script src="js/feeds.js?v=20261025h"></script>
+<script src="js/hero.js?v=20261025h"></script>
+<script src="js/app.js?v=20261025h"></script>
 </body>
 </html>

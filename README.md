@@ -24,4 +24,12 @@ Run it locally: `pip install -r requirements.txt && bash scripts/update.sh && py
 
 See `docs/ARCHITECTURE.md`, `docs/ROBUSTNESS.md` and `pipeline/SOURCES.md`.
 
-License: MIT (see LICENSE). Lightweight Charts is (c) TradingView, Apache-2.0.
+## License
+
+Copyright (c) 2026 Euthymia686. This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) (see `LICENSE`).
+
+- Free for personal and other non-commercial use, including study, research and hobby projects.
+- Commercial use needs permission from the copyright holder. Open an issue on this repository to ask.
+- Earlier copies of this repository were published under the MIT License. Copies obtained under MIT keep those terms; this license applies from this commit on.
+
+The bundled Lightweight Charts library is (c) TradingView and stays under its own Apache-2.0 license.

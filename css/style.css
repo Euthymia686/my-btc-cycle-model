@@ -79,3 +79,18 @@ button.mini{font-size:11px;padding:1px 8px;margin-left:6px;vertical-align:middle
 @media (max-width:520px){.diag{text-align:left}}
 
 #heroC{position:relative}.herotip{position:absolute;z-index:5;pointer-events:none;background:rgba(255,255,255,.96);border:1px solid #d1d5db;border-radius:4px;padding:5px 8px;font-size:12px;line-height:1.45;color:#1f2937;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+/* explainers (i) and the "How to read this" box */
+button.info{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;min-width:16px;padding:0;margin:0 2px;border-radius:50%;border:1px solid #6b7280;background:transparent;color:#9ca3af;font:italic 700 10.5px/1 Georgia,"Times New Roman",serif;vertical-align:middle;cursor:pointer;position:relative}
+button.info::after{content:"";position:absolute;inset:-8px}
+button.info:hover,button.info.on{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.panel.hero button.info{border-color:#9ca3af;color:#6b7280}.panel.hero button.info:hover,.panel.hero button.info.on{color:#fff}
+#tipPop{position:fixed;z-index:1000;background:#ffffff;color:#1f2937;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 4px 16px rgba(0,0,0,.25);text-align:left;font-weight:400;font-style:normal}
+#tipPop[hidden]{display:none}
+.feedwrap{display:flex;align-items:center;gap:8px;flex:1 1 300px;justify-content:flex-end}.feedwrap .feeds{flex:0 1 auto}
+.diagwrap{display:flex;align-items:flex-start;gap:6px;width:100%}.diagwrap .diag{flex:1 1 auto}
+.howto{margin-top:10px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;color:#1f2937;font-size:13.5px}
+.howto summary{cursor:pointer;padding:8px 12px;font-weight:600;color:#1d4ed8;list-style-position:inside}
+.howto[open] summary{border-bottom:1px solid #e5e7eb}
+.howto ul{margin:8px 0 10px;padding:0 14px 0 30px}.howto li{margin:5px 0;line-height:1.45}
+.nfa-mini{margin:8px 2px 0;font-size:12.5px;color:#374151}
+@media (max-width:520px){.feedwrap{justify-content:flex-start}.howto{font-size:13px}.howto ul{padding-left:22px}}

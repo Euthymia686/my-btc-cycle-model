@@ -60,7 +60,7 @@
     const parts = feeds.map((x) => { const d = x.diag(); return `${x.src.name}: WS ${d.ws}, REST ${d.rest}`; })
       .concat(pollers.filter((x) => x.active || x.restTries).map((x) => `${x.src.name}: REST ${x.diag().rest}`))
       .concat([`Blocks: WS ${blocks.diag().ws}, REST ${blocks.diag().rest}`]);
-    $("diag").textContent = "feed check · " + parts.join(" · ");
+    $("diag").textContent = "connection check · " + parts.join(" · ");
   }
   function flash(el) { el.style.transition = "none"; el.style.color = "#22c55e"; requestAnimationFrame(() => { el.style.transition = "color 2s"; el.style.color = ""; }); }
 
@@ -85,34 +85,34 @@
       : priceVia === "stale" && kind === "live" ? `<div class="upd">price STALE · last tick ${hms(lastTick.at)} UTC, reconnecting</div>` : "";
     if (kind === "live" && priceVia === "close") kind = "daily"; else if (kind === "live" && priceVia === "stale") kind = "stale";
     el.className = "tile z-" + (z === "n/a" ? "na" : z);
-    el.innerHTML = `<div class="t"><span>${title} ${badge(kind)}</span><span class="zn z-${z}">${z}</span></div><div class="val">${val}</div>`
+    el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)} ${badge(kind)}</span><span class="zn z-${z}">${z}</span></div><div class="val">${val}</div>`
       + (heat != null ? `<div class="bar z-${z}" title="heat ${f(heat, 0)} / 100"><span style="width:${Math.max(1, Math.min(100, heat))}%"></span></div>` : "") + `<div class="d">${desc}</div>` + upd;
   }
   function tileFailed(id, title, e) {   // never leave a tile blank: say what it is and when its data last updated
     const el = $("t_" + id); if (!el) return; el.className = "tile z-na";
-    el.innerHTML = `<div class="t"><span>${title}</span><span class="zn">n/a</span></div><div class="val pending">not available right now</div><div class="upd">updated daily, last: ${M.last_daily}</div>`;
+    el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)}</span><span class="zn">n/a</span></div><div class="val pending">not available right now</div><div class="upd">updated daily, last: ${M.last_daily}</div>`;
     window.__app.errors.push("tile " + id + ": " + (e && e.message)); }
-  const TITLES = { cycle_day: "Cycle timing", mayer: "Mayer Multiple", p200w: "Price / 200W MA", trend_mult: "Price / my trend line", mvrv_z: "MVRV Z", pi_ratio: "Pi Cycle ratio", wiki: "Wikipedia attention", activity: "Address activity", mnav: "MSTR mNAV", levels: "Trend & realized price" };
-  for (const id of Object.keys(TITLES)) { const el = $("t_" + id); if (el) { el.className = "tile z-na"; el.innerHTML = `<div class="t"><span>${TITLES[id]}</span></div><div class="val pending">loading...</div>`; } }
+  const TITLES = { cycle_day: "Cycle timing", mayer: "Price / 200-day avg", p200w: "Price / 200-week avg", trend_mult: "Price / long-term trend", mvrv_z: "Market value vs holder cost", pi_ratio: "Pi Cycle top ratio", wiki: "Wikipedia attention", activity: "Network activity", mnav: "MSTR premium (mNAV)", levels: "Trend line & realized price" };
+  for (const id of Object.keys(TITLES)) { const el = $("t_" + id); if (el) { el.className = "tile z-na"; el.innerHTML = `<div class="t"><span>${TITLES[id]} ${Explain.i(id)}</span></div><div class="val pending">loading...</div>`; } }
   const mnavZone = (m) => m < 1 ? "cool" : m < 1.5 ? "neutral" : m < 2.5 ? "warm" : "hot";
   function renderTiles(c) {
     const H_ = c.heat, Z = c.zones, T = c.thr, hotP = (s, base) => T[s] ? ` (hot &asymp; ${usdK(T[s].hot * base)})` : "";
     const z = (s) => `heat ${f(H_[s], 0)}`;
-    try { tile("cycle_day", { title: "Cycle timing", kind: "live", val: `day ${c.cycleDay} <span class="sm">since the ${isoDay(c.lastHalving)} halving</span>`, zone: Z.cycle_day, heat: H_.cycle_day, desc: cycleTiming(c) }); } catch (e) { tileFailed("cycle_day", TITLES["cycle_day"], e); }
-    try { tile("mayer", { title: "Mayer Multiple", kind: "live", val: f(c.vals.mayer) + "x", zone: Z.mayer, heat: H_.mayer, desc: `${z("mayer")} &middot; warm &ge; ${f(T.mayer.warm)} &middot; hot &ge; ${f(T.mayer.hot)}${hotP("mayer", c.ma200)} &middot; 200D MA ${usdK(c.ma200)}` }); } catch (e) { tileFailed("mayer", TITLES["mayer"], e); }
-    try { tile("p200w", { title: "Price / 200W MA", kind: "live", val: f(c.vals.p200w) + "x", zone: Z.p200w, heat: H_.p200w, desc: `${z("p200w")} &middot; warm &ge; ${f(T.p200w.warm)} &middot; hot &ge; ${f(T.p200w.hot)}${hotP("p200w", c.ma1400)} &middot; 200W MA ${usdK(c.ma1400)}` }); } catch (e) { tileFailed("p200w", TITLES["p200w"], e); }
-    try { tile("trend_mult", { title: "Price / my trend line", kind: "live", val: f(c.vals.trend_mult) + "x", zone: Z.trend_mult, heat: H_.trend_mult, desc: `${z("trend_mult")} &middot; warm &ge; ${f(T.trend_mult.warm)} &middot; hot &ge; ${f(T.trend_mult.hot)}${hotP("trend_mult", c.trendLine)} &middot; trend ${usdK(c.trendLine)}` }); } catch (e) { tileFailed("trend_mult", TITLES["trend_mult"], e); }
+    try { tile("cycle_day", { title: TITLES.cycle_day, kind: "live", val: `day ${c.cycleDay} <span class="sm">since the ${isoDay(c.lastHalving)} halving</span>`, zone: Z.cycle_day, heat: H_.cycle_day, desc: cycleTiming(c) }); } catch (e) { tileFailed("cycle_day", TITLES["cycle_day"], e); }
+    try { tile("mayer", { title: TITLES.mayer, kind: "live", val: f(c.vals.mayer) + "x", zone: Z.mayer, heat: H_.mayer, desc: `${z("mayer")} &middot; warm &ge; ${f(T.mayer.warm)} &middot; hot &ge; ${f(T.mayer.hot)}${hotP("mayer", c.ma200)} &middot; 200-day avg ${usdK(c.ma200)}` }); } catch (e) { tileFailed("mayer", TITLES["mayer"], e); }
+    try { tile("p200w", { title: TITLES.p200w, kind: "live", val: f(c.vals.p200w) + "x", zone: Z.p200w, heat: H_.p200w, desc: `${z("p200w")} &middot; warm &ge; ${f(T.p200w.warm)} &middot; hot &ge; ${f(T.p200w.hot)}${hotP("p200w", c.ma1400)} &middot; 200-week avg ${usdK(c.ma1400)}` }); } catch (e) { tileFailed("p200w", TITLES["p200w"], e); }
+    try { tile("trend_mult", { title: TITLES.trend_mult, kind: "live", val: f(c.vals.trend_mult) + "x", zone: Z.trend_mult, heat: H_.trend_mult, desc: `${z("trend_mult")} &middot; warm &ge; ${f(T.trend_mult.warm)} &middot; hot &ge; ${f(T.trend_mult.hot)}${hotP("trend_mult", c.trendLine)} &middot; trend line ${usdK(c.trendLine)}` }); } catch (e) { tileFailed("trend_mult", TITLES["trend_mult"], e); }
     const std = (c.mcap - M.realized_cap) / c.vals.mvrv_z, zHotP = (T.mvrv_z.hot * std + M.realized_cap) / M.supply;
-    try { tile("mvrv_z", { title: "MVRV Z", kind: "live", val: f(c.vals.mvrv_z), zone: Z.mvrv_z, heat: H_.mvrv_z, desc: `${z("mvrv_z")} &middot; warm &ge; ${f(T.mvrv_z.warm)} &middot; hot &ge; ${f(T.mvrv_z.hot)} (&asymp; ${usdK(zHotP)}) &middot; live market cap, realized cap daily (${M.realized_cap_asof})` }); } catch (e) { tileFailed("mvrv_z", TITLES["mvrv_z"], e); }
-    try { tile("pi_ratio", { title: "Pi Cycle ratio", kind: "live", val: f(c.vals.pi_ratio, 3), zone: Z.pi_ratio, heat: H_.pi_ratio, desc: `${z("pi_ratio")} &middot; warm &ge; ${f(T.pi_ratio.warm, 3)} &middot; hot &ge; ${f(T.pi_ratio.hot, 3)} &middot; 1.00 = the 111DMA crossing 2&times;350DMA` }); } catch (e) { tileFailed("pi_ratio", TITLES["pi_ratio"], e); }
+    try { tile("mvrv_z", { title: TITLES.mvrv_z, kind: "live", val: f(c.vals.mvrv_z), zone: Z.mvrv_z, heat: H_.mvrv_z, desc: `${z("mvrv_z")} &middot; warm &ge; ${f(T.mvrv_z.warm)} &middot; hot &ge; ${f(T.mvrv_z.hot)} (&asymp; ${usdK(zHotP)}) &middot; MVRV Z-score: market value live, holder cost (realized cap) daily, ${M.realized_cap_asof}` }); } catch (e) { tileFailed("mvrv_z", TITLES["mvrv_z"], e); }
+    try { tile("pi_ratio", { title: TITLES.pi_ratio, kind: "live", val: f(c.vals.pi_ratio, 3), zone: Z.pi_ratio, heat: H_.pi_ratio, desc: `${z("pi_ratio")} &middot; warm &ge; ${f(T.pi_ratio.warm, 3)} &middot; hot &ge; ${f(T.pi_ratio.hot, 3)} &middot; 1.00 = the 111-day avg crossing 2&times; the 350-day avg` }); } catch (e) { tileFailed("pi_ratio", TITLES["pi_ratio"], e); }
     const ac = M.fixed.activity;
     try { if (!W) throw new Error("data/wiki.json not available"); const wz = BM.zone(W.heat, 80, 65);
-      tile("wiki", { title: "Wikipedia attention", kind: "daily", val: `${Math.round(W.ma30).toLocaleString("en-US")} <span class="sm">views/day (30-day avg)</span>`, zone: wz, heat: W.heat,
+      tile("wiki", { title: TITLES.wiki, kind: "daily", val: `${Math.round(W.ma30).toLocaleString("en-US")} <span class="sm">views/day (30-day avg)</span>`, zone: wz, heat: W.heat,
         desc: `heat ${f(W.heat, 0)} = percentile vs the prior 8 years &middot; English Wikipedia "Bitcoin" article, as of ${W.asof}${sparkline()}<span class="note">display only: not in the Cycle Heat Score, which still uses Google Trends (${(M.fixed.trends.month || "").slice(0, 7)}, heat ${f(M.fixed.trends.heat, 0)}). Zones 80/65/40, not calibrated.</span>` }); } catch (e) { tileFailed("wiki", TITLES["wiki"], e); }
-    try { tile("activity", { title: "Address activity", kind: "daily", val: f(ac.value) + "x", zone: Z.activity, heat: H_.activity, desc: `heat ${f(ac.heat, 0)} &middot; 30d / 365d active addresses, as of ${ac.asof}; on-chain data published once a day` }); } catch (e) { tileFailed("activity", TITLES["activity"], e); }
+    try { tile("activity", { title: TITLES.activity, kind: "daily", val: f(ac.value) + "x", zone: Z.activity, heat: H_.activity, desc: `heat ${f(ac.heat, 0)} &middot; active addresses, 30-day vs 1-year average, as of ${ac.asof}; on-chain data published once a day` }); } catch (e) { tileFailed("activity", TITLES["activity"], e); }
     let mnav = null; try { mnav = MS.price * MS.shares / (MS.btc_holdings * c.live); } catch (e) {}
-    try { tile("mnav", { title: "MSTR mNAV", kind: "live", val: f(mnav) + "x", zone: mnavZone(mnav), heat: null, desc: `MSTR ${usd(MS.price, 2)} (last close ${String(MS.price_time).slice(0, 10)}) &times; ${(MS.shares / 1e6).toFixed(1)}M shares / (${MS.btc_holdings.toLocaleString()} BTC &times; live BTC). Zones are judgement bands, not backtested` }); } catch (e) { tileFailed("mnav", TITLES["mnav"], e); }
-    try { tile("levels", { title: "Trend & realized price", kind: "live", val: `${usdK(c.trendLine)} / ${usdK(c.realizedPrice)}`, zone: "n/a", heat: null, desc: `my trend line (refit including today) / realized price (daily, ${M.realized_cap_asof}). BTC is ${f(100 * (c.live / c.trendLine - 1), 1)}% vs trend` }); } catch (e) { tileFailed("levels", TITLES["levels"], e); }
+    try { tile("mnav", { title: TITLES.mnav, kind: "live", val: f(mnav) + "x", zone: mnavZone(mnav), heat: null, desc: `MSTR ${usd(MS.price, 2)} (last close ${String(MS.price_time).slice(0, 10)}) &times; ${(MS.shares / 1e6).toFixed(1)}M shares / (${MS.btc_holdings.toLocaleString()} BTC &times; live BTC). Zones are judgement bands, not backtested` }); } catch (e) { tileFailed("mnav", TITLES["mnav"], e); }
+    try { tile("levels", { title: TITLES.levels, kind: "live", val: `${usdK(c.trendLine)} / ${usdK(c.realizedPrice)}`, zone: "n/a", heat: null, desc: `trend line (refit including today) / realized price, the average cost of all coins (daily, ${M.realized_cap_asof}). BTC is ${f(100 * (c.live / c.trendLine - 1), 1)}% vs trend` }); } catch (e) { tileFailed("levels", TITLES["levels"], e); }
     return mnav;
   }
 
@@ -149,7 +149,7 @@
 
   /* ---------- freshness table ---------- */
   function renderFresh(n) {
-    const rows = [["Own index price", priceVia === "live" ? `${badge("live")} ${lastTick.streaming ? "streaming (WebSocket)" : "polling HTTPS every 10 s"}: median of ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""} with a price < 15 s old (${lastTick.used.join(", ")})${lastTick.dropped.length ? `; ${lastTick.dropped.join(", ")} left out (> 0.5% from the others)` : ""}; last tick ${hms(lastTick.at)} UTC`
+    const rows = [["BTC price", priceVia === "live" ? `${badge("live")} ${lastTick.streaming ? "streaming (WebSocket)" : "polling HTTPS every 10 s"}: median of ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""} with a price < 15 s old (${lastTick.used.join(", ")})${lastTick.dropped.length ? `; ${lastTick.dropped.join(", ")} left out (> 0.5% from the others)` : ""}; last tick ${hms(lastTick.at)} UTC`
         : priceVia === "stale" ? `${badge("stale")} no price from any source in the last 15 s; showing the last one (${hms(lastTick.at)} UTC), retrying` : `${badge("daily")} no live source reachable yet; the model runs on the last daily close (${lastClose()})`],
       ["Blocks / halving countdown", `${badge(blocks.status() === "down" ? "daily" : "live")} ${blocks.src || "mempool.space"} ${blocks.status() === "live" ? "WebSocket" : "REST"}; last block ${blocks.blockTime ? ago(Date.now() - blocks.blockTime * 1000) : "--"}`],
       ["Mayer, 200W MA, trend, Pi Cycle", `${badge("live")} live price as today's close + daily closes to ${isoDay(cT[cT.length - 1])}${gapFilled ? ` (${gapFilled} recent days from Coinbase candles)` : ""}`],
