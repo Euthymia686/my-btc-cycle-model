@@ -19,6 +19,8 @@ concurrency:
 env:
   # sha256 of pipeline/frozen/FROZEN_SHA256SUMS (the list of every v2 and v3 frozen file, timestamped 2026-10-25)
   FROZEN_LIST_SHA256: 96f83fc4e0e34d1e0efaf0a097f35e2b323dc0edb4e80d8b692f63b3f0031234
+  # sha256 of pipeline/frozen/band/BAND_SHA256SUMS (blue band pre-registration, PREREG_BAND.md). Set on the freeze day.
+  BAND_LIST_SHA256: 0ad5244cacdf0a3d21a8d7fe3506f028ceb1ef434f32f9bf377c4ae107cd427b
 
 jobs:
   guard:
@@ -30,6 +32,10 @@ jobs:
           echo "$FROZEN_LIST_SHA256  pipeline/frozen/FROZEN_SHA256SUMS" | sha256sum -c
           sha256sum -c pipeline/frozen/FROZEN_SHA256SUMS
           (cd pipeline/frozen/v3 && sha256sum -c v3_hashes.txt)
+      - name: Guard - band pre-registration files must not change
+        run: |
+          echo "$BAND_LIST_SHA256  pipeline/frozen/band/BAND_SHA256SUMS" | sha256sum -c
+          sha256sum -c pipeline/frozen/band/BAND_SHA256SUMS
 
   update:
     needs: guard
@@ -45,18 +51,26 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Rebuild data (failure-tolerant; keeps last data on source errors)
         run: bash scripts/update.sh
-      - name: Guard - v2 and v3 frozen files must not change during the run
+      - name: Guard - v2, v3 and band frozen files must not change during the run
         run: |
           git diff --exit-code -- pipeline/frozen pipeline/v2_spec.py pipeline/robust.py
           echo "$FROZEN_LIST_SHA256  pipeline/frozen/FROZEN_SHA256SUMS" | sha256sum -c
           sha256sum -c pipeline/frozen/FROZEN_SHA256SUMS
+          echo "$BAND_LIST_SHA256  pipeline/frozen/band/BAND_SHA256SUMS" | sha256sum -c
+          sha256sum -c pipeline/frozen/band/BAND_SHA256SUMS
+      - name: Guard - append-only records (band logs, price log, hash chain, scorecard) keep every earlier row
+        run: python scripts/check_append_only.py HEAD
       - name: Save the dated raw-data snapshot (daily small files, weekly large files; failure-tolerant)
         run: bash scripts/snapshot.sh || echo "::warning::snapshot failed"
-      - name: Upgrade the OpenTimestamps proof once Bitcoin confirms it (failure-tolerant)
+      - name: Daily hash-chain record + OpenTimestamps stamp (never fails the run; a missed stamp is retried next day)
         run: |
           pip install -q opentimestamps-client==0.7.2 || true
-          for f in pipeline/timestamps/*.ots; do ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"; done
-          rm -f pipeline/timestamps/*.ots.bak
+          python scripts/stamp_daily.py || true
+      - name: Upgrade the OpenTimestamps proofs once Bitcoin confirms them (failure-tolerant)
+        run: |
+          for f in pipeline/timestamps/*.ots pipeline/timestamps/chain/*.ots; do
+            [ -e "$f" ] || continue ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"; done
+          rm -f pipeline/timestamps/*.ots.bak pipeline/timestamps/chain/*.ots.bak
       - name: Commit refreshed data if changed
         run: |
           git config user.name "github-actions[bot]"

@@ -122,6 +122,30 @@
       `<p class="small">v3 is the same fan with narrower bands (frozen scales ${F.s90} and ${F.s50}); which one is better is decided by the scorecard below. This range was drawn on the main chart until 2026-10-25; it is now shown here so it is not mixed up with the blue cycle band (a shape guide). Model ranges, not predictions; not financial advice. ` +
       `Frozen file: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/${F.fan_file}" rel="noopener">${F.fan_file}</a> <span class="mono">sha256 ${F.fan_sha256.slice(0, 12)}...</span></p>`;
   }).catch(() => { lf.innerHTML = ""; });
+  /* Blue cycle band pre-registration (data/band_grades.json, from pipeline/frozen/band/grade_band.py; rules in PREREG_BAND.md).
+     Display of the frozen claims and their grades only; nothing here is computed in the browser. */
+  const bs = document.getElementById("bandScore");
+  if (bs) fetch("data/band_grades.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("band_grades " + r.status); return r.json(); }).then((G) => {
+    const K = (v) => v == null || !isFinite(v) ? "--" : "$" + Math.round(v / 1000).toLocaleString("en-US") + "K";
+    const st = G.status || {}, top = st.top || {}, low = st.low || {}, C = G.claims || {};
+    const res = (x) => !x || x.hit == null ? "pending" : (x.hit ? "hit" : "miss");
+    const rng = (h) => h && h.range && h.range[0] != null ? `${K(h.range[0])} to ${K(h.range[1])} (point ${K(h.point)})` : (h ? K(h.point) : "--");
+    const row = (name, c) => `<tr><th>${name}</th><td>${c.timing ? fmtDay(c.timing.predicted) : "--"}</td><td>${c.timing ? (/^same/.test(c.timing.source || "") ? "same date as the band" : res(c.timing)) : ""}</td>` +
+      `<td>${c.height ? rng(c.height) : "--"}</td><td>${c.height ? res(c.height) : ""}</td><td>${c.low ? rng(c.low) : "--"}</td><td>${c.low ? res(c.low) : ""}</td></tr>`;
+    const names = { band: "Blue band (main claim)", C1: "C1 ensemble-corrected band", C2: "C2 size law S1", C3: "C3 on-chain size law S3", C4: "C4 lengthening-cycle timing" };
+    const P = G.path || {}, M = P.mae || {};
+    const verdict = G.verdict_main && top.final && low.final ? `<b>Verdict on the main claim: ${G.verdict_main}.</b>` :
+      `<b>Verdict: pending.</b> The top window opens 2028-01-02; a top counts only once confirmed (52 weeks and a 50% drawdown, or at the end of the window).`;
+    bs.innerHTML = `<h3>Cycle band and its competitors, frozen 2026-10-25 ${I("bandscore")}</h3>` +
+      `<p class="small">${verdict} Status: ${top.outcome_class || "pending"}${top.T_star && top.final ? ` (top ${fmtDay(top.T_star)} at ${K(top.close)})` : ""}${low.L_star && low.final ? `; low ${fmtDay(low.L_star)} at ${K(low.close)}` : ""}.</p>` +
+      `<div class="stwrap"><table class="sc lf"><thead><tr><th>forecast</th><th>top date</th><th></th><th>top price</th><th></th><th>following low</th><th></th></tr></thead><tbody>` +
+      ["band", "C1", "C2", "C3", "C4"].filter((k) => C[k]).map((k) => row(names[k], C[k])).join("") + `</tbody></table></div>` +
+      (P.weeks ? `<p class="small">Weekly path so far (${P.weeks} weeks, mean absolute log10 error, lower is better): band ${(M.band ?? NaN).toFixed(3)}, C1 ${(M.C1 ?? NaN).toFixed(3)}, trend line ${(M.trend ?? NaN).toFixed(3)}. ` +
+        (P.formal_results_allowed ? `Band vs trend test p = ${((P.H4_primary_DM_band_vs_trend || {}).p ?? NaN).toFixed(3)}.` : `Formal tests start after 104 weeks.`) + `</p>` : "") +
+      (((G.events || {}).floor_breaks || []).length ? `<p class="small">Weekly closes below the trend floor: ${(G.events.floor_breaks || []).length} run(s).</p>` : "") +
+      `<p class="small">The band drawn on the main chart is recomputed daily; this table grades the copy frozen on 2026-10-25, whose code and values are fixed by sha256 and timestamped. The competitors are secondary and cannot replace the main claim after the fact. Historical pattern test, not a price target. Not financial advice. ` +
+      `Rules: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/band/PREREG_BAND.md" rel="noopener">PREREG_BAND.md</a> · how to check: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/VERIFY.md" rel="noopener">VERIFY.md</a> · raw: <a href="data/band_log.csv">band_log.csv</a>, <a href="data/band_prices.csv">band_prices.csv</a>, <a href="data/band_grades.json">band_grades.json</a>.</p>`;
+  }).catch(() => { bs.innerHTML = ""; });
   fetch("data/scorecard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("scorecard " + r.status); return r.json(); })
     .then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
 })();

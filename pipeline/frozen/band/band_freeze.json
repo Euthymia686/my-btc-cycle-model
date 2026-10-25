@@ -1,0 +1,55 @@
+{
+ "origin_T0": "2026-10-25",
+ "data_through": "2026-10-24",
+ "rho": 0.7772517177779567,
+ "peak_excess": [
+  1.185218210010144,
+  1.0515050627735465,
+  0.8186365807654337,
+  0.5565233453567373
+ ],
+ "trend_a": -16.34129611221869,
+ "trend_b": 5.638438495719856,
+ "resid_q05_q50_q95": [
+  -0.3522730787321806,
+  -0.06706337852420763,
+  0.5551881718255987
+ ],
+ "halving_2028_assumed": "2028-04-11",
+ "window_days": 10,
+ "smooth_days": 15,
+ "constw_half_width_log10": 0.09476997867132944,
+ "snapshot_last_date": "2030-11-01",
+ "band_peak": {
+  "date": "2029-09-25",
+  "mid": 481433.72526703856,
+  "lo": 355060.9816211749,
+  "hi": 653031.7985836079
+ },
+ "band_low_after_peak": {
+  "date": "2030-06-04",
+  "mid": 276258.16385415324,
+  "lo": 226608.88484787385,
+  "hi": 336640.18099024537
+ },
+ "timing_window": [
+  "2029-06-26",
+  "2029-12-25"
+ ],
+ "timing_rule_benchmark": {
+  "date": "2029-10-05",
+  "prior_tops": [
+   "2021-11-14",
+   "2025-10-05"
+  ]
+ },
+ "inputs_sha256": {
+  "pipeline/cache/coinmetrics.json": "ca47bcd37e8a94c283429ffdd8908813ec558d5e46cdad296064859e14e2cd42"
+ },
+ "code_sha256": {
+  "lib.py": "4968f626f157f5c38cf2274209799a6691029ebfe7a92263801d14e0fbf96985",
+  "charts.py": "7e321198049674aafb10e49bc50f750c13a0a6abc23eff5097b4ed499a473cb1",
+  "band_freeze.py": "546c07de8b08eeeac47f6fd4cbf45ee29d99189fd8f0237344c41b076808b5c6"
+ },
+ "snapshot_sha256": "f33d31a0e65becb471b1a85fbc21f5c9761c13242c1cf329cabb98d19aa0a26d"
+}
