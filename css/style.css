@@ -127,3 +127,5 @@ table.sc.st{font-size:12px}table.sc.st td,table.sc.st th{padding:2px 8px 2px 0}.
 .lockedfan{margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line,#2a2e39)}.lockedfan h3{font-size:13px;margin:4px 0;color:#d1d4dc}
 .lockedfan .small{margin:4px 0}.lockedfan a{color:#7aa2ff}table.sc.lf td,table.sc.lf th{padding:3px 12px 3px 0;white-space:nowrap}table.sc.lf td.med{font-weight:600}
 table.sc.lf tbody tr:nth-child(2n) td{color:#c4b5fd}table.sc.lf tbody tr:nth-child(2n+1) td:first-child{color:#d1d4dc}
+.lockedfan .stwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:600px){.lockedfan table.sc{font-size:11px}.lockedfan table.sc td,.lockedfan table.sc th{padding:2px 6px 2px 0}}
