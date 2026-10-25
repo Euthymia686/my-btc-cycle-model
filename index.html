@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second.">
-<link rel="stylesheet" href="css/style.css?v=20261025simp">
+<link rel="stylesheet" href="css/style.css?v=20261025simp2">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -64,6 +64,7 @@
 
 <section class="panel" id="scorecardSec">
   <h2>Scorecard <button type="button" class="info" data-k="scorecard" aria-label="What is this?">i</button> <span class="small">every prediction is written down in advance and graded in public</span></h2>
+  <p class="small fcnote">Hypothetical model output, not a trade signal: <a href="#disclaimer">see disclaimer</a></p>
   <div id="scoreSummary" class="scsum"><p class="small">Loading the scorecard...</p></div>
   <details class="more" id="scoreDetails">
     <summary>Show full scorecard details <span class="small">locked ranges, band vs competitors, live and backtest tests, p-values, kill rules</span></summary>
@@ -120,19 +121,19 @@
 </section>
 
 <footer>
-  <p class="nfa"><b>Disclaimer:</b> This site is for educational and informational purposes only and is not financial, investment or trading advice or a recommendation to buy or sell anything. Model output, backtests and past cycles do not guarantee future results, crypto is highly volatile, and the data may be incomplete or wrong; everything is provided as is, without warranty. Do your own research or consult a licensed professional; the author accepts no liability for any loss arising from use of this site.</p>
-  <p class="small disclosure">Disclosure: the author holds Bitcoin-related investments; the model rules are locked and graded in public so this cannot quietly shape the results. Designed by Euthymia686, built with help from an AI assistant.</p>
+  <p class="nfa" id="disclaimer"><b>Disclaimer:</b> For education and information only. This is not financial, investment or trading advice and is not tailored to anyone. Forecasts and backtests are hypothetical model output; they can be wrong, and past cycles don't guarantee future results. Provided as is, without warranty; use at your own risk.</p>
+  <p class="small disclosure"><b>Disclosure:</b> The author holds long Bitcoin-related investments that benefit if Bitcoin rises, and may buy or sell at any time without notice. Built with AI assistance.</p>
   <p class="small copy">&copy; 2026 Euthymia686 &middot; free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>) &middot; DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">GitHub</a> &middot; <a href="#verify" data-open="verify">verify &amp; data sources</a> &middot; charts by <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> (Apache-2.0)</p>
   <!-- Donate placeholder: hidden until the owner provides a link. To enable, set the href and remove the hidden attribute. -->
   <p class="donate" id="donate" hidden><a id="donateLink" href="#" rel="noopener">Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025simp"></script>
-<script src="js/explain.js?v=20261025simp"></script>
-<script src="js/model.js?v=20261025simp"></script>
-<script src="js/feeds.js?v=20261025simp"></script>
-<script src="js/hero.js?v=20261025simp"></script>
-<script src="js/app.js?v=20261025simp"></script>
-<script src="js/scorecard.js?v=20261025simp"></script>
-<script src="js/nav.js?v=20261025simp"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025simp2"></script>
+<script src="js/explain.js?v=20261025simp2"></script>
+<script src="js/model.js?v=20261025simp2"></script>
+<script src="js/feeds.js?v=20261025simp2"></script>
+<script src="js/hero.js?v=20261025simp2"></script>
+<script src="js/app.js?v=20261025simp2"></script>
+<script src="js/scorecard.js?v=20261025simp2"></script>
+<script src="js/nav.js?v=20261025simp2"></script>
 </body>
 </html>
