@@ -107,6 +107,7 @@
       `<li><b>The cycle path has pointed too high.</b> Even the scaled-down path ran far above the actual 2025 top, so it is a shape guide only.</li>` +
       `<li><b>The 90% band is too wide.</b> Checked up to 3 years ahead, about 98.6% of past prices landed inside the v3 90% band (99.4% for v2) instead of 90%. v3 narrows it, but not enough yet.</li>` +
       flags(S.tests_backtest).map((t) => `<li><b>Backtest test result.</b> ${t}</li>`).join("") +
+      `<li><b>Few cycles, and the market may be changing.</b> There are only four past cycle tops to learn from, and ETFs and large institutions may make the next cycle behave differently, so past patterns may not repeat.</li>` +
       `<li><b>Data sources can fail.</b> If a source is down, the site keeps the last good data and the scorecard skips that day rather than guessing.</li></ul>`;
     if (ws) ws.innerHTML = weak; else el.innerHTML += weak;
     el.innerHTML +=

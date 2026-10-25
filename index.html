@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
 <meta name="twitter:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
 <meta name="twitter:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
-<link rel="stylesheet" href="css/style.css?v=20261025harden">
+<link rel="stylesheet" href="css/style.css?v=20261026faq">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -33,7 +33,7 @@
   </div>
   <button type="button" class="navbtn" id="navBtn" aria-label="Menu" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
   <nav class="sitenav" id="siteNav" aria-label="Sections">
-    <a href="#model">Model</a><a href="#signalsSec">Signals</a><a href="#scorecardSec">Scorecard</a><a href="#methods" data-open="methodBox">Methods</a><a href="#verify" data-open="verify">Verify</a>
+    <a href="#model">Model</a><a href="#signalsSec">Signals</a><a href="#scorecardSec">Scorecard</a><a href="#methods" data-open="methodBox">Methods</a><a href="#verify" data-open="verify">Verify</a><a href="#faq" data-open="faq">Questions</a>
   </nav>
 </header>
 
@@ -96,6 +96,35 @@
 
 <section class="panel" id="methods">
   <h2>Details <span class="small">for anyone who wants to check the work; open any section</span></h2>
+  <details class="more" id="faq">
+    <summary>Common questions <span class="small">stock-to-flow, overfitting, the four-year cycle, how this could be proven wrong, bias</span></summary>
+    <div class="morebody faqbody">
+      <details class="faq">
+        <summary>Isn't this just stock-to-flow again?</summary>
+        <p>It was built around stock-to-flow's lesson: that model published one future price path and had no rule saying when it had failed. Here the trend is a power law refit daily on all data, forecasts are ranges rather than one number, and every graded rule and prediction was frozen on 2026-10-25 and stamped on Bitcoin with OpenTimestamps. The <a href="#scorecardSec">scorecard</a> grades them in public, and kill rules written in advance say what counts as failure.</p>
+      </details>
+      <details class="faq">
+        <summary>With only four past cycles, isn't it overfit?</summary>
+        <p>Possibly, and that can't be fully ruled out. Bitcoin has had four halving-cycle tops (2013, 2017, 2021, 2025), and parts of the model, such as the rule that scales down each new cycle, were designed after seeing them, so the backtests are in-sample. That is why only the forward test counts: predictions made from 2026-10-25 on are graded on prices nobody had seen, against a plain trend-line benchmark and three competing forecasts frozen the same day. Even then, one cycle is one data point, and the scorecard says so.</p>
+      </details>
+      <details class="faq">
+        <summary>What if the four-year cycle is over, now that ETFs and institutions are here?</summary>
+        <p>Then the cycle band should fail, and the grading is set up to show it. A competitor called C4 assumes cycles keep getting longer and puts the next top around 2029-12-27 instead of 2029-09-25, graded with the same &plusmn;91-day rule (the evidence for it is weak, and the rules say so). If no clear top appears, the timing claims are recorded as misses, not excused. Any change to the model waits for the yearly review (next on 2027-10-25) and comes as a new locked version, never an edit to the old one.</p>
+      </details>
+      <details class="faq">
+        <summary>How could this model be proven wrong?</summary>
+        <p>In several dated ways, all written down before any result. The cycle band fails if the next top misses 2029-09-25 by more than 91 days, or if its path does significantly worse than the plain power-law trend line once 104 weekly closes are in; a weekly close above $653,032 before 2029-12-25 rules out its height range straight away. The graded forecast range is retired in public if its 90% band fails a coverage test (p below 0.01 on at least 10 independent forecasts), if it loses to the simple benchmark (p below 0.05 on at least 12), or if price closes below the power-law floor for 26 weeks in a row. Failures stay on the site with a label; the first graded results are due on 2026-11-24.</p>
+      </details>
+      <details class="faq">
+        <summary>The author holds Bitcoin-related investments. Isn't this biased?</summary>
+        <p>It's a fair worry, and the footer discloses it. The safeguard is that the predictions can't be moved afterwards: they were frozen on 2026-10-25, their SHA-256 hashes are stamped on Bitcoin, and the daily build fails if a frozen file changes, so a quiet edit would show. Results are published whatever they are, including misses and competitor wins, and anyone can <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/VERIFY.md" rel="noopener">check the hashes</a>.</p>
+      </details>
+      <details class="faq">
+        <summary>Can I use this to decide when to buy or sell?</summary>
+        <p>No. Everything here is hypothetical model output: a slow gauge that changes over weeks and months, not a trade signal, and not tailored to anyone. Past cycles don't guarantee the next one. See the <a href="#disclaimer">disclaimer</a>.</p>
+      </details>
+    </div>
+  </details>
   <details class="more" id="healthBox">
     <summary>Model health <span class="small">is the model still working on new data? checked daily against a frozen copy</span></summary>
     <div class="morebody"><div id="health" class="health"></div></div>
@@ -144,13 +173,13 @@
   <!-- Contact + optional tip link (Ko-fi). Footer only, kept away from the forecasts. To hide the tip link again, add the hidden attribute to #donateLink. -->
   <p class="donate" id="donate"><a id="contactLink" href="mailto:btc.cycle.model@gmail.com"><span aria-hidden="true">&#9993;</span> Contact: btc.cycle.model@gmail.com</a><span class="sep" aria-hidden="true"> &middot; </span><a id="donateLink" href="https://ko-fi.com/euthymia686" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#9749;</span> Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025harden"></script>
-<script src="js/explain.js?v=20261025harden"></script>
-<script src="js/model.js?v=20261025harden"></script>
-<script src="js/feeds.js?v=20261025harden"></script>
-<script src="js/hero.js?v=20261025harden"></script>
-<script src="js/app.js?v=20261025harden"></script>
-<script src="js/scorecard.js?v=20261025harden"></script>
-<script src="js/nav.js?v=20261025harden"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261026faq"></script>
+<script src="js/explain.js?v=20261026faq"></script>
+<script src="js/model.js?v=20261026faq"></script>
+<script src="js/feeds.js?v=20261026faq"></script>
+<script src="js/hero.js?v=20261026faq"></script>
+<script src="js/app.js?v=20261026faq"></script>
+<script src="js/scorecard.js?v=20261026faq"></script>
+<script src="js/nav.js?v=20261026faq"></script>
 </body>
 </html>
