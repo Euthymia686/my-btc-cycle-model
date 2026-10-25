@@ -100,12 +100,15 @@
       (S.tests_backtest ? `<p class="small"><b>Backtest (past data)</b> ${I("sc_bt_p")}: one forecast per day from ${S.tests_backtest.first_origin}, each made with data up to its own date only (${(S.tests_backtest.origins || 0).toLocaleString("en-US")} forecasts). Coverage</p>${covTable(S.tests_backtest, false)}` +
         `<p class="small">Skill (positive means the first one scored better)</p>${skillTable(S.tests_backtest, false)}` : "") +
       `<h3>Kill criteria ${I("sc_kill")}</h3>` + killBlock(S.kill, S.kill_backtest) +
-      `<h3>Known weak spots ${I("sc_weak")}</h3><ul class="weak">` +
+      "";
+    const ws = document.getElementById("weakSpots"), weak = `<h3>Known weak spots ${I("sc_weak")}</h3><ul class="weak">` +
       `<li><b>Heat peaks are shrinking.</b> The score reached about 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, so the next top may not look "hot".</li>` +
       `<li><b>The cycle path has pointed too high.</b> Even the scaled-down path ran far above the actual 2025 top, so it is a shape guide only.</li>` +
       `<li><b>The 90% band is too wide.</b> Checked up to 3 years ahead, about 98.6% of past prices landed inside the v3 90% band (99.4% for v2) instead of 90%. v3 narrows it, but not enough yet.</li>` +
       flags(S.tests_backtest).map((t) => `<li><b>Backtest test result.</b> ${t}</li>`).join("") +
-      `<li><b>Data sources can fail.</b> If a source is down, the site keeps the last good data and the scorecard skips that day rather than guessing.</li></ul>` +
+      `<li><b>Data sources can fail.</b> If a source is down, the site keeps the last good data and the scorecard skips that day rather than guessing.</li></ul>`;
+    if (ws) ws.innerHTML = weak; else el.innerHTML += weak;
+    el.innerHTML +=
       `<p class="small">Promotion rule, set ${S.live_since || "2026-10-25"} before any result: v3 replaces v2 only if, from ${S.promotion_check_earliest || "2027-10-25"} on, it has the better log score <b>and</b> its 90% band is closer to 90% <b>and</b> it stays at or above 80% at every horizon. ` +
       `Raw data: <a href="data/scorecard.csv">scorecard.csv</a> · rules: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/v3/FREEZE.md" rel="noopener">FREEZE.md</a> · updated ${S.data_through ? "with data through " + S.data_through : "daily"}.</p>`;
   }
@@ -119,7 +122,7 @@
       `<p class="small">Where the model expected the price to be, written down on ${F.frozen_on} (from the ${F.data_through} close) and never changed. Fixed numbers from the frozen fan file, not recomputed with the live price. If the model is right, the price on that date lands in the 25%-75% range about half the time and in the 5%-95% range about 90% of the time.</p>` +
       `<div class="stwrap"><table class="sc lf"><thead><tr><th>date</th><th>version</th><th>5%</th><th>25%</th><th>median</th><th>75%</th><th>95%</th></tr></thead><tbody>` +
       F.rows.map((r) => row(r, "v2") + row(r, "v3")).join("") + `</tbody></table></div>` +
-      `<p class="small">v3 is the same fan with narrower bands (frozen scales ${F.s90} and ${F.s50}); which one is better is decided by the scorecard below. This range was drawn on the main chart until 2026-10-25; it is now shown here so it is not mixed up with the blue cycle band (a shape guide). Model ranges, not predictions; not financial advice. ` +
+      `<p class="small">v3 is the same fan with narrower bands (frozen scales ${F.s90} and ${F.s50}); which one is better is decided by the scorecard below. This range was drawn on the main chart until 2026-10-25; it is now shown here so it is not mixed up with the blue cycle band (a shape guide). Model ranges, not predictions. ` +
       `Frozen file: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/${F.fan_file}" rel="noopener">${F.fan_file}</a> <span class="mono">sha256 ${F.fan_sha256.slice(0, 12)}...</span></p>`;
   }).catch(() => { lf.innerHTML = ""; });
   /* Blue cycle band pre-registration (data/band_grades.json, from pipeline/frozen/band/grade_band.py; rules in PREREG_BAND.md).
@@ -143,9 +146,39 @@
       (P.weeks ? `<p class="small">Weekly path so far (${P.weeks} weeks, mean absolute log10 error, lower is better): band ${(M.band ?? NaN).toFixed(3)}, C1 ${(M.C1 ?? NaN).toFixed(3)}, trend line ${(M.trend ?? NaN).toFixed(3)}. ` +
         (P.formal_results_allowed ? `Band vs trend test p = ${((P.H4_primary_DM_band_vs_trend || {}).p ?? NaN).toFixed(3)}.` : `Formal tests start after 104 weeks.`) + `</p>` : "") +
       (((G.events || {}).floor_breaks || []).length ? `<p class="small">Weekly closes below the trend floor: ${(G.events.floor_breaks || []).length} run(s).</p>` : "") +
-      `<p class="small">The band drawn on the main chart is recomputed daily; this table grades the copy frozen on 2026-10-25, whose code and values are fixed by sha256 and timestamped. The competitors are secondary and cannot replace the main claim after the fact. Historical pattern test, not a price target. Not financial advice. ` +
+      `<p class="small">The band drawn on the main chart is recomputed daily; this table grades the copy frozen on 2026-10-25, whose code and values are fixed by sha256 and timestamped. The competitors are secondary and cannot replace the main claim after the fact. Historical pattern test, not a price target. ` +
       `Rules: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/band/PREREG_BAND.md" rel="noopener">PREREG_BAND.md</a> · how to check: <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/VERIFY.md" rel="noopener">VERIFY.md</a> · raw: <a href="data/band_log.csv">band_log.csv</a>, <a href="data/band_prices.csv">band_prices.csv</a>, <a href="data/band_grades.json">band_grades.json</a>.</p>`;
   }).catch(() => { bs.innerHTML = ""; });
-  fetch("data/scorecard.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("scorecard " + r.status); return r.json(); })
-    .then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
+  const getJ = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
+  const pS = getJ("scorecard"), pG = getJ("band_grades").catch(() => null), pF = getJ("fan_locked").catch(() => null);
+  pS.then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
+  /* Plain-language summary at the top of the scorecard: one row per pre-registered prediction, its status and when it is graded.
+     Display only: it reads the same published files as the detailed tables below and computes nothing new. */
+  const sum = document.getElementById("scoreSummary");
+  if (sum) Promise.all([pS.catch(() => null), pG, pF]).then(([S, G, F]) => {
+    const K = (v) => v == null || !isFinite(v) ? "--" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + Math.round(v / 1000).toLocaleString("en-US") + "K";
+    const pill = (st, txt) => `<span class="pill p-${st}">${txt}</span>`;
+    const res = (x, fin) => !x || x.hit == null || !fin ? pill("wait", "pending") : x.hit ? pill("pass", "hit") : pill("fail", "miss");
+    const addD = (iso, d) => { const t = new Date(iso + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + d); return t.toISOString().slice(0, 10); };
+    const rows = [];
+    const C = (G && G.claims) || {}, b = C.band, st = (G && G.status) || {};
+    if (b) {
+      rows.push([`Next cycle top: <b>when</b> ${I("lg_band")}`, `around <b>${fmtDay(b.timing.predicted)}</b><br><span class="small">counts if within &plusmn;91 days: ${fmtDay(addD(b.timing.predicted, -91))} to ${fmtDay(addD(b.timing.predicted, 91))}</span>`, res(b.timing, st.top && st.top.final), "Apr 6, 2031"]);
+      rows.push([`Next cycle top: <b>how high</b>`, `<b>${K(b.height.range[0])} to ${K(b.height.range[1])}</b><br><span class="small">middle ${K(b.height.point)} (highest weekly close)</span>`, res(b.height, st.top && st.top.final), "Apr 6, 2031"]);
+      rows.push([`Low after the top`, `<b>${K(b.low.range[0])} to ${K(b.low.range[1])}</b><br><span class="small">middle ${K(b.low.point)}, around ${fmtDay(b.low.date)}</span>`, res(b.low, st.low && st.low.final), "2 years after the top"]);
+    }
+    if (F && F.rows) rows.push([`Locked price range ${I("lockedfan")}`, F.rows.map((r) => `${fmtDay(r.date)}: <b>${K(r.v2.q5)} to ${K(r.v2.q95)}</b>`).join("<br>") + `<br><span class="small">90% range, middle ${F.rows.map((r) => K(r.v2.q50)).join(" / ")}</span>`, pill("wait", "pending"), F.rows.map((r) => fmtDay(r.date)).join(" and ")]);
+    if (S) {
+      const V = S.versions || {}, n2 = ((V.v2 || {}).all || {}).matured || 0, a2 = (V.v2 || {}).all || {}, a3 = ((V.v3 || {}).all) || {};
+      const rt = (o) => { const v = o && o.in90 != null && typeof o.in90 === "object" ? o.in90.rate : o && o.in90; return v == null ? "--" : (100 * v).toFixed(0) + "%"; };
+      const cov = n2 ? `v2 ${rt(a2)}, v3 ${rt(a3)} inside the 90% range (target 90%, ${n2} graded)` : "no forecast has come due yet";
+      rows.push([`Daily price ranges, 30 / 90 / 365 days ahead ${I("v3")}`, `a new range every day, v2 vs v3 vs a simple benchmark<br><span class="small">${cov}</span>`, n2 ? pill("run", "being graded") : pill("wait", "pending"), `first on ${fmtDay(S.next_result || "2026-11-24")}, then daily`]);
+      const k = S.kill && S.kill.versions, on = k ? ["v2", "v3"].filter((v) => k[v] && k[v].status !== "not triggered") : [];
+      if (k) rows.push([`Rules that would retire the model ${I("sc_kill")}`, `3 rules written in advance (e.g. 26 weeks in a row below the floor)`, on.length ? pill("fail", "triggered: " + on.join(", ")) : pill("pass", "not triggered"), "checked every day"]);
+    }
+    if (!rows.length) { sum.innerHTML = ""; return; }
+    sum.innerHTML = `<div class="stwrap"><table class="sc sumt"><thead><tr><th>What is predicted ${I("sc_sum")}</th><th>The prediction</th><th>Result</th><th>Graded on</th></tr></thead><tbody>` +
+      rows.map((r) => `<tr><th>${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("") + `</tbody></table></div>` +
+      `<p class="small">All frozen on Oct 25, 2026 and never changed: they pass or fail on real prices that did not exist yet. Pending means its date has not come.</p>`;
+  });
 })();

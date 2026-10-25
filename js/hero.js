@@ -99,22 +99,39 @@
     const fmtD = (t) => new Date(t * 1000).toISOString().slice(0, 10);
     let tipLive = null;
     const tip = document.createElement("div"); tip.className = "herotip"; tip.style.display = "none"; $("heroC").appendChild(tip);
+    const fmtW = (t) => new Date(t * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+    const bgI = new Map(BG ? BG.t.map((x, i) => [x, i]) : []);
+    const corrTxt = (t) => { const j = bgI.get(t); return j == null || BG.mid[j] == null ? "" : `<div class="tt-c">trend ${usdK(BG.mid[j])} &middot; corridor ${usdK(BG.floor[j])} - ${usdK(BG.ceil[j])}</div>`; };
+    const pastBandTxt = (t) => { const j = bgI.get(t); return j == null || BG.band_lo[j] == null ? "" : `<div class="tt-b">blue band (past 2 cycles) ${usdK(BG.band_lo[j])} - ${usdK(BG.band_hi[j])}</div>`; };
+    const zoneTxt = (s, z) => `<b style="color:${heatColor(s)}">${s == null || !isFinite(s) ? "n/a" : f(s, 0) + " " + (z || zoneOf(s)).toUpperCase()}</b>`;
     A.subscribeCrosshairMove((pr) => {
       if (!pr.point || pr.time == null || pr.point.x < 0 || pr.point.y < 0) { tip.style.display = "none"; return; }
       const t = pr.time, d = pr.seriesData.get(histA); let h = "";
-      if (t > histEnd && tipLive) { const L = tipLive, lbl = L.via === "close" ? "last close" : L.via === "stale" ? "stale" : "now";
-        if (t <= histEnd + 14 * DAY) h = `<b>${lbl} ${usd(L.p, 0)}</b><br>score <b style="color:${heatColor(L.s)}">${f(L.s, 1)} ${L.z}</b>`;
-        else { const c = fwdByT.get(t), mk = fwdMk.pk && fwdMk.pk.t === t ? "<br><b>possible next top</b> (band middle)" : fwdMk.lo && fwdMk.lo.t === t ? "<br><b>low after it</b> (band middle)" : "";
-          if (c) h = `${fmtD(t)}<br>cycle band ahead: past cycles scaled down<br>(shape guide, not a forecast)<br>middle ${usdK(c.md)} · band ${usdK(c.lo)} - ${usdK(c.hi)}${mk}`;
-          else { const j = BG ? BG.t.indexOf(t) : -1; if (j >= 0) h = `${fmtD(t)}<br>trend ${usdK(BG.mid[j])} · corridor ${usdK(BG.floor[j])} - ${usdK(BG.ceil[j])}`; } } }
+      if (t > histEnd && tipLive) { const L = tipLive, lbl = L.via === "close" ? "last close" : L.via === "stale" ? "stale price" : "live price";
+        if (t <= histEnd + 14 * DAY) h = `<div class="tt-h">${lbl}</div><div class="tt-p">${usd(L.p, 0)}</div><div>Heat Score ${zoneTxt(L.s, L.z)}</div>${pastBandTxt(t) || pastBandTxt(histEnd)}`;
+        else { const c = fwdByT.get(t), mk = fwdMk.pk && fwdMk.pk.t === t ? `<div class="tt-m">&#9679; possible next top (band middle)</div>` : fwdMk.lo && fwdMk.lo.t === t ? `<div class="tt-m">&#9679; low after the top (band middle)</div>` : "";
+          if (c) h = `<div class="tt-h">week of ${fmtW(t)} &middot; ahead</div><div class="tt-b"><b>blue band ${usdK(c.lo)} - ${usdK(c.hi)}</b>, middle ${usdK(c.md)}</div>${mk}<div class="tt-n">past 2 cycles, scaled down</div>${corrTxt(t)}`;
+          else h = corrTxt(t) ? `<div class="tt-h">week of ${fmtW(t)}</div>${corrTxt(t)}` : ""; } }
       else { const v = d && d.value != null ? d.value : vByW.get(t), s = sByW.get(t);
-        if (v != null) h = `week of ${fmtD(t)}<br><b>${usd(v, 0)}</b> close<br>score <b style="color:${heatColor(s)}">${s == null ? "n/a" : f(s, 1) + " " + zoneOf(s)}</b>`; }
+        if (v != null) h = `<div class="tt-h">week of ${fmtW(t)}</div><div class="tt-p">${usd(v, 0)}</div><div>Heat Score ${zoneTxt(s)}</div>${pastBandTxt(t)}${corrTxt(t)}`; }
       if (!h) { tip.style.display = "none"; return; }
       tip.innerHTML = h; tip.style.display = "block";
       const W = $("heroC").clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
       let x = pr.point.x + 14, y = pr.point.y - th - 10; if (x + tw > W - 70) x = pr.point.x - tw - 14; if (y < 4) y = pr.point.y + 14;
       tip.style.left = Math.max(4, x) + "px"; tip.style.top = y + "px";
     });
+    /* Tap support on phones: a short tap (not a drag) pins the crosshair and tooltip on the nearest week. */
+    { const el = $("heroC"); let p0 = null;
+      el.addEventListener("pointerdown", (e) => { p0 = e.pointerType === "mouse" ? null : { x: e.clientX, y: e.clientY }; }, { passive: true });
+      el.addEventListener("pointerup", (e) => {
+        if (!p0 || Math.hypot(e.clientX - p0.x, e.clientY - p0.y) > 8) return; p0 = null;
+        const r = el.getBoundingClientRect(), x = e.clientX - r.left; let t = A.timeScale().coordinateToTime(x);
+        if (t == null && BG && BG.t.length) { const lg = A.timeScale().coordinateToLogical(x); if (lg != null) t = BG.t[Math.max(0, Math.min(BG.t.length - 1, Math.round(lg)))]; }
+        if (t == null) return;
+        const c = fwdByT.get(t), v = vByW.get(t) != null ? vByW.get(t) : c ? c.md : tipLive && t > histEnd ? tipLive.p : null;
+        if (v != null && A.setCrosshairPosition) A.setCrosshairPosition(v, t, histA);
+      }, { passive: true });
+    }
     /* Forward cycle band (display only): dampened cycle band from data/hero_fwd.json, drawn from this week as far as the prior
        cycles' data reaches (late 2030, one more day each day), in the same light-blue band + middle line style as the past band.
        The first 8 weeks blend in log space from the past band's value to the dampened one, so the two meet without a step at "now".
@@ -133,6 +150,7 @@
       if (after.length) { const pk = after.reduce((m, q) => q.md > m.md ? q : m), rest = after.filter((q) => q.t > pk.t);
         fwdMk.pk = pk; fwdMk.lo = rest.length ? rest.reduce((m, q) => q.md < m.md ? q : m) : null; }
       const txt = (q) => `~${mon(q.t)}, middle ~${usdK(q.md)} (band ~${usdK(q.lo)}-${usdK(q.hi)})`;
+      fwdMk.pkShort = fwdMk.pk ? `next top? ~${mon(fwdMk.pk.t)} · ~${usdK(fwdMk.pk.md)}` : ""; fwdMk.loShort = fwdMk.lo ? `low after ~${mon(fwdMk.lo.t)} · ~${usdK(fwdMk.lo.md)}` : "";
       fwdMk.pkTxt = fwdMk.pk ? "possible next top: " + txt(fwdMk.pk) : ""; fwdMk.loTxt = fwdMk.lo ? "low after it: " + txt(fwdMk.lo) : "";
       window.__app.fwdMk = { pk: fwdMk.pkTxt, lo: fwdMk.loTxt, end: fmtD(fwd.pts[fwd.pts.length - 1].t) };
       window.__app.fwd = { n: fwd.pts.length, first: fwd.pts[0], last: fwd.pts[fwd.pts.length - 1], rho: FWD.rho };
@@ -155,12 +173,12 @@
       const ts = fwd.chart.timeScale(), sr = fwd.series;
       target.useMediaCoordinateSpace(({ context: g, mediaSize }) => {
         const W = mediaSize.width, Hh = mediaSize.height, wide = W >= 640, boxes = [];
-        for (const [q, lab, up] of [[fwdMk.pk, fwdMk.pkTxt, true], [fwdMk.lo, fwdMk.loTxt, false]]) {
+        for (const [q, lab, up] of [[fwdMk.pk, fwdMk.pkShort, true], [fwdMk.lo, fwdMk.loShort, false]]) {
           if (!q) continue; const x = ts.timeToCoordinate(q.t), y = sr.priceToCoordinate(q.md); if (x == null || y == null || x < 0 || x > W) continue;
           g.save(); g.beginPath(); g.arc(x, y, wide ? 3.5 : 3, 0, 2 * Math.PI); g.fillStyle = "rgba(37,99,235,.8)"; g.fill(); g.lineWidth = 1.2; g.strokeStyle = "#ffffff"; g.stroke(); g.restore();
           if (!wide) continue;
-          const i = lab.indexOf(", middle"), L = [lab.slice(0, i), lab.slice(i + 2)];
-          g.save(); g.font = "11px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; const tw = Math.max(...L.map((l) => g.measureText(l).width)) + 10, th = 32;
+          const L = [lab];
+          g.save(); g.font = "11px system-ui, -apple-system, Segoe UI, Roboto, sans-serif"; const tw = Math.max(...L.map((l) => g.measureText(l).width)) + 10, th = 18;
           let bx = Math.min(Math.max(4, x - tw / 2 - (up ? 60 : 40)), W - tw - 4), by = up ? y - th - 28 : y + 26;
           if (by < 22) by = 22; if (by + th > Hh - 4) by = Hh - th - 4;
           for (const b of boxes) if (bx < b.x + b.w && bx + tw > b.x && by < b.y + b.h && by + th > b.y) by = up ? b.y - th - 4 : b.y + b.h + 4;
@@ -177,13 +195,18 @@
     const liveA = histA.createPriceLine({ price: 1, color: "#3b82f6", lineWidth: 1, lineStyle: 3, lineVisible: false, axisLabelVisible: true, axisLabelColor: "#3b82f6", axisLabelTextColor: "#ffffff", title: "" });
     halvingLines(A, $("heroC"));
     A.timeScale().fitContent();
-    $("heroCLegend").innerHTML = `<span class="scale"><b>Line color = Cycle Heat Score</b> <i class="grad"></i><span class="ticks"><span>0 cool</span><span>40</span><span>${C.score_warm} warm</span><span>${C.score_hot}+ hot</span></span></span>`
-      + `<span><i style="background:#d1d5db"></i>trend corridor</span><span><i style="background:#6b7280"></i>trend (dashed) / ceiling (dotted)</span><span><i style="background:#d97706"></i>floor</span>`
-      + `<span><i style="background:#93c5fd"></i>past cycle band (prior 2 cycles)</span>`
-      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Runs to late 2030, as far as the prior cycles' data reaches. Display only, not in the score, not graded."><i style="background:#93c5fd"></i>cycle band ahead (past cycles scaled down): shape guide, not a forecast</span>` : "")
-      + (fwdMk.pk ? `<span><i style="background:#2563eb;width:7px;height:7px;border-radius:50%"></i>${fwdMk.pkTxt}${fwdMk.lo ? " · " + fwdMk.loTxt : ""}</span>` : "")
-      + `<span><i style="background:#9ca3af"></i>halvings</span>`;
-    $("heroAlt").innerHTML = `The blue band after "now" is the past cycles scaled down and is recomputed daily; the copy frozen on 2026-10-25 is the pre-registered, graded claim (see the <a href="#scorecardSec">scorecard section</a>)${fwd.pts.length ? ` (it ends ${fmtD(fwd.pts[fwd.pts.length - 1].t)}, as far as the prior cycles' data reaches)` : ""}. The locked forecast range (the fan) is also in the scorecard section, not on this chart. Model ranges, not predictions; not financial advice.`;
+    const I = (k) => window.Explain ? Explain.i(k) : "";
+    $("heroCLegend").innerHTML = `<span class="scale">line color = Heat Score <i class="grad"></i><span class="ticks"><span>cool</span><span>hot</span></span>${I("lg_heat")}</span>`
+      + `<span><i class="sw band"></i>blue band = past cycles${I("lg_band")}</span>`
+      + `<span><i class="sw corr"></i>trend corridor${I("lg_corr")}</span>`
+      + (fwdMk.pk ? `<span><i class="sw dot"></i>next top / low${I("lg_dots")}</span>` : "");
+    $("heroAlt").textContent = "";   // the old note under the legend moved into the legend (i) buttons and the hover/tap tooltip
+    if (window.Explain) {
+      Explain.T.lg_heat = `The price line's color is the Cycle Heat Score at that time (0-100): blue = cool (under 40), gray = neutral, orange = warm (${C.score_warm}+), red = hot (${C.score_hot}+). Hot readings have clustered near past cycle tops and cool ones near past bottoms. The blue tag on the right axis and the dot at the end of the line are the live price.`;
+      Explain.T.lg_band = `Light blue band: where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues to ${fwd.pts.length ? fmtD(fwd.pts[fwd.pts.length - 1].t) : "late 2030"}, built from the same past cycles scaled down (each cycle has peaked less far above trend; rho ${FWD ? FWD.rho.toFixed(2) : "--"}). The band on the chart is recomputed daily; the copy frozen on 2026-10-25 is the pre-registered claim graded in the scorecard (top about 2029-09-25 at $355K-$653K, then a low about 2030-06-04 at $227K-$337K). Last cycle it pointed far above the actual 2025 top. The locked forecast range (the fan) is in the scorecard, not on this chart.`;
+      Explain.T.lg_corr = "The gray corridor: the orange floor line (bottom), the dashed trend line (middle) and the dotted ceiling (top). All three come from one long-term power-law curve fitted to Bitcoin's whole history; about 5% of past days sat below the floor and 5% above the ceiling. Price has rarely left it, but nothing guarantees it stays inside. Faint vertical lines mark the halvings.";
+      Explain.T.lg_dots = (fwdMk.pkTxt ? fwdMk.pkTxt.replace(/^possible next top/, "Possible next top") + ". " : "") + (fwdMk.loTxt ? fwdMk.loTxt.replace(/^low after it/, "Low after it") + ". " : "") + "These are the highest and lowest points of the blue band's middle line after the next halving, found from the band each day. A pattern from past cycles, not a price target.";
+    }
     document.querySelector("#heroCLegend .grad").style.background = `linear-gradient(90deg, ${[0, 20, 30, 40, C.score_warm, C.score_hot, 90].map((s) => heatColor(s) + " " + s + "%").join(",")})`;
 
 
@@ -228,6 +251,7 @@
       if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }
       // one-line summary under the combined chart
       const ath = Math.max(...closes, p), athI = closes.lastIndexOf(Math.max(...closes)), athT = p >= ath ? today : cT[athI];
+      { const e = document.getElementById("v2Score"); if (e) e.innerHTML = `<span style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</span>`; }
       $("heroLine").innerHTML = `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (stricter v2 score <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b> ${Explain.i("v2")}) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`;
       // live position of today's price inside the frozen fan
       const FZ = FAN2.frozen; if (FZ) { const j = FZ.today.t.indexOf(today); if (j >= 0) { const q = { q5: FZ.today.q5[j], q25: FZ.today.q25[j], q50: FZ.today.q50[j], q75: FZ.today.q75[j], q95: FZ.today.q95[j] };

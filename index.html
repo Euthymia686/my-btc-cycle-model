@@ -4,38 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
-<meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025band">
+<meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second.">
+<link rel="stylesheet" href="css/style.css?v=20261025simp">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
 <header class="top">
   <div class="brand">
     <h1>My BTC Cycle Model</h1>
-    <span class="sub">where Bitcoin is in its ~4-year cycle, live &middot; model output, not financial advice</span>
+    <span class="sub">where Bitcoin is in its ~4-year cycle, live</span>
   </div>
+  <button type="button" class="navbtn" id="navBtn" aria-label="Menu" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+  <nav class="sitenav" id="siteNav" aria-label="Sections">
+    <a href="#model">Model</a><a href="#signalsSec">Signals</a><a href="#scorecardSec">Scorecard</a><a href="#methods" data-open="methodBox">Methods</a><a href="#verify" data-open="verify">Verify</a>
+  </nav>
 </header>
 
-<section class="panel hero">
-  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub">BTC price colored by Cycle Heat Score · trend corridor · blue cycle band to 2030 from past cycles scaled down · a copy frozen on 2026-10-25 is pre-registered and graded (scorecard section), as is the locked forecast range</span></h2>
+<section class="panel hero" id="model">
+  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub">Weekly BTC price, log scale. Hover or tap the chart for details.</span></h2>
   <div id="heroC" class="chart heroc"></div>
-  <div class="heroline" id="heroLine">connecting to exchanges...</div>
+  <div class="heroline" id="heroLine" hidden>connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
-  <div class="small heroalt" id="heroAlt"></div>
+  <div class="small heroalt" id="heroAlt" hidden></div>
   <details class="howto" id="howto">
     <summary>How to read this chart</summary>
     <ul>
       <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. The blue tag on the right axis and the dot at the end of the line are the live price; the small status next to "Reset view" says whether it is live, polling, STALE or the last daily close. Hover or tap the chart for the price and score of any week.</li>
       <li><b>The gray corridor</b> runs from the orange <b>floor</b> line up to the dotted <b>ceiling</b> line, around the dashed <b>trend</b> line. All three come from one long-term curve fitted to Bitcoin's whole history. Price has rarely left this corridor, but nothing guarantees it stays inside.</li>
-      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues in the same style, built from the same past cycles but scaled down because each cycle has peaked less far above trend. It shows the next possible top (around 2029, marked with a small dot) and the fall after it (around 2030, second dot); the hover/tap text and the legend give the month and the band's middle and range at each. It runs only as far as the previous cycles' data reaches (late 2030 for now, one more day each day). It is a shape guide only, not a forecast, and it is not graded: last cycle it pointed far above the actual 2025 top.</li>
+      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues in the same style, built from the same past cycles but scaled down because each cycle has peaked less far above trend. It shows the next possible top (around 2029, marked with a small dot) and the fall after it (around 2030, second dot); hover or tap for the month and the band's middle and range. It runs only as far as the previous cycles' data reaches (late 2030 for now, one more day each day). The band on the chart is recomputed daily; the copy frozen on 2026-10-25 is the pre-registered claim graded in the <a href="#scorecardSec">scorecard</a>. Last cycle it pointed far above the actual 2025 top, so the test may well fail.</li>
       <li><b>The graded forecast range is not on this chart.</b> The model's locked range of outcomes (the "fan", frozen on 2026-10-25, to the end of 2028) is the part that gets graded. It is shown as a small table in the <a href="#scorecardSec">scorecard section</a>, next to its public grades, so it is not confused with the blue shape guide here.</li>
       <li><b>Heat zones</b> (cool, neutral, warm, hot) say how stretched price and on-chain data look compared with all of history. Hot readings have clustered near past cycle tops and cool ones near past bottoms.</li>
       <li><b>Track record:</b> in the backtest the score peaked around 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, just above the hot line, which was itself set from those tops. Peaks have come down, so a top can come without the score going "hot".</li>
       <li><b>What this is not:</b> a trade timing signal or buy/sell advice. It is a slow gauge of where we are in the cycle that changes over weeks and months. For entries and exits, pair it with your own short-term tools (moving averages, RSI and so on).</li>
     </ul>
   </details>
-  <p class="nfa-mini"><b>Not financial advice.</b> Model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat.</p>
-  <p class="nfa-mini disclosure">Disclosure: the author holds Bitcoin-related investments. The model rules are locked and graded in public so that this cannot quietly shape the results.</p>
 </section>
 
 <section class="scorebar">
@@ -46,6 +48,7 @@
     <div class="small" id="scoreNote"></div>
   </div>
   <div class="score-side">
+    <div><span class="k">Stricter v2 score <button type="button" class="info" data-k="v2" aria-label="What is this?">i</button></span><span class="v" id="v2Score">--</span></div>
     <div><span class="k">Signals at their hot level <button type="button" class="info" data-k="nhot" aria-label="What is this?">i</button></span><span class="v" id="nHot">--</span></div>
     <div><span class="k">Days since halving <button type="button" class="info" data-k="cycday" aria-label="What is this?">i</button></span><span class="v" id="cycDay">--</span></div>
     <div><span class="k">Latest block <button type="button" class="info" data-k="height" aria-label="What is this?">i</button></span><span class="v" id="height">--</span></div>
@@ -54,32 +57,38 @@
   </div>
 </section>
 
-<section>
+<section id="signalsSec">
   <h2>Signals <button type="button" class="info" data-k="signals" aria-label="What is this?">i</button> <span class="small">each tile: current value &middot; heat bar (0-100, how high vs all past days) &middot; zone</span></h2>
   <div class="tiles" id="tiles"></div>
 </section>
 
 <section class="panel" id="scorecardSec">
-  <h2>Scorecard <button type="button" class="info" data-k="scorecard" aria-label="What is this?">i</button> <span class="small">every forecast is written down and graded in public: did the price land inside the ranges? v2 vs v3 <button type="button" class="info" data-k="v3" aria-label="What is this?">i</button></span></h2>
-  <div id="lockedFan" class="lockedfan"></div>
-  <div id="bandScore" class="lockedfan"></div>
-  <div id="scorecard" class="scorecard"><p class="small">Loading the scorecard...</p></div>
+  <h2>Scorecard <button type="button" class="info" data-k="scorecard" aria-label="What is this?">i</button> <span class="small">every prediction is written down in advance and graded in public</span></h2>
+  <div id="scoreSummary" class="scsum"><p class="small">Loading the scorecard...</p></div>
+  <details class="more" id="scoreDetails">
+    <summary>Show full scorecard details <span class="small">locked ranges, band vs competitors, live and backtest tests, p-values, kill rules</span></summary>
+    <div class="morebody">
+      <div id="lockedFan" class="lockedfan"></div>
+      <div id="bandScore" class="lockedfan"></div>
+      <div id="scorecard" class="scorecard"><p class="small">Loading the scorecard...</p></div>
+    </div>
+  </details>
+  <div id="weakSpots" class="scorecard weakbox"></div>
 </section>
 
-<section class="two one">
-  <div class="panel">
-    <h2>Model health <button type="button" class="info" data-k="health" aria-label="What is this?">i</button> <span class="small">is the model still working on new data? checked daily against a frozen copy</span></h2>
-    <div id="health" class="health"></div>
-  </div>
-</section>
-
-<section class="panel">
-  <h2>What updates live, and what doesn't <button type="button" class="info" data-k="fresh" aria-label="What is this?">i</button></h2>
-  <div id="fresh" class="fresh"></div>
-</section>
-
-<section class="panel method">
-  <h2>Method <button type="button" class="info" data-k="method" aria-label="What is this?">i</button> <span class="small">technical details</span></h2>
+<section class="panel" id="methods">
+  <h2>Details <span class="small">for anyone who wants to check the work; open any section</span></h2>
+  <details class="more" id="healthBox">
+    <summary>Model health <span class="small">is the model still working on new data? checked daily against a frozen copy</span></summary>
+    <div class="morebody"><div id="health" class="health"></div></div>
+  </details>
+  <details class="more" id="freshBox">
+    <summary>What updates live, and what doesn't <span class="small">sources and the date of the latest data</span></summary>
+    <div class="morebody"><div id="fresh" class="fresh"></div><p class="small" id="built"></p></div>
+  </details>
+  <details class="more method" id="methodBox">
+    <summary>Method <span class="small">technical details: price index, signals, score, forecast range, cycle band</span></summary>
+    <div class="morebody">
   <ol>
     <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets. An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. <b>Fallback:</b> if fewer than 2 sockets deliver a price within ~5 s (e.g. a network that blocks WebSockets), the page switches to HTTPS polling every 10 s of the three exchanges plus Gemini, Binance.US, Crypto.com, Blockchain.com and CoinGecko (all public, CORS-enabled, different domains), with the same median and 0.5% outlier rule; the status next to the chart then says <b>live (polling every 10s)</b> instead of <b>live</b>. Blocks fall back from mempool.space to blockstream.info to blockchain.info. If nothing has priced for 15 s the price is marked <b>STALE</b>; if nothing was reachable at all, the status shows <b>last close</b> in gray and the chart and scores use the last daily close. Its (i) note lists each source's price and connection state and which connections failed.</li>
     <li><b>Signals</b> are recomputed every second with the live price as today's daily close: Mayer Multiple (price / 200-day MA), price / 200-week (1400-day) MA, price / my power-law trend fit (refit including today), Pi Cycle ratio (111DMA / 2&times;350DMA), MVRV Z (live market cap = price &times; supply; realized cap from the latest daily print), plus halving-cycle timing. Address activity (daily) and Google search interest (monthly) only change when their sources publish.</li>
@@ -87,29 +96,43 @@
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
     <li><b>Cycle Heat Score</b> = plain average of the 8 heats. Zones: hot = lowest score seen around any past top; warm = hot &minus; 15; neutral 40+; cool below 40.</li>
     <li><b>Projection fan (the graded forecast range):</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. It is not drawn on the main chart; the locked copy (frozen 2026-10-25, horizon Dec 31 2028) and its v3 version are shown as a table in the scorecard section, and the scorecard grades the daily 30/90/365-day forecasts. The model's 5% level can sit below the floor line, and the floor is not guaranteed.</li>
-    <li><b>Cycle band / forward cycle path (pre-registered 2026-10-25):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is drawn to the end of 2030, together with the power-law corridor. The band on the chart is recomputed every day. <b>The graded claim is the copy frozen on 2026-10-25</b>: next top about 2029-09-25 (&plusmn;91 days) at $355K-$653K, then a low about 2030-06-04 at $227K-$337K. Its code, its daily values and the grading rules are fixed by sha256 and timestamped (PREREG_BAND.md), and it is scored in the scorecard section against simple benchmarks and three competitors. It is not part of either Cycle Heat Score. In the 2024 cycle even the dampened path ran well above the actual 2025 top, and the test may well fail. Historical pattern test, not a price target. Not financial advice.</li>
+    <li><b>Cycle band / forward cycle path (pre-registered 2026-10-25):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is drawn to the end of 2030, together with the power-law corridor. The band on the chart is recomputed every day. <b>The graded claim is the copy frozen on 2026-10-25</b>: next top about 2029-09-25 (&plusmn;91 days) at $355K-$653K, then a low about 2030-06-04 at $227K-$337K. Its code, its daily values and the grading rules are fixed by sha256 and timestamped (PREREG_BAND.md), and it is scored in the scorecard section against simple benchmarks and three competitors. It is not part of either Cycle Heat Score. In the 2024 cycle even the dampened path ran well above the actual 2025 top, and the test may well fail. Historical pattern test, not a price target.</li>
     <li><b>Score v2 (pre-registered 2026-10-25):</b> heat = percentile vs the prior 8 years only; signals grouped into 5 independent families (price structure, on-chain valuation, network usage, attention, timing), score = mean of families; zones fixed at 80/65/40. Its code is frozen by sha256 and logged daily next to v1. See ROBUSTNESS.md.</li>
     <li><b>Backtest (walk-forward):</b> the score reached 92-93 at the 2013 and 2017 tops but only ~65-68 at the 2021 and 2025 tops; it fell to 12-25 at every cycle low. It is a description of how stretched the market is versus history, not a sell timer.</li>
   </ol>
+    </div>
+  </details>
+  <details class="more" id="verify">
+    <summary>Verify, cite and data sources <span class="small">frozen files, hashes, Bitcoin timestamps, DOI, raw data</span></summary>
+    <div class="morebody verifybody">
+      <p>Every graded rule and prediction is frozen in files whose SHA-256 hashes are published and timestamped on Bitcoin (OpenTimestamps), and a daily hash chain records the logs, so nothing can be quietly edited. Anyone can re-check it with free tools.</p>
+      <ul>
+        <li><b>How to check it yourself:</b> <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/VERIFY.md" rel="noopener">VERIFY.md</a> (step-by-step hash and OpenTimestamps check)</li>
+        <li><b>Pre-registered rules:</b> blue band test <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/band/PREREG_BAND.md" rel="noopener">PREREG_BAND.md</a> &middot; forecast range and scorecard <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/v3/FREEZE.md" rel="noopener">FREEZE.md</a> &middot; robustness notes <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/docs/ROBUSTNESS.md" rel="noopener">ROBUSTNESS.md</a></li>
+        <li><b>Hash lists:</b> <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/FROZEN_SHA256SUMS" rel="noopener">FROZEN_SHA256SUMS</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/pipeline/frozen/band/BAND_SHA256SUMS" rel="noopener">BAND_SHA256SUMS</a> (and their .ots proofs)</li>
+        <li><b>Raw data:</b> <a href="data/scorecard.csv">scorecard.csv</a> &middot; <a href="data/band_log.csv">band_log.csv</a> &middot; <a href="data/band_prices.csv">band_prices.csv</a> &middot; <a href="data/band_grades.json">band_grades.json</a></li>
+        <li><b>History of changes:</b> <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/RESEARCH_LOG.md" rel="noopener">research log</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/IDEAS.md" rel="noopener">idea log</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">source code on GitHub</a></li>
+        <li><b>Cite:</b> My BTC Cycle Model, DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> (<a href="https://github.com/Euthymia686/my-btc-cycle-model/blob/main/CITATION.cff" rel="noopener">CITATION.cff</a>)</li>
+      </ul>
+      <p class="small credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; alternative.me Fear &amp; Greed Index, Deribit and OKX public funding rates (crowd euphoria).</p>
+    </div>
+  </details>
 </section>
 
 <footer>
-  <p class="nfa"><b>Not financial advice.</b> Everything on this page is model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat. Do your own research.</p>
-  <p class="nfa disclosure">Disclosure: the author holds Bitcoin-related investments. The model rules are locked and graded in public so that this cannot quietly shape the results.</p>
-  <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; alternative.me Fear &amp; Greed Index, Deribit and OKX public funding rates (crowd euphoria). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
-  <p class="small" id="built"></p>
-  <p class="small copy">Copyright 2026 Euthymia686. Free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>).</p>
-  <p class="small cite">Cite: My BTC Cycle Model, DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a></p>
-  <p class="small built-by">Designed by Euthymia686, built with help from an AI assistant. Judged by the <a href="#scorecardSec">public scorecard</a>.</p>
+  <p class="nfa"><b>Disclaimer:</b> This site is for educational and informational purposes only and is not financial, investment or trading advice or a recommendation to buy or sell anything. Model output, backtests and past cycles do not guarantee future results, crypto is highly volatile, and the data may be incomplete or wrong; everything is provided as is, without warranty. Do your own research or consult a licensed professional; the author accepts no liability for any loss arising from use of this site.</p>
+  <p class="small disclosure">Disclosure: the author holds Bitcoin-related investments; the model rules are locked and graded in public so this cannot quietly shape the results. Designed by Euthymia686, built with help from an AI assistant.</p>
+  <p class="small copy">&copy; 2026 Euthymia686 &middot; free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>) &middot; DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a> &middot; <a href="https://github.com/Euthymia686/my-btc-cycle-model" rel="noopener">GitHub</a> &middot; <a href="#verify" data-open="verify">verify &amp; data sources</a> &middot; charts by <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> (Apache-2.0)</p>
   <!-- Donate placeholder: hidden until the owner provides a link. To enable, set the href and remove the hidden attribute. -->
   <p class="donate" id="donate" hidden><a id="donateLink" href="#" rel="noopener">Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025band"></script>
-<script src="js/explain.js?v=20261025band"></script>
-<script src="js/model.js?v=20261025band"></script>
-<script src="js/feeds.js?v=20261025band"></script>
-<script src="js/hero.js?v=20261025band"></script>
-<script src="js/app.js?v=20261025band"></script>
-<script src="js/scorecard.js?v=20261025band"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025simp"></script>
+<script src="js/explain.js?v=20261025simp"></script>
+<script src="js/model.js?v=20261025simp"></script>
+<script src="js/feeds.js?v=20261025simp"></script>
+<script src="js/hero.js?v=20261025simp"></script>
+<script src="js/app.js?v=20261025simp"></script>
+<script src="js/scorecard.js?v=20261025simp"></script>
+<script src="js/nav.js?v=20261025simp"></script>
 </body>
 </html>

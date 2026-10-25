@@ -193,7 +193,7 @@
     $("score").textContent = f(calc.score, 1); $("score").className = "score z-" + calc.scoreZone;
     $("scoreZone").textContent = calc.scoreZone; $("scoreZone").className = "zone z-" + calc.scoreZone;
     $("meterFill").style.left = `calc(${Math.max(0, Math.min(100, calc.score))}% - 1px)`; $("markWarm").style.left = C.score_warm + "%"; $("markHot").style.left = C.score_hot + "%";
-    $("scoreNote").textContent = `hot ≥ ${C.score_hot}, warm ≥ ${C.score_warm}, cool < 40. Plain average of 8 signal heats, recomputed every second. In the backtest it peaked at ~93 (2013, 2017) but only ~65-68 (2021, 2025).`;
+    $("scoreNote").textContent = `cool < 40 · warm ≥ ${C.score_warm} · hot ≥ ${C.score_hot} · average of 8 signals, updated every second`;
     $("nHot").textContent = `${calc.nHot} / ${calc.nSignals}`; $("cycDay").textContent = `${calc.cycleDay} (peaks: ${Math.min(...C.top_days)}-${Math.max(...C.top_days)})`;
     if (blocks.height) { const left = M.next_halving_block - blocks.height, eta = new Date(now + left * 600000); $("height").textContent = blocks.height.toLocaleString() + (blocks.blockTime ? ` · ${ago(now - blocks.blockTime * 1000)}` : "");
       $("halving").textContent = `${left.toLocaleString()} blocks · ~${eta.toISOString().slice(0, 10)}`; }
