@@ -145,7 +145,7 @@
     for (let i = from; i < n; i++) if (g[i] != null) pts.push(`${((i - from) / (n - 1 - from) * w).toFixed(1)},${(h - 2 - g[i] / 100 * (h - 4)).toFixed(1)}`);
     if (pts.length < 2) return (crowdSVG = "");
     const y75 = (h - 2 - 0.75 * (h - 4)).toFixed(1), yr = new Date((t0 + from * DAY) * 1000).getUTCFullYear();
-    return (crowdSVG = `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Crowd euphoria gauge, last 3 years"><line x1="0" x2="${w}" y1="${y75}" y2="${y75}" stroke="#ef5350" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" opacity=".6"/><polyline fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" points="${pts.join(" ")}"/></svg><span class="sparkax"><span>${yr}</span><span>0-100, dashed = euphoric (75)</span><span>${CR.asof.slice(0, 7)}</span></span>`);
+    return (crowdSVG = `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Crowd euphoria gauge, last 3 years"><line x1="0" x2="${w}" y1="${y75}" y2="${y75}" stroke="#ef5350" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" opacity=".6"/><polyline fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" points="${pts.join(" ")}"/></svg><span class="sparkax"><span>${yr}</span><span>dashed = 75</span><span>${CR.asof.slice(0, 7)}</span></span>`);
   }
   /* Wikipedia 30-day average, last 3 years, as an inline SVG sparkline (log scale) */
   let sparkSVG = null;
