@@ -4,8 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
-<meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second.">
-<link rel="stylesheet" href="css/style.css?v=20261025kofi">
+<meta name="description" content="A live Bitcoin cycle model: where Bitcoin is in its ~4-year cycle, with a Cycle Heat Score recomputed every second, locked rules, Bitcoin timestamps and a public scorecard.">
+<link rel="canonical" href="https://euthymia686.github.io/my-btc-cycle-model/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="My BTC Cycle Model">
+<meta property="og:title" content="My BTC Cycle Model">
+<meta property="og:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
+<meta property="og:url" content="https://euthymia686.github.io/my-btc-cycle-model/">
+<meta property="og:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="My BTC Cycle Model">
+<meta name="twitter:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
+<meta name="twitter:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
+<meta name="twitter:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
+<link rel="stylesheet" href="css/style.css?v=20261025share">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -21,7 +37,7 @@
 </header>
 
 <section class="panel hero" id="model">
-  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub">Weekly BTC price, log scale. Hover or tap the chart for details.</span></h2>
+  <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub" id="read30">The line is Bitcoin's weekly price (log scale), colored from cool (blue) to hot (red) by the Cycle Heat Score; the light blue band shows where past cycles would put price. <span id="r30now" hidden>Today it reads <b id="r30zone"></b>.</span> Hover or tap the chart for details.</span></h2>
   <div id="heroC" class="chart heroc"></div>
   <div class="heroline" id="heroLine" hidden>connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
@@ -127,13 +143,13 @@
   <!-- Optional tip link (Ko-fi). Footer only, kept away from the forecasts. To hide it again, add the hidden attribute. -->
   <p class="donate" id="donate"><a id="donateLink" href="https://ko-fi.com/euthymia686" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#9749;</span> Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025kofi"></script>
-<script src="js/explain.js?v=20261025kofi"></script>
-<script src="js/model.js?v=20261025kofi"></script>
-<script src="js/feeds.js?v=20261025kofi"></script>
-<script src="js/hero.js?v=20261025kofi"></script>
-<script src="js/app.js?v=20261025kofi"></script>
-<script src="js/scorecard.js?v=20261025kofi"></script>
-<script src="js/nav.js?v=20261025kofi"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025share"></script>
+<script src="js/explain.js?v=20261025share"></script>
+<script src="js/model.js?v=20261025share"></script>
+<script src="js/feeds.js?v=20261025share"></script>
+<script src="js/hero.js?v=20261025share"></script>
+<script src="js/app.js?v=20261025share"></script>
+<script src="js/scorecard.js?v=20261025share"></script>
+<script src="js/nav.js?v=20261025share"></script>
 </body>
 </html>

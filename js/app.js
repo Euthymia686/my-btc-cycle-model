@@ -191,6 +191,9 @@
     if (priceVia === "live") prevShown = p;
     sect("score", () => {
     $("score").textContent = f(calc.score, 1); $("score").className = "score z-" + calc.scoreZone;
+    { const rz = document.getElementById("r30zone");   // 30-second read under the chart title: today's zone and score
+      if (rz && isFinite(calc.score)) { const txt = `${String(calc.scoreZone).toUpperCase()} (Heat ${Math.round(calc.score)})`;
+        if (rz.textContent !== txt) { rz.textContent = txt; rz.className = "z-" + calc.scoreZone; } document.getElementById("r30now").hidden = false; } }
     $("scoreZone").textContent = calc.scoreZone; $("scoreZone").className = "zone z-" + calc.scoreZone;
     $("meterFill").style.left = `calc(${Math.max(0, Math.min(100, calc.score))}% - 1px)`; $("markWarm").style.left = C.score_warm + "%"; $("markHot").style.left = C.score_hot + "%";
     $("scoreNote").textContent = `cool < 40 · warm ≥ ${C.score_warm} · hot ≥ ${C.score_hot} · average of 8 signals, updated every second`;
