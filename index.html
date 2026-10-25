@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025e">
+<link rel="stylesheet" href="css/style.css?v=20261025f">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -73,7 +73,7 @@
     <li><b>Wikipedia attention (display only):</b> daily views of the English Wikipedia "Bitcoin" article (Wikimedia pageviews API, users only, since July 2015). Heat = percentile of the 30-day average against the prior 8 years. It is shown next to the signals but is <b>not</b> part of either score; the pre-registered scores keep Google Trends.</li>
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
     <li><b>Cycle Heat Score</b> = plain average of the 8 heats. Zones: hot = lowest score seen around any past top; warm = hot &minus; 15; neutral 40+; cool below 40.</li>
-    <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. On the chart it is drawn faintly, behind the forward cycle path.</li>
+    <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. On the chart it is drawn faintly, behind the forward cycle path. Fan shading is cut off at the floor line for readability; the model's 5% quantile can sit below the floor, and the floor is not guaranteed.</li>
     <li><b>Cycle band / forward cycle path (display only):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the v3-candidate "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is a shape guide from past cycles, not a forecast, and it is not part of either score. In the 2024 cycle even the dampened path ran well above the actual 2025 top.</li>
     <li><b>Score v2 (pre-registered 2026-10-25):</b> heat = percentile vs the prior 8 years only; signals grouped into 5 independent families (price structure, on-chain valuation, network usage, attention, timing), score = mean of families; zones fixed at 80/65/40. Its code is frozen by sha256 and logged daily next to v1. See ROBUSTNESS.md.</li>
     <li><b>Backtest (walk-forward):</b> the score reached 92-93 at the 2013 and 2017 tops but only ~65-68 at the 2021 and 2025 tops; it fell to 12-25 at every cycle low. It is a description of how stretched the market is versus history, not a sell timer.</li>
@@ -85,10 +85,10 @@
   <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; Wikimedia pageviews API (Wikipedia attention) &middot; Strategy.com and SEC EDGAR (MSTR holdings) &middot; Yahoo Finance (MSTR price, delayed). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
   <p class="small" id="built"></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025e"></script>
-<script src="js/model.js?v=20261025e"></script>
-<script src="js/feeds.js?v=20261025e"></script>
-<script src="js/hero.js?v=20261025e"></script>
-<script src="js/app.js?v=20261025e"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025f"></script>
+<script src="js/model.js?v=20261025f"></script>
+<script src="js/feeds.js?v=20261025f"></script>
+<script src="js/hero.js?v=20261025f"></script>
+<script src="js/app.js?v=20261025f"></script>
 </body>
 </html>

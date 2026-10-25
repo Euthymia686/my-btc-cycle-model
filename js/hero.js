@@ -58,12 +58,13 @@
     const LN = (color, w, style) => ser(LC.LineSeries, { color, lineWidth: w, lineStyle: style });
     // background layers are opaque stacked areas, drawn back to front; each "mask" area paints the colour of the layer beneath it
     const bgT = BG ? BG.t : [];
-    const gA = { ceil: AR(KA.corr), bandHi: AR(KA.band), bandLo: AR(KA.corr), floorM: AR(KA.bg) };
+    const gA = { ceil: AR(KA.corr), bandHi: AR(KA.band), bandLo: AR(KA.corr) };
     const fA = { q95: AR(KA.fanO), q75: AR(KA.fanI), q25: AR(KA.fanO), q5: AR(KA.bg) };
+    gA.floorM = AR(KA.bg);   // floor mask drawn after the fan and the forward path: shading is cut off at the floor (display only; quantiles unchanged)
     const lA = { ceil: LN("#9ca3af", 1, 1), mid: LN("#6b7280", 1, 2), floor: LN("#d97706", 1.5, 0), bandMd: LN("rgba(59,130,246,.55)", 1, 0), q50: LN("rgba(109,40,217,.45)", 1, 1) };
-    if (BG) {   // floor mask only covers history, so the fan can show below the floor
+    if (BG) {
       const D = (k, from) => bgT.map((t, i) => ({ time: t, value: BG[k][i] })).filter((x) => x.value != null && (!from || x.time >= from));
-      const nowW = weekStart(BM.utcDay(Date.now())); gA.ceil.setData(D("ceil")); gA.floorM.setData(D("floor").filter((x) => x.time <= nowW)); lA.ceil.setData(D("ceil")); lA.mid.setData(D("mid")); lA.floor.setData(D("floor"));
+      const nowW = weekStart(BM.utcDay(Date.now())); gA.ceil.setData(D("ceil")); gA.floorM.setData(D("floor")); lA.ceil.setData(D("ceil")); lA.mid.setData(D("mid")); lA.floor.setData(D("floor"));
       // the past cycle band stops at this week; from here on the dampened forward path (below) takes over
       const past = (k) => D(k).filter((x) => x.time <= nowW);
       gA.bandHi.setData(past("band_hi")); lA.bandMd.setData(past("band_md"));
@@ -85,7 +86,7 @@
     let histEnd = histAData.length ? histAData[histAData.length - 1].time : wk0 - 7 * DAY, histEndV = histAData.length ? histAData[histAData.length - 1].value : null;
     /* Live tail: from the last weekly close through this week's daily closes to the live price, coloured by score, redrawn every tick.
        Drawn as a series primitive at fractional x inside the current week's slot, so the weekly time spacing is not distorted. */
-    const tail = { pts: [], label: "", col: "#6b7280",
+    const tail = { pts: [], col: "#6b7280",
       attached(p) { this.chart = p.chart; this.series = p.series; this.req = p.requestUpdate; }, detached() {}, updateAllViews() {},
       paneViews() { return [tailView]; } };
     const tailView = { zOrder: () => "top", renderer: () => ({ draw(target) {
@@ -99,14 +100,30 @@
         for (let i = 1; i < P.length; i++) { g.strokeStyle = P[i].c; g.beginPath(); g.moveTo(P[i - 1].x, P[i - 1].y); g.lineTo(P[i].x, P[i].y); g.stroke(); }
         const e = P[P.length - 1]; if (!e) { g.restore(); return; }
         g.beginPath(); g.arc(e.x, e.y, mobile ? 4 : 5, 0, 2 * Math.PI); g.fillStyle = tail.col; g.fill(); g.lineWidth = 2; g.strokeStyle = "#ffffff"; g.stroke();
-        g.font = (mobile ? "11px" : "12px") + " -apple-system, Segoe UI, Roboto, sans-serif"; const w = g.measureText(tail.label).width + 10, h = 18;
-        let bx = Math.min(e.x - w / 2, mediaSize.width - w - 2), by = e.y - 30; bx = Math.max(2, bx); if (by < 2) by = e.y + 12;
-        g.fillStyle = "rgba(255,255,255,0.92)"; g.strokeStyle = "#d1d5db"; g.lineWidth = 1; g.beginPath(); g.rect(bx, by, w, h); g.fill(); g.stroke();
-        g.fillStyle = "#1f2937"; g.textBaseline = "middle"; g.fillText(tail.label, bx + 5, by + h / 2 + 0.5);
         g.restore();
       });
     } }) };
     histA.attachPrimitive(tail); window.__app.heroChart = A;
+    /* Hover tooltip: weekly close and Cycle Heat Score for past weeks; live price and live score for this week; fan median and 5-95% after now. */
+    const zoneOf = (s) => s == null || !isFinite(s) ? "n/a" : s >= C.score_hot ? "hot" : s >= C.score_warm ? "warm" : s >= 40 ? "neutral" : "cool";
+    const sByW = new Map(histAData.map((x) => [x.time, x.s])), vByW = new Map(histAData.map((x) => [x.time, x.value]));
+    const fmtD = (t) => new Date(t * 1000).toISOString().slice(0, 10);
+    let tipLive = null;
+    const tip = document.createElement("div"); tip.className = "herotip"; tip.style.display = "none"; $("heroC").appendChild(tip);
+    A.subscribeCrosshairMove((pr) => {
+      if (!pr.point || pr.time == null || pr.point.x < 0 || pr.point.y < 0) { tip.style.display = "none"; return; }
+      const t = pr.time, d = pr.seriesData.get(histA); let h = "";
+      if (t > histEnd && tipLive) { const L = tipLive, lbl = L.via === "close" ? "last close" : L.via === "stale" ? "stale" : "now";
+        if (t < histEnd + 14 * DAY) h = `<b>${lbl} ${usd(L.p, 0)}</b><br>score <b style="color:${heatColor(L.s)}">${f(L.s, 1)} ${L.z}</b>`;
+        else if (fanCache) { const r = fanCache.rows.find((x) => x.t === t); if (r) h = `${fmtD(t)}<br>fan median ${usdK(r.q.q50)}<br>5-95%: ${usdK(r.q.q5)} - ${usdK(r.q.q95)}`; } }
+      else { const v = d && d.value != null ? d.value : vByW.get(t), s = sByW.get(t);
+        if (v != null) h = `week of ${fmtD(t)}<br><b>${usd(v, 0)}</b> close<br>score <b style="color:${heatColor(s)}">${s == null ? "n/a" : f(s, 1) + " " + zoneOf(s)}</b>`; }
+      if (!h) { tip.style.display = "none"; return; }
+      tip.innerHTML = h; tip.style.display = "block";
+      const W = $("heroC").clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+      let x = pr.point.x + 14, y = pr.point.y - th - 10; if (x + tw > W - 70) x = pr.point.x - tw - 14; if (y < 4) y = pr.point.y + 14;
+      tip.style.left = Math.max(4, x) + "px"; tip.style.top = y + "px";
+    });
     /* Forward cycle path (display only): dampened cycle band from data/hero_fwd.json, drawn from this week to the end of the fan,
        same light-blue band + middle line as the past band, over the (faint) fan. The first 8 weeks blend in log space from the
        past band's value to the dampened one, so the two meet without a step at "now". */
@@ -129,7 +146,7 @@
         g.beginPath(); P.forEach((q, i) => i ? g.lineTo(q.x, q.md) : g.moveTo(q.x, q.md)); g.strokeStyle = "rgba(59,130,246,.55)"; g.lineWidth = 1; g.stroke(); g.restore();
       });
     } }) };
-    fA.q5.attachPrimitive(fwd);   // after the fan areas, before the trend/floor/ceiling lines (same layering as the past band)
+    fA.q5.attachPrimitive(fwd);   // after the fan areas, before the floor mask and the trend/floor/ceiling lines
     const liveA = histA.createPriceLine({ price: 1, color: "#3b82f6", lineWidth: 1, lineStyle: 3, lineVisible: false, axisLabelVisible: true, axisLabelColor: "#3b82f6", axisLabelTextColor: "#ffffff", title: "" });
     halvingLines(A, $("heroC"));
     A.timeScale().fitContent();
@@ -176,7 +193,8 @@
       const pts = [{ T: histEnd + 7 * DAY, v: histEndV ?? p, c: col }];
       for (let i = 0; i < cT.length; i++) if (cT[i] >= wk && cT[i] < BM.utcDay(now)) { const s = scoreByT.get(cT[i]); pts.push({ T: cT[i] + DAY, v: closes[i], c: s != null ? heatColor(s) : col }); }
       pts.push({ T: now / 1000, v: p, c: col });
-      tail.pts = pts; tail.col = !via || via === "live" ? col : "#9ca3af"; tail.label = `${via === "close" ? "last close" : via === "stale" ? "stale" : "now"} ${usdK(p)} · ${f(calc.score, 0)} ${calc.scoreZone}`; tail.req && tail.req();
+      tail.pts = pts; tail.col = !via || via === "live" ? col : "#9ca3af"; tail.req && tail.req();
+      tipLive = { p, s: calc.score, z: calc.scoreZone, via };
       window.__app.tail = { x: null, p, n: pts.length };
       { const live = !via || via === "live", c = live ? "#3b82f6" : "#9ca3af"; liveA.applyOptions({ price: p, color: c, axisLabelColor: c }); }
       { const qe = fanCache.qe; $("heroAlt").textContent = `Projection fan at its end (Dec 31 2028), recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }

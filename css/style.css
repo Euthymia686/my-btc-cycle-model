@@ -77,3 +77,5 @@ button.mini{font-size:11px;padding:1px 8px;margin-left:6px;vertical-align:middle
 .px .pxlbl{font-size:13px;font-weight:500}
 .pxat .mode{font-weight:600}.pxat .m-stream{color:#16a34a}.pxat .m-poll{color:#2563eb}.pxat .m-stale{color:#f59e0b}.pxat .m-close{color:var(--mute)}
 @media (max-width:520px){.diag{text-align:left}}
+
+#heroC{position:relative}.herotip{position:absolute;z-index:5;pointer-events:none;background:rgba(255,255,255,.96);border:1px solid #d1d5db;border-radius:4px;padding:5px 8px;font-size:12px;line-height:1.45;color:#1f2937;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.08)}
