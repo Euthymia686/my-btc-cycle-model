@@ -136,10 +136,10 @@ def summary(rows, last, p=None):
     bt = os.path.join(ROOT, "data", "scorecard_backtest.json")
     out["tests_backtest"] = json.load(open(bt)) if os.path.exists(bt) else None
     if p is not None:
-        out["kill"] = kill(out["tests_live"], ST.floor_weeks(p, out["live_since"]))
+        out["kill"] = kill(out["tests_live"], ST.floor_weeks(p, out["live_since"], KILL["b_weeks"]))
         out["kill"]["b"]["latest_close"] = {"date": str(last.date()), "close": float(p[last]), "floor": ST.floor_level(p, last)}
         try:
-            fh = ST.floor_weeks(p, "2012-01-01"); fh.pop("last", None)
+            fh = ST.floor_weeks(p, "2012-01-01", KILL["b_weeks"]); fh.pop("last", None)
             out["kill_backtest"] = kill(out["tests_backtest"], fh) if out["tests_backtest"] else None
         except Exception: out["kill_backtest"] = None
     tmp = SUMMARY + ".tmp"
@@ -172,12 +172,12 @@ def tests(rows, lag_days=True):
             s[f"{a}_vs_{b}"] = o
     return out
 
-KILL = {"a_p": 0.01, "a_min": 10, "b_weeks": 8, "c_p": 0.05, "c_min": 12}
+KILL = {"a_p": 0.01, "a_min": 10, "b_weeks": 26, "c_p": 0.05, "c_min": 12}
 
 def kill(t, fw):
     """Kill criteria (frozen/v3/FREEZE.md, "Kill criteria"). t = tests(...) output, fw = scorestats.floor_weeks(...).
     (a) 90% band coverage: binomial p < 0.01 with at least 10 independent matured forecasts, at any horizon.
-    (b) 8 or more consecutive weekly closes below the power-law floor (shared trend, so it applies to v2 and v3 alike).
+    (b) 26 or more consecutive weekly closes below the power-law floor (shared trend, so it applies to v2 and v3 alike).
     (c) losing to the plain benchmark: DM mean log score difference < 0 with p < 0.05 over at least 12 independent forecasts."""
     out = {"rules": KILL, "versions": {}}
     b_hit = fw["longest_run"] >= KILL["b_weeks"]

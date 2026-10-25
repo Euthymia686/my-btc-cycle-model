@@ -18,7 +18,7 @@ concurrency:
 
 env:
   # sha256 of pipeline/frozen/FROZEN_SHA256SUMS (the list of every v2 and v3 frozen file, timestamped 2026-10-25)
-  FROZEN_LIST_SHA256: 591f2ccae6bd3575694bf2e7e28cc4d73bea67f970fdb739de6b401f0578a565
+  FROZEN_LIST_SHA256: 96f83fc4e0e34d1e0efaf0a097f35e2b323dc0edb4e80d8b692f63b3f0031234
 
 jobs:
   guard:

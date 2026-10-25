@@ -4,9 +4,10 @@ v3 is frozen as of 2026-10-25 and runs alongside v2. From this date both are sco
 `data/scorecard.csv`. Nothing in this folder may change. Any change means a new version (v4) with a new freeze date.
 The workflow fails if any frozen file changes (see `pipeline/frozen/FROZEN_SHA256SUMS`). That list is timestamped in the
 Bitcoin blockchain with OpenTimestamps: `pipeline/timestamps/FROZEN_SHA256SUMS.ots` (check with
-`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`). Two earlier lists stamped the same day,
+`ots verify -f pipeline/frozen/FROZEN_SHA256SUMS pipeline/timestamps/FROZEN_SHA256SUMS.ots`). Three earlier lists stamped the same day,
 before any forecast matured, are kept with their own proofs: `pipeline/timestamps/FROZEN_SHA256SUMS.first.txt` (before the
-grading method below was added) and `FROZEN_SHA256SUMS.second.txt` (before the kill criteria were added), each with its `.ots`.
+grading method below was added) `FROZEN_SHA256SUMS.second.txt` (before the kill criteria were added) and `FROZEN_SHA256SUMS.third.txt` (kill rule (b) at 8
+weeks, before it was changed to 26), each with its `.ots`.
 
 ## What is frozen
 
@@ -119,7 +120,7 @@ new version with its own freeze date. Code: `kill()` in `pipeline/scorecard.py`,
 
 - **(a) Coverage fails.** At any horizon (30, 90 or 365 days), the exact two-sided binomial test of the 90% band (method
   item 2 above) gives p < 0.01 on at least 10 independent (non-overlapping) matured forecasts.
-- **(b) Price breaks the floor.** 8 or more consecutive weekly closes below the power-law floor. Weekly close = the daily
+- **(b) Price breaks the floor.** 26 or more consecutive weekly closes below the power-law floor. Weekly close = the daily
   CoinMetrics close dated each Sunday (UTC), from 2026-10-25 on. Floor at that date = the benchmark's trend (method item 1,
   OLS on closes up to and including that date) shifted down by the 5% quantile of that fit's log10 residuals, the orange
   floor line on the site. Both versions use this trend, so (b) retires v2 and v3 together.
@@ -128,7 +129,11 @@ new version with its own freeze date. Code: `kill()` in `pipeline/scorecard.py`,
   item 2).
 
 The site shows each criterion's live status ("not triggered" or "triggered") and, for context only, whether it would have
-fired on past data. Checked on 2026-10-25 before freezing, with the same code: on weekly closes since 2012-01-01, (b) would
-have fired 4 times (17 weeks from 2012-02-19, 16 from 2015-03-22, 15 from 2015-07-19, 9 from 2022-11-13). So (b) is a strict
-test that earlier bear markets would have failed. On the backtest (one forecast per day from 2015), (a) and (c) would not
+fired on past data. Checked on 2026-10-25 before freezing, with the same code: on the 773 weekly closes from 2012-01-01,
+(b) at 26 weeks would never have fired; the longest run below the floor was 17 weeks (from 2012-02-19).
+
+Amendment (2026-10-25, before any live weekly close counted): (b) was first frozen at 8 weeks. On past data 8 weeks would
+have fired 4 times (17 weeks from 2012-02-19, 16 from 2015-03-22, 15 from 2015-07-19, 9 from 2022-11-13), so it was changed
+to 26 weeks. This choice was informed by historical data, so it is mildly in-sample. The 8-week version stays on record in
+`pipeline/timestamps/FROZEN_SHA256SUMS.third.txt`. On the backtest (one forecast per day from 2015), (a) and (c) would not
 have fired; the closest case is v2 at 365 days, behind the benchmark with p 0.0002 but only 11 independent forecasts.

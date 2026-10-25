@@ -49,13 +49,13 @@
   }
   function killBlock(K, KB) {
     if (!K || !K.versions) return "";
-    const R = K.rules || { a_p: 0.01, a_min: 10, b_weeks: 8, c_p: 0.05, c_min: 12 };
+    const R = K.rules || { a_p: 0.01, a_min: 10, b_weeks: 26, c_p: 0.05, c_min: 12 };
     const st = (on) => on ? `<td class="bad">triggered</td>` : `<td class="ok">not triggered</td>`;
     const aNote = (V) => { const r = V.a.filter((x) => x.eff_n >= R.a_min && x.p != null); if (!r.length) return `waiting for ${R.a_min} independent results (have ${Math.max(...V.a.map((x) => x.eff_n))})`; const m = r.reduce((x, y) => (y.p < x.p ? y : x)); return `lowest p ${pv(m.p)} (${m.h} days, n=${m.eff_n})`; };
     const cNote = (V) => { const r = V.c.filter((x) => x.p != null && x.mean_diff < 0); if (!r.length) { const n = Math.max(...V.c.map((x) => x.eff_n || 0)); return n < R.c_min ? `waiting for ${R.c_min} independent results (have ${n})` : "never behind the benchmark"; } const m = r.reduce((x, y) => (y.p < x.p ? y : x)); return `behind at ${m.h} days, p ${pv(m.p)}, n=${m.eff_n}${m.eff_n < R.c_min ? " (below " + R.c_min + ")" : ""}`; };
     const b = K.b || {}, lc = b.latest_close;
     const bLive = `${b.current_run || 0} weeks below the floor now (longest ${b.longest_run || 0})` + (lc ? `; latest close ${usd(lc.close)} vs floor ${usd(lc.floor)}` : "");
-    const bb = (KB || {}).b; const bPast = !bb ? "--" : bb.runs && bb.runs.length ? `would have triggered ${bb.runs.length} times: ` + bb.runs.map((r) => `${r.weeks} weeks from ${fmtDay(r.start)}`).join(", ") : "never";
+    const bb = (KB || {}).b; const bPast = !bb ? "--" : bb.runs && bb.runs.length ? `would have triggered ${bb.runs.length} times: ` + bb.runs.map((r) => `${r.weeks} weeks from ${fmtDay(r.start)}`).join(", ") : "never" + (bb.longest_run ? ` (longest run ${bb.longest_run} weeks, from ${fmtDay(bb.longest_start)})` : "");
     const V2 = K.versions.v2, V3 = K.versions.v3, P2 = KB && KB.versions ? KB.versions.v2 : null, P3 = KB && KB.versions ? KB.versions.v3 : null;
     const past = (on, txt) => `<td class="${on ? "bad" : ""}">${on ? "yes" : "no"}<span class="small">, ${txt}</span></td>`;
     const aOn = (V) => V.a.some((x) => x.triggered), cOn = (V) => V.c.some((x) => x.triggered);

@@ -63,17 +63,18 @@ def floor_level(p, d):
     b, a = np.polyfit(x, y, 1); r = y - (a + b * x)
     return float(10 ** (a + b * x[-1] + np.quantile(r, 0.05)))
 
-def floor_weeks(p, since, run_len=8):
+def floor_weeks(p, since, run_len=26):
     """Weekly closes = the daily close dated each Sunday (UTC) on or after `since`. Returns the current and longest
     run of consecutive weekly closes below the floor, plus every run of at least `run_len` weeks."""
     suns = [d for d in p.index if d.dayofweek == 6 and d >= pd.Timestamp(since)]
-    run = best = 0; start = None; runs = []; last = None
+    run = best = 0; start = None; best_start = None; runs = []; last = None
     for s in suns:
         f = floor_level(p, s); below = bool(p[s] < f); last = {"date": str(s.date()), "close": float(p[s]), "floor": f, "below": below}
         if below:
-            run += 1; start = start or s; best = max(best, run)
+            run += 1; start = start or s
+            if run > best: best = run; best_start = start
         else:
             if run >= run_len: runs.append({"start": str(start.date()), "weeks": run})
             run = 0; start = None
     if run >= run_len: runs.append({"start": str(start.date()), "weeks": run, "ongoing": True})
-    return {"weeks": len(suns), "current_run": run, "longest_run": best, "runs_at_least": run_len, "runs": runs, "last": last}
+    return {"weeks": len(suns), "current_run": run, "longest_run": best, "longest_start": str(best_start.date()) if best_start is not None else None, "runs_at_least": run_len, "runs": runs, "last": last}

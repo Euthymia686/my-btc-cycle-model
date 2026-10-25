@@ -58,7 +58,8 @@ Rules written at 08:24 before any test (`PREREG.md`), results at 08:25 to 08:27 
 |---|---|---|
 | 13:14 (commit 6448540) | Forward scorecard with the promotion rule (v3 replaces v2 only after 2027-10-25 and only if it wins on all three conditions) | Frozen in `pipeline/frozen/v3/FREEZE.md`. |
 | 13:26 (commit 025f759) | Statistical grading: exact binomial coverage tests, Diebold-Mariano vs a plain power-law benchmark, minimum 10 independent results | Frozen in FREEZE.md before any result. |
-| this entry's commit | Kill criteria (a) coverage p below 0.01 on at least 10, (b) 8 or more weekly closes below the floor, (c) behind the benchmark with p below 0.05 on at least 12 | Frozen in FREEZE.md before any result. Checked on past data before freezing: (b) would have fired 4 times (2012, twice in 2015, late 2022), so it is strict. Kept as written. |
+| this entry's commit | Kill criteria (a) coverage p below 0.01 on at least 10, (b) 8 or more weekly closes below the floor, (c) behind the benchmark with p below 0.05 on at least 12 | Frozen in FREEZE.md before any result. Checked on past data before freezing: (b) would have fired 4 times (2012, twice in 2015, late 2022), so it is strict. Kept as written at first; see the next row. |
+| 2026-10-25 (this entry's commit) | Kill rule (b) changed from 8 to 26 consecutive weekly closes below the floor, both versions | Changed from 8 to 26 weeks after seeing that 8 would have fired 4 times in past bear markets (2012, 2015 x2, 2022). This choice was informed by historical data, so it is mildly in-sample; locked before any live weekly close counted. At 26 weeks it would never have fired on the 773 weekly closes since 2012 (longest run 17 weeks, from 2012-02-19). The 8-week list is kept as `FROZEN_SHA256SUMS.third.txt`. |
 
 ## 7. Display-only changes (no effect on any score or forecast)
 

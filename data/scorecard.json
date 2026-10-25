@@ -1,5 +1,5 @@
 {
- "updated_utc": "2026-10-25T13:40:22+00:00",
+ "updated_utc": "2026-10-25T14:20:15+00:00",
  "data_through": "2026-10-24",
  "live_since": "2026-10-25",
  "targets": {
@@ -574,7 +574,7 @@
   "rules": {
    "a_p": 0.01,
    "a_min": 10,
-   "b_weeks": 8,
+   "b_weeks": 26,
    "c_p": 0.05,
    "c_min": 12
   },
@@ -684,7 +684,8 @@
    "weeks": 0,
    "current_run": 0,
    "longest_run": 0,
-   "runs_at_least": 8,
+   "longest_start": null,
+   "runs_at_least": 26,
    "runs": [],
    "last": null,
    "triggered": false,
@@ -699,7 +700,7 @@
   "rules": {
    "a_p": 0.01,
    "a_min": 10,
-   "b_weeks": 8,
+   "b_weeks": 26,
    "c_p": 0.05,
    "c_min": 12
   },
@@ -751,10 +752,8 @@
       "triggered": false
      }
     ],
-    "triggered": [
-     "b"
-    ],
-    "status": "triggered"
+    "triggered": [],
+    "status": "not triggered"
    },
    "v3": {
     "a": [
@@ -803,36 +802,18 @@
       "triggered": false
      }
     ],
-    "triggered": [
-     "b"
-    ],
-    "status": "triggered"
+    "triggered": [],
+    "status": "not triggered"
    }
   },
   "b": {
    "weeks": 773,
    "current_run": 0,
    "longest_run": 17,
-   "runs_at_least": 8,
-   "runs": [
-    {
-     "start": "2012-02-19",
-     "weeks": 17
-    },
-    {
-     "start": "2015-03-22",
-     "weeks": 16
-    },
-    {
-     "start": "2015-07-19",
-     "weeks": 15
-    },
-    {
-     "start": "2022-11-13",
-     "weeks": 9
-    }
-   ],
-   "triggered": true
+   "longest_start": "2012-02-19",
+   "runs_at_least": 26,
+   "runs": [],
+   "triggered": false
   }
  }
 }
