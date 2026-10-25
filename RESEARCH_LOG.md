@@ -65,6 +65,15 @@ Rules written at 08:24 before any test (`PREREG.md`), results at 08:25 to 08:27 
 
 - 11:26 (commit 756b74d): fan shading and forward path cut off at the floor line on the chart, for readability.
 - 12:49 (commit 8ecf210): plain-language labels and (i) explainers.
+- 2026-10-25 (commit with the crowd gauge): chart time axis, power-law corridor and dampened forward cycle path extended to the end of 2030 (the cycle path stops where the prior cycles' data ends, late 2030 for now); the locked fan still ends Dec 31 2028, marked by a dashed line. The live-price header block was removed (the live price stays on the chart, with a small status indicator), and the MSTR premium (mNAV) tile was removed from the site (the pipeline still writes `data/mstr.json`). New display-only "Crowd euphoria" tile (`crowd.py`, `data/crowd.json`): Fear & Greed plus annualized BTC perpetual funding. No score, fan or locked file changed.
+
+## 8. Idea log (candidates for the next yearly review, 2027-10-25)
+
+Dated ideas only; nothing here changes v1, v2 or v3. An adopted idea becomes a new locked version (v4) at the review.
+The same entries are kept in `IDEAS.md`.
+
+- 2026-10-25: Crowd-euphoria signal (funding rates + Fear & Greed) added as display only. Proposed as a v4 candidate. A shadow candidate score will be pre-registered and tracked live until the 2027-10-25 review.
+- 2026-10-25: Signal review for v4 candidate. Price-stretch family (Mayer, 200W, trend multiple, Pi Cycle) is largely redundant; family averaging already limits its weight. Candidates for the 2027-10-25 review: add crowd euphoria (funding rates + Fear & Greed); consider dropping or down-weighting Pi Cycle ratio (did not fire at the 2025 top) and active addresses (weakened by ETF/exchange custody and off-chain activity); add a long-term-holder selling signal if a free, reliable data source exists. No change to v2/v3.
 
 ## How to add an entry
 

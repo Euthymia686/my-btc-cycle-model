@@ -12,8 +12,9 @@
   const ago = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 90 ? s + "s ago" : s < 5400 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
   const load = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); });
 
-  const [M, H, FAN2, HEALTH, MS, META] = await Promise.all(["model", "history", "fan2", "health", "mstr", "meta"].map(load));
-  const [BG, W, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("wiki").catch(() => null), load("hero_fwd").catch(() => null)]);   // optional files
+  const [M, H, FAN2, HEALTH, META] = await Promise.all(["model", "history", "fan2", "health", "meta"].map(load));
+  const [BG, W, FWD] = await Promise.all([load("hero_bg").catch(() => null), load("wiki").catch(() => null), load("hero_fwd").catch(() => null)]);
+  const CR = await load("crowd").catch(() => null);   // display-only crowd euphoria gauge (optional file)   // optional files
   $("built").textContent = `Daily data files built ${META.built_utc.replace("T", " ").slice(0, 16)} UTC (on-chain as of ${M.last_daily}). Live prices and blocks come directly from the exchanges and mempool.space into your browser (WebSocket streaming, HTTPS polling as fallback).`;
 
   /* ---------- live feeds (start connecting right away, in parallel with the optional gap-fill below) ---------- */
@@ -50,17 +51,37 @@
   }
   const hms = (ms) => new Date(ms).toISOString().slice(11, 19);
   const diagTxt = (d) => [d.ws ? "WebSocket " + d.ws : null, "REST " + d.rest].filter(Boolean).join(" / ");
-  function renderFeeds() {
-    const out = new Set(lastTick && priceVia === "live" ? lastTick.dropped : []);
-    const shown = allSrc.filter((x) => feeds.includes(x) || x.active || x.at);
-    $("feeds").innerHTML = shown.map((x) => { const st = out.has(x.src.name) ? "out" : x.status(), d = x.diag();
-      return `<span class="feed${st === "stale" || st === "down" || st === "out" ? " off" : ""}" title="${x.src.name}: ${diagTxt(d)}; ${x.at ? "last price " + hms(x.at) + " UTC (" + ago(Date.now() - x.at) + ") via " + (x.via === "ws" ? "WebSocket" : "REST") : "no price yet"}${st === "out" ? " · not in the index: > 0.5% from the others" : st === "stale" ? " · not in the index: no price for > 15 s" : ""}"><span class="dot ${st}"></span>${x.src.name} <b>${x.price ? usd(x.price, 0) : "--"}</b></span>`; }).join("")
-      + `<span class="feed" title="Blocks: mempool.space ${diagTxt(blocks.diag())}${blocks.src ? "; last from " + blocks.src : ""}"><span class="dot ${blocks.status()}"></span>Blocks <b>${blocks.height ? blocks.height.toLocaleString() : "--"}</b></span>`;
-    // per-source diagnostic line (also useful when a work network blocks crypto sites)
+  /* Live-status details, shown in the (i) next to the small status indicator in the chart header (the price itself is on the chart).
+     Built fresh each time the note opens: one line per price source (price, status, WebSocket/REST state), blocks, connection check. */
+  const STNAME = { live: "fresh", rest: "waiting", stale: "no price for > 15 s (not used)", down: "down", out: "> 0.5% from the others (left out)" };
+  function liveInfo() {
+    const now = Date.now(), out = new Set(lastTick && priceVia === "live" ? lastTick.dropped : []), L = [];
+    L.push("Status of the live BTC/USD price shown on the chart (right-axis price tag, the dot and the hover note). The price is the middle (median) of several exchanges, using only sources with a price under 15 s old; one more than 0.5% away from the others is left out. \"live\" = streaming connection; \"polling every 10s\" = re-checked by ordinary web requests (e.g. when a network blocks WebSockets); STALE = no new price for 15 s; gray \"last close\" = no live source reachable, so the model runs on the last daily close.");
+    L.push("");
+    if (priceVia === "live") L.push(`Now: ${lastTick.streaming ? "live (streaming)" : `live (polling every ${Feeds.POLL_MS / 1000}s)`}, ${usd(lastTick.p, 0)} from ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""} (${lastTick.used.join(", ")}), last tick ${hms(lastTick.at)} UTC${lastTick.disagree ? ", sources disagree" : ""}.`);
+    else if (priceVia === "stale") L.push(`Now: STALE, last price ${usd(lastTick.p, 0)} at ${hms(lastTick.at)} UTC (${ago(now - lastTick.at)}), reconnecting.`);
+    else L.push(`Now: not live, showing the last daily close (${lastClose()}). ${notLiveWhy(now)}.`);
+    L.push("");
+    for (const x of allSrc.filter((x) => feeds.includes(x) || x.active || x.at)) { const st = out.has(x.src.name) ? "out" : x.status();
+      L.push(`${x.src.name}: ${x.price ? usd(x.price, 0) : "--"} · ${STNAME[st] || st} · ${diagTxt(x.diag())}${x.at ? ` · last ${hms(x.at)} UTC via ${x.via === "ws" ? "WebSocket" : "REST"}` : ""}`); }
+    L.push(`Blocks: ${blocks.height ? blocks.height.toLocaleString() : "--"} · ${diagTxt(blocks.diag())}${blocks.src ? " · from " + blocks.src : ""}`);
+    // connection check (also useful when a work network blocks crypto sites)
     const parts = feeds.map((x) => { const d = x.diag(); return `${x.src.name}: WS ${d.ws}, REST ${d.rest}`; })
       .concat(pollers.filter((x) => x.active || x.restTries).map((x) => `${x.src.name}: REST ${x.diag().rest}`))
       .concat([`Blocks: WS ${blocks.diag().ws}, REST ${blocks.diag().rest}`]);
-    $("diag").textContent = "connection check · " + parts.join(" · ");
+    L.push(""); L.push("Connection check: " + parts.join(" · "));
+    return L.join("\n");
+  }
+  Explain.T.live = liveInfo;
+  function notLiveWhy(now) { const tried = now - t0 > 12000, wsBlocked = feeds.every((x) => x.diag().ws === "blocked"), restBlocked = allSrc.every((x) => x.restErr && !x.at);
+    return !tried ? "Trying exchange WebSockets, then HTTPS polling" : `${wsBlocked ? "WebSockets blocked" : "No WebSocket price"}${restBlocked ? ", HTTPS price APIs blocked too (network filter?)" : ", polling HTTPS"}`; }
+  function renderStatus(now) {   // small indicator in the chart header: dot + live / live (polling every 10s) / STALE / last close (gray)
+    const el = $("liveSt"); if (!el) return;
+    let cls, txt, ttl;
+    if (priceVia === "live") { cls = lastTick.streaming ? "stream" : "poll"; txt = lastTick.streaming ? "live" : `live (polling every ${Feeds.POLL_MS / 1000}s)`; ttl = `last tick ${hms(lastTick.at)} UTC`; }
+    else if (priceVia === "stale") { cls = "stale"; txt = "STALE"; ttl = `last price ${ago(now - lastTick.at)}, reconnecting`; }
+    else { cls = "close"; txt = now - t0 > 12000 ? "last close · not live" : "connecting..."; ttl = notLiveWhy(now); }
+    el.className = "livest m-" + cls; $("liveTxt").textContent = txt; el.title = ttl;
   }
   function flash(el) { el.style.transition = "none"; el.style.color = "#22c55e"; requestAnimationFrame(() => { el.style.transition = "color 2s"; el.style.color = ""; }); }
 
@@ -73,28 +94,27 @@
   let calc = null;
 
   /* ---------- tiles ---------- */
-  const TILE_ORDER = ["cycle_day", "mayer", "p200w", "trend_mult", "mvrv_z", "pi_ratio", "wiki", "activity"];
-  $("tiles").innerHTML = TILE_ORDER.map((s) => `<div class="tile" id="t_${s}"></div>`).join("") + ["mnav", "levels"].map((s) => `<div class="tile" id="t_${s}"></div>`).join("");
+  const TILE_ORDER = ["cycle_day", "mayer", "p200w", "trend_mult", "mvrv_z", "pi_ratio", "wiki", "crowd", "activity", "levels"];
+  $("tiles").innerHTML = TILE_ORDER.map((s) => `<div class="tile" id="t_${s}"></div>`).join("");
   const badge = (k) => `<span class="badge ${k}">${k.toUpperCase()}</span>`;
   let priceVia = "live";
   const lastClose = () => isoDay(cT[cT.length - 1]);
-  function tile(id, { title, val, zone, heat, desc, kind }) {
+  function tile(id, { title, val, zone, zlabel, heat, desc, kind }) {
     const el = $("t_" + id); if (!el) return; const z = zone || "n/a";
     const upd = kind === "daily" || kind === "monthly" ? `<div class="upd">updated ${kind}, last: ${(desc.match(/\d{4}-\d{2}(-\d{2})?/) || [lastClose()])[0]}</div>`
       : priceVia === "close" ? `<div class="upd">no live price reachable · showing the last daily close (${lastClose()})</div>`
       : priceVia === "stale" && kind === "live" ? `<div class="upd">price STALE · last tick ${hms(lastTick.at)} UTC, reconnecting</div>` : "";
     if (kind === "live" && priceVia === "close") kind = "daily"; else if (kind === "live" && priceVia === "stale") kind = "stale";
     el.className = "tile z-" + (z === "n/a" ? "na" : z);
-    el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)} ${badge(kind)}</span><span class="zn z-${z}">${z}</span></div><div class="val">${val}</div>`
+    el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)} ${badge(kind)}</span><span class="zn z-${z}">${zlabel || z}</span></div><div class="val">${val}</div>`
       + (heat != null ? `<div class="bar z-${z}" title="heat ${f(heat, 0)} / 100"><span style="width:${Math.max(1, Math.min(100, heat))}%"></span></div>` : "") + `<div class="d">${desc}</div>` + upd;
   }
   function tileFailed(id, title, e) {   // never leave a tile blank: say what it is and when its data last updated
     const el = $("t_" + id); if (!el) return; el.className = "tile z-na";
     el.innerHTML = `<div class="t"><span>${title} ${Explain.i(id)}</span><span class="zn">n/a</span></div><div class="val pending">not available right now</div><div class="upd">updated daily, last: ${M.last_daily}</div>`;
     window.__app.errors.push("tile " + id + ": " + (e && e.message)); }
-  const TITLES = { cycle_day: "Cycle timing", mayer: "Price / 200-day avg", p200w: "Price / 200-week avg", trend_mult: "Price / long-term trend", mvrv_z: "Market value vs holder cost", pi_ratio: "Pi Cycle top ratio", wiki: "Wikipedia attention", activity: "Network activity", mnav: "MSTR premium (mNAV)", levels: "Trend line & realized price" };
+  const TITLES = { cycle_day: "Cycle timing", mayer: "Price / 200-day avg", p200w: "Price / 200-week avg", trend_mult: "Price / long-term trend", mvrv_z: "Market value vs holder cost", pi_ratio: "Pi Cycle top ratio", wiki: "Wikipedia attention", crowd: "Crowd euphoria", activity: "Network activity", levels: "Trend line & realized price" };
   for (const id of Object.keys(TITLES)) { const el = $("t_" + id); if (el) { el.className = "tile z-na"; el.innerHTML = `<div class="t"><span>${TITLES[id]} ${Explain.i(id)}</span></div><div class="val pending">loading...</div>`; } }
-  const mnavZone = (m) => m < 1 ? "cool" : m < 1.5 ? "neutral" : m < 2.5 ? "warm" : "hot";
   function renderTiles(c) {
     const H_ = c.heat, Z = c.zones, T = c.thr, hotP = (s, base) => T[s] ? ` (hot &asymp; ${usdK(T[s].hot * base)})` : "";
     const z = (s) => `heat ${f(H_[s], 0)}`;
@@ -109,13 +129,24 @@
     try { if (!W) throw new Error("data/wiki.json not available"); const wz = BM.zone(W.heat, 80, 65);
       tile("wiki", { title: TITLES.wiki, kind: "daily", val: `${Math.round(W.ma30).toLocaleString("en-US")} <span class="sm">views/day (30-day avg)</span>`, zone: wz, heat: W.heat,
         desc: `heat ${f(W.heat, 0)} = percentile vs the prior 8 years &middot; English Wikipedia "Bitcoin" article, as of ${W.asof}${sparkline()}<span class="note">display only: not in the Cycle Heat Score, which still uses Google Trends (${(M.fixed.trends.month || "").slice(0, 7)}, heat ${f(M.fixed.trends.heat, 0)}). Zones 80/65/40, not calibrated.</span>` }); } catch (e) { tileFailed("wiki", TITLES["wiki"], e); }
+    try { if (!CR || CR.gauge == null) throw new Error("data/crowd.json not available");
+      const czCls = { calm: "cool", normal: "neutral", excited: "warm", euphoric: "hot" }[CR.zone] || "n/a", fu = CR.funding || {}, fg = CR.fng || {};
+      tile("crowd", { title: TITLES.crowd, kind: "daily", val: `${f(CR.gauge, 0)} <span class="sm">/ 100 &middot; ${CR.zone}</span>`, zone: czCls, zlabel: CR.zone, heat: CR.gauge,
+        desc: `Fear &amp; Greed ${fg.value != null ? f(fg.value, 0) : "--"} (7-day avg ${fg.avg7 != null ? f(fg.avg7, 0) : "--"}) &middot; BTC perpetual funding ${fu.ann7 != null ? f(fu.ann7, 1) + "%" : "--"} a year (7-day avg; 30-day ${fu.ann30 != null ? f(fu.ann30, 1) + "%" : "--"}), as of ${CR.asof}${crowdSpark()}<span class="note">display only, a contrarian crowd gauge: not in the Cycle Heat Score or any graded version. Zones calm / normal / excited / euphoric at 25 / 55 / 75, not calibrated.</span>` }); } catch (e) { tileFailed("crowd", TITLES["crowd"], e); }
     try { tile("activity", { title: TITLES.activity, kind: "daily", val: f(ac.value) + "x", zone: Z.activity, heat: H_.activity, desc: `heat ${f(ac.heat, 0)} &middot; active addresses, 30-day vs 1-year average, as of ${ac.asof}; on-chain data published once a day` }); } catch (e) { tileFailed("activity", TITLES["activity"], e); }
-    let mnav = null; try { mnav = MS.price * MS.shares / (MS.btc_holdings * c.live); } catch (e) {}
-    try { tile("mnav", { title: TITLES.mnav, kind: "live", val: f(mnav) + "x", zone: mnavZone(mnav), heat: null, desc: `MSTR ${usd(MS.price, 2)} (last close ${String(MS.price_time).slice(0, 10)}) &times; ${(MS.shares / 1e6).toFixed(1)}M shares / (${MS.btc_holdings.toLocaleString()} BTC &times; live BTC). Zones are judgement bands, not backtested` }); } catch (e) { tileFailed("mnav", TITLES["mnav"], e); }
     try { tile("levels", { title: TITLES.levels, kind: "live", val: `${usdK(c.trendLine)} / ${usdK(c.realizedPrice)}`, zone: "n/a", heat: null, desc: `trend line (refit including today) / realized price, the average cost of all coins (daily, ${M.realized_cap_asof}). BTC is ${f(100 * (c.live / c.trendLine - 1), 1)}% vs trend` }); } catch (e) { tileFailed("levels", TITLES["levels"], e); }
-    return mnav;
   }
 
+  /* Crowd euphoria gauge, last 3 years, with the 75 (euphoric) line */
+  let crowdSVG = null;
+  function crowdSpark() {
+    if (crowdSVG != null) return crowdSVG;
+    const g = CR.gauge_daily || [], n = g.length, from = Math.max(0, n - 3 * 365), w = 220, h = 34, pts = [], t0 = BM.tsOf(CR.t0);
+    for (let i = from; i < n; i++) if (g[i] != null) pts.push(`${((i - from) / (n - 1 - from) * w).toFixed(1)},${(h - 2 - g[i] / 100 * (h - 4)).toFixed(1)}`);
+    if (pts.length < 2) return (crowdSVG = "");
+    const y75 = (h - 2 - 0.75 * (h - 4)).toFixed(1), yr = new Date((t0 + from * DAY) * 1000).getUTCFullYear();
+    return (crowdSVG = `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Crowd euphoria gauge, last 3 years"><line x1="0" x2="${w}" y1="${y75}" y2="${y75}" stroke="#ef5350" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke" opacity=".6"/><polyline fill="none" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke" points="${pts.join(" ")}"/></svg><span class="sparkax"><span>${yr}</span><span>0-100, dashed = euphoric (75)</span><span>${CR.asof.slice(0, 7)}</span></span>`);
+  }
   /* Wikipedia 30-day average, last 3 years, as an inline SVG sparkline (log scale) */
   let sparkSVG = null;
   function sparkline() {
@@ -145,7 +176,7 @@
   }
 
   /* ---------- hero charts (js/hero.js) ---------- */
-  const hero = window.Hero.init({ LC, BM, M, H, MS, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C });
+  const hero = window.Hero.init({ LC, BM, M, H, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C });
 
   /* ---------- freshness table ---------- */
   function renderFresh(n) {
@@ -155,10 +186,9 @@
       ["Mayer, 200W MA, trend, Pi Cycle", `${badge("live")} live price as today's close + daily closes to ${isoDay(cT[cT.length - 1])}${gapFilled ? ` (${gapFilled} recent days from Coinbase candles)` : ""}`],
       ["MVRV Z", `${badge("live")} market cap live; ${badge("daily")} realized cap ${M.realized_cap_asof}`],
       ["Address activity", `${badge("daily")} as of ${M.fixed.activity.asof} (on-chain, published daily)`],
+      ["Crowd euphoria (display only)", CR ? `${badge("daily")} as of ${CR.asof} (Fear &amp; Greed ${CR.fng && CR.fng.asof}, alternative.me; funding ${CR.funding && CR.funding.asof}, Deribit with OKX backup)` : `${badge("daily")} not available`],
       ["Wikipedia attention (display only)", W ? `${badge("daily")} as of ${W.asof} (Wikimedia pageviews API, ~1 day lag)` : `${badge("daily")} not available`],
       ["Google search interest (score input)", `${badge("monthly")} ${(M.fixed.trends.month || "").slice(0, 7)} (Google Trends monthly)`],
-      ["MSTR price (for mNAV)", `${badge("daily")} last close ${String(MS.price_time).slice(0, 16)}; no free real-time stock feed in the browser`],
-      ["BTC holdings / shares", `${badge("daily")} latest 8-K ${(MS.edgar_latest_8k || {}).date || "--"}`],
       ["Score calibration", `past tops ${C.prior_tops.join(", ")}`]];
     $("fresh").innerHTML = rows.map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
   }
@@ -166,26 +196,14 @@
   /* ---------- main tick ---------- */
   let lastFresh = 0;
   function tick(force) {
-    const now = Date.now(); setPolling(); const { p, n, via } = indexPrice(); priceVia = n ? "live" : via; try { renderFeeds(); } catch (e) {}
-    if (!p) { $("px").textContent = "--"; return; }
+    const now = Date.now(); setPolling(); const { p, n, via } = indexPrice(); priceVia = n ? "live" : via; try { renderStatus(now); } catch (e) {}
+    if (!p) return;
     const sect = (name, fn) => { try { return fn(); } catch (e) { const k = name + ": " + e.message; if (!window.__app.errors.includes(k)) { window.__app.errors.push(k); console.error(name, e); } } };
     // UTC day rolled over while the page was open: yesterday's last index becomes a provisional daily close
     const today = BM.utcDay(now);
     if (today - DAY > cT[cT.length - 1]) { cT.push(today - DAY); closes.push(prevShown || p); todayOpen = p; }
     calc = BM.compute(M, closes, p, now); window.__app.ticks++; window.__app.last = { price: p, sources: n, via: priceVia, score: calc.score, t: now, tickAt: lastTick && lastTick.at, used: lastTick && lastTick.used, dropped: lastTick && lastTick.dropped };
-    const px = $("px"); px.classList.remove("up", "down"); px.classList.toggle("fallback", priceVia === "close"); px.classList.toggle("stale", priceVia === "stale");
-    const closeLbl = new Date(cT[cT.length - 1] * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-    if (priceVia === "close") px.innerHTML = `<span class="pxlbl">last close</span> ${usd(p, 0)} <span class="pxlbl">(${closeLbl})</span>`;
-    else { px.innerHTML = usd(p, 0) + (priceVia === "stale" ? ` <span class="badge stale">STALE</span>` : ""); if (priceVia === "live" && prevShown && p !== prevShown) px.classList.add(p > prevShown ? "up" : "down"); }
     if (priceVia === "live") prevShown = p;
-    const open = todayOpen;
-    const tried = now - t0 > 12000, wsBlocked = feeds.every((x) => x.diag().ws === "blocked"), restBlocked = allSrc.every((x) => x.restErr && !x.at);
-    if (priceVia === "close") $("chg").innerHTML = `<span class="small">${!tried ? "not live yet · trying exchange WebSockets, then HTTPS polling" : `not live · ${wsBlocked ? "WebSockets blocked" : "no WebSocket price"}${restBlocked ? ", HTTPS price APIs blocked too (network filter?)" : ", polling HTTPS"}`} · model shown on the last daily close</span>`;
-    else if (priceVia === "stale") $("chg").innerHTML = `<span class="small">STALE · last price ${ago(now - lastTick.at)} · retrying</span>`;
-    else if (open) { const ch = p / open - 1; $("chg").innerHTML = `<span style="color:${ch >= 0 ? "#26a69a" : "#ef5350"}">${ch >= 0 ? "+" : ""}${(ch * 100).toFixed(2)}%</span> <span class="small">vs 00:00 UTC open ${usd(open, 0)}</span>`; }
-    else $("chg").innerHTML = "&nbsp;";
-    const mode = priceVia === "live" ? (lastTick.streaming ? "live (streaming)" : `live (polling every ${Feeds.POLL_MS / 1000}s)`) : priceVia === "stale" ? "STALE" : "not live";
-    $("pxAt").innerHTML = `<b class="mode m-${priceVia === "live" ? (lastTick.streaming ? "stream" : "poll") : priceVia}">${mode}</b> · ` + (lastTick ? `last tick ${hms(lastTick.at)} UTC · ${ago(now - lastTick.at)}${priceVia === "live" ? ` · ${lastTick.used.length} source${lastTick.used.length > 1 ? "s" : ""}` + (lastTick.dropped.length ? ` (${lastTick.dropped.join(", ")} > 0.5% off, left out)` : "") + (lastTick.disagree ? " · sources disagree" : "") : ""}` : "no live price yet");
     sect("score", () => {
     $("score").textContent = f(calc.score, 1); $("score").className = "score z-" + calc.scoreZone;
     $("scoreZone").textContent = calc.scoreZone; $("scoreZone").className = "zone z-" + calc.scoreZone;
@@ -196,11 +214,11 @@
       $("halving").textContent = `${left.toLocaleString()} blocks · ~${eta.toISOString().slice(0, 10)}`; }
     const ath = Math.max(...closes, p), dd = p / ath - 1; $("dd").textContent = `${(dd * 100).toFixed(1)}% (peak ${usd(ath, 0)})`;
     });
-    const mnav = sect("tiles", () => renderTiles(calc));
-    sect("hero", () => { const v2 = BM.computeV2(M, calc); window.__app.last.v2 = v2.score; hero.update(p, now, calc, v2, mnav, priceVia); });
+    sect("tiles", () => renderTiles(calc));
+    sect("hero", () => { const v2 = BM.computeV2(M, calc); window.__app.last.v2 = v2.score; hero.update(p, now, calc, v2, priceVia); });
     if (force || now - lastFresh > 5000) { sect("freshness", renderFresh); lastFresh = now; }
     document.title = `${priceVia === "close" ? "last close " + usd(p, 0) : usd(p, 0) + (priceVia === "stale" ? " (stale)" : "")} · score ${f(calc.score, 0)} · My BTC Cycle Model`;
   }
   tick(true);
   setInterval(() => { try { tick(); } catch (e) { window.__app.errors.push("tick: " + e.message); } }, 1000);
-})().catch((e) => { (window.__app = window.__app || { errors: [] }).errors.push("init: " + e.message); const p = document.getElementById("px"); if (p) p.textContent = "data failed to load"; console.error(e); });
+})().catch((e) => { (window.__app = window.__app || { errors: [] }).errors.push("init: " + e.message); const p = document.getElementById("liveTxt"); if (p) p.textContent = "data failed to load"; console.error(e); });

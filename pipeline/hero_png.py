@@ -1,6 +1,7 @@
 """Render the one-figure 'My BTC Cycle Model' hero PNG (high resolution).
 Top: weekly BTC price coloured by Cycle Heat Score (v1) over the trend corridor / floor / ceiling / trend line / cycle band,
-plus the FROZEN projection fan (frozen/fan_2026-10-25.json) to Dec 31 2028. Bottom strip: Cycle Heat Score over zone shading.
+plus the FROZEN projection fan (frozen/fan_2026-10-25.json) to Dec 31 2028. The axis runs to the end of 2030: after Dec 2028 only the
+corridor and the dampened forward cycle path (data/hero_fwd.json from forward_band.py, display only) are drawn, not a graded forecast.
 No model changes: uses charts.fits / cycle_band (same as chart a), the frozen fan file and state.json. Model output, not predictions."""
 import json, os, sys, warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, matplotlib; matplotlib.use("Agg")
@@ -20,7 +21,8 @@ p = df["price"].dropna(); a, b, res, q = charts.fits(p)
 H = json.load(open(os.path.join(lib.HERE, "..", "data", "history.json")))
 score = pd.Series(H["score"], index=pd.to_datetime(H["t"], unit="s"), dtype=float)
 
-START, END = pd.Timestamp("2015-01-01"), pd.Timestamp("2029-01-20")
+START, END = pd.Timestamp("2015-01-01"), pd.Timestamp("2031-01-20")
+DISPLAY_END = pd.Timestamp("2030-12-31")   # display only; the frozen fan still ends at lib.HORIZON (Dec 31 2028)
 now = pd.Timestamp(st["date"]); px = st["btc"]["price"]; sc_now = st["score"]["value"]; zone_now = st["score"]["zone"]
 # weekly price + weekly score (last value of each week), then the live point
 wk = p.loc[START:].resample("W").last().dropna(); wk = wk[wk.index < now]
@@ -35,14 +37,30 @@ fig = plt.figure(figsize=(16, 9), dpi=200); fig.patch.set_facecolor("white")
 ax = fig.add_axes([0.035, 0.115, 0.855, 0.775])
 
 # ---- background layers (subtle), as in chart (a)
-dates = pd.date_range(START, "2028-12-31", freq="D"); t = charts.trend_at(a, b, dates)
+dates = pd.date_range(START, DISPLAY_END, freq="D"); t = charts.trend_at(a, b, dates)
 ax.fill_between(dates, t * 10 ** q["floor"], t * 10 ** q["ceil"], color="#f3f4f6", lw=0, zorder=0, label="Trend corridor (5-95% of history)")
 ax.plot(dates, t * 10 ** q["ceil"], color="#9ca3af", lw=0.9, ls=":", zorder=1, label="Trend ceiling (95%)")
 ax.plot(dates, t * 10 ** q["mid"], color="#6b7280", lw=1.0, ls="--", zorder=1, label="Trend line (power-law fit)")
 ax.plot(dates, t * 10 ** q["floor"], color="#d97706", lw=1.4, alpha=0.8, zorder=1, label="Trend floor (5%)")
-band = charts.cycle_band(p, a, b, res, pd.date_range("2016-07-15", "2028-12-31", freq="D"))
-ax.fill_between(band.index, band.lo, band.hi, color="#3b82f6", alpha=0.10, lw=0, zorder=1, label="Cycle band (prior 2 cycles, same day since halving)")
-ax.plot(band.index, band.md, color="#3b82f6", lw=0.9, alpha=0.55, zorder=1, label="Cycle band middle")
+band = charts.cycle_band(p, a, b, res, pd.date_range("2016-07-15", DISPLAY_END, freq="D"))
+nowp = pd.Timestamp(st["date"]); pb = band.loc[:nowp]
+ax.fill_between(pb.index, pb.lo, pb.hi, color="#3b82f6", alpha=0.10, lw=0, zorder=1, label="Cycle band (prior 2 cycles, same day since halving)")
+ax.plot(pb.index, pb.md, color="#3b82f6", lw=0.9, alpha=0.55, zorder=1, label="Cycle band middle")
+# forward cycle path after now (display only): the dampened band from data/hero_fwd.json, blended in log space over the first
+# 8 weeks from the past band, as on the live site. Ends where the prior cycles' data ends (no extrapolation).
+try:
+    FW = json.load(open(os.path.join(lib.HERE, "..", "data", "hero_fwd.json")))
+    fw = pd.DataFrame({k: pd.to_numeric(pd.Series(FW[k]), errors="coerce").values for k in ("lo", "md", "hi")}, index=pd.to_datetime(FW["t"], unit="s"))
+    fw = fw.loc[nowp:DISPLAY_END].dropna()
+    w = np.clip((fw.index - nowp).days.values / 56.0, 0, 1)
+    bref = band.reindex(fw.index)
+    for k in ("lo", "md", "hi"):
+        bk = bref[k].values; fw[k] = np.where(np.isfinite(bk), np.exp((1 - w) * np.log(np.where(np.isfinite(bk), bk, 1)) + w * np.log(fw[k].values)), fw[k].values)
+    fw = pd.concat([pb.iloc[[-1]], fw])
+    ax.fill_between(fw.index, fw.lo, fw.hi, color="#3b82f6", alpha=0.13, lw=0, zorder=1, label=f"Cycle path ahead (past cycles scaled down, rho {FW['rho']:.2f}): shape guide only")
+    ax.plot(fw.index, fw.md, color="#3b82f6", lw=0.9, alpha=0.55, zorder=1)
+except Exception as e:
+    print("forward cycle path not drawn:", e)
 
 # ---- frozen projection fan (violet), opens at today's price
 fd = pd.to_datetime(FF["dates"]); F = {k: np.array(FF[k], float) for k in ("q5", "q25", "q50", "q75", "q95")}
@@ -65,6 +83,9 @@ for h in [pd.Timestamp(d) for d in ["2016-07-09", "2020-05-11", "2024-04-20"]] +
     for A in (ax,): A.axvline(h, color="#6b7280", ls=":", lw=0.9, zorder=1)
     ax.text(h, 105, ("est. halving " if h.year == 2028 else " halving"), fontsize=8.5, color="#6b7280", va="bottom", ha=("right" if h.year == 2028 else "left"))
 E = lib.HORIZON
+# boundary of the locked (graded) forecast: after this only the corridor and the cycle path are shown
+ax.axvline(E, color="#7c3aed", ls=(0, (4, 3)), lw=0.9, alpha=0.55, zorder=2)
+ax.text(E, 2.6e6, " locked forecast\n ends Dec 2028", fontsize=8.5, color="#6d28d9", va="top", ha="left")
 
 # ---- right price axis, dense plain-dollar ticks (live-site style) + tag pill for the live price
 TICKS = [100, 170, 300, 500, 850, 1500, 2500, 4200, 7000, 12000, 20000, 35000, 60000, 100000, 170000, 300000, 500000, 850000, 1500000, 2500000]
@@ -108,7 +129,7 @@ for o in OUTS: fig.savefig(o, facecolor="white")
 print("wrote", OUTS)
 
 # ---- background layers for the live site hero (same fits as above), weekly on Mondays (matches hero.js weekStart)
-mon = pd.date_range("2014-01-06", "2029-01-15", freq="W-MON"); tm = charts.trend_at(a, b, mon)
+mon = pd.date_range("2014-01-06", DISPLAY_END + pd.Timedelta(days=13), freq="W-MON"); tm = charts.trend_at(a, b, mon)
 bm = band.reindex(mon)
 r = lambda v: None if v is None or not np.isfinite(v) else round(float(v), 2)
 bg = {"generated_from": "cycle_signals/hero_png.py (charts.fits + charts.cycle_band, same as chart a)",

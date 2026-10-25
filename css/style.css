@@ -104,3 +104,15 @@ table.sc thead th{color:var(--mute);font-weight:500}table.sc td.ok{color:var(--u
 .scorecard a{color:#7aa2ff}
 table.sc.st{font-size:12px}table.sc.st td,table.sc.st th{padding:2px 8px 2px 0}.scorecard .stwrap{overflow-x:auto}
 .disclosure{margin-top:4px}
+
+/* live-price status in the chart header (the price itself is shown on the chart) */
+.livewrap{display:inline-flex;align-items:center;gap:2px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+.livest{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#6b7280}
+.livest .ldot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9ca3af}
+.livest.m-stream{color:#16a34a}.livest.m-stream .ldot{background:#22c55e;box-shadow:0 0 5px #22c55e}
+.livest.m-poll{color:#2563eb}.livest.m-poll .ldot{background:#3b82f6}
+.livest.m-stale{color:#d97706}.livest.m-stale .ldot{background:#f59e0b}
+.livest.m-close{color:#9ca3af;font-weight:500}
+#tipPop{white-space:pre-line}
+/* boundary of the locked (graded) forecast, Dec 2028 */
+#heroC .vline.lock{border-left:1px dashed rgba(124,58,237,.55)}#heroC .vline.lock span{color:rgba(109,40,217,.85);top:18px}

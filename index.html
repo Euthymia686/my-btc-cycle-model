@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: own multi-exchange price index, cycle-top signals and a Cycle Heat Score recomputed every second. Model output, not financial advice.">
-<link rel="stylesheet" href="css/style.css?v=20261025m">
+<link rel="stylesheet" href="css/style.css?v=20261025n">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -14,18 +14,10 @@
     <h1>My BTC Cycle Model</h1>
     <span class="sub">where Bitcoin is in its ~4-year cycle, live &middot; model output, not financial advice</span>
   </div>
-  <div class="ticker">
-    <div class="px-label">BTC/USD price <span class="hint" title="Median of the sources whose last price is under 15 s old (exchange WebSockets; HTTPS polling every 10 s of up to 8 public APIs if the sockets are blocked); a source more than 0.5% away from the others is left out">(middle of several exchanges)</span> <button type="button" class="info" data-k="price" aria-label="What is this?">i</button></div>
-    <div class="px" id="px">--</div>
-    <div class="chg" id="chg">&nbsp;</div>
-    <div class="pxat" id="pxAt">&nbsp;</div>
-  </div>
-  <div class="feedwrap"><div class="feeds" id="feeds"></div><button type="button" class="info" data-k="feeds" aria-label="What is this?">i</button></div>
-  <div class="diagwrap"><div class="diag" id="diag"></div><button type="button" class="info" data-k="diag" aria-label="What is this?">i</button></div>
 </header>
 
 <section class="panel hero">
-  <h2>My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button> <span class="small">BTC price colored by Cycle Heat Score, with the model's range of outcomes to Dec 2028 · live, model ranges, not predictions</span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></h2>
+  <h2>My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button> <span class="small">BTC price colored by Cycle Heat Score · the model's range of outcomes to Dec 2028, then only the trend corridor and past-cycle path to 2030 (not graded) · model ranges, not predictions</span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button> <span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span></h2>
   <div id="heroC" class="chart heroc"></div>
   <div class="heroline" id="heroLine">connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
@@ -33,10 +25,10 @@
   <details class="howto" id="howto">
     <summary>How to read this chart</summary>
     <ul>
-      <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. Hover or tap the chart for the price and score of any week.</li>
+      <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. The blue tag on the right axis and the dot at the end of the line are the live price; the small status next to "Reset view" says whether it is live, polling, STALE or the last daily close. Hover or tap the chart for the price and score of any week.</li>
       <li><b>The gray corridor</b> runs from the orange <b>floor</b> line up to the dotted <b>ceiling</b> line, around the dashed <b>trend</b> line. All three come from one long-term curve fitted to Bitcoin's whole history. Price has rarely left this corridor, but nothing guarantees it stays inside.</li>
-      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues, scaled down because each cycle has peaked less far above trend. It is a shape guide only, not a forecast: last cycle it pointed far above the actual 2025 top.</li>
-      <li><b>The faint purple fan</b> is the model's range of outcomes to the end of 2028. If the model is right, price lands in the darker middle about half the time (25-75%) and inside the whole fan about 90% of the time (5-95%). It widens further out because the future is less certain. Its shading stops at the floor line for readability.</li>
+      <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues, scaled down because each cycle has peaked less far above trend, through the next possible top in 2029 and the fall after it into 2030. It runs only as far as the previous cycles' data reaches (late 2030 for now). It is a shape guide only, not a forecast, and it is not graded: last cycle it pointed far above the actual 2025 top.</li>
+      <li><b>The faint purple fan</b> is the model's range of outcomes to the end of 2028, the locked forecast that the scorecard grades. It stops at the dashed "locked forecast ends Dec 2028" line; after that line the chart shows only the corridor and the cycle path, which are context, not forecasts. If the model is right, price lands in the darker middle about half the time (25-75%) and inside the whole fan about 90% of the time (5-95%). It widens further out because the future is less certain. Its shading stops at the floor line for readability.</li>
       <li><b>Heat zones</b> (cool, neutral, warm, hot) say how stretched price and on-chain data look compared with all of history. Hot readings have clustered near past cycle tops and cool ones near past bottoms.</li>
       <li><b>Track record:</b> in the backtest the score peaked around 93 at the 2013 and 2017 tops but only about 65 to 68 at the 2021 and 2025 tops, just above the hot line, which was itself set from those tops. Peaks have come down, so a top can come without the score going "hot".</li>
       <li><b>What this is not:</b> a trade timing signal or buy/sell advice. It is a slow gauge of where we are in the cycle that changes over weeks and months. For entries and exits, pair it with your own short-term tools (moving averages, RSI and so on).</li>
@@ -87,13 +79,14 @@
 <section class="panel method">
   <h2>Method <button type="button" class="info" data-k="method" aria-label="What is this?">i</button> <span class="small">technical details</span></h2>
   <ol>
-    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets. An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. <b>Fallback:</b> if fewer than 2 sockets deliver a price within ~5 s (e.g. a network that blocks WebSockets), the page switches to HTTPS polling every 10 s of the three exchanges plus Gemini, Binance.US, Crypto.com, Blockchain.com and CoinGecko (all public, CORS-enabled, different domains), with the same median and 0.5% outlier rule; the header then says <b>live (polling every 10s)</b> instead of <b>live (streaming)</b>. Blocks fall back from mempool.space to blockstream.info to blockchain.info. If nothing has priced for 15 s the price is marked <b>STALE</b>; if nothing was reachable at all, the header shows the <b>last daily close</b> in gray and the feed-check line says which connections failed.</li>
+    <li><b>Own index price:</b> median of the latest trade/ticker prices from Coinbase, Kraken and Bitstamp WebSockets. An exchange counts only if its last tick is under 15 s old, and one that is more than 0.5% away from the others is left out. A socket that goes silent for 10 s is reconnected, and every socket is checked again when the page becomes visible, regains focus or comes back online (phones freeze background tabs); the exchange REST endpoints are polled meanwhile. <b>Fallback:</b> if fewer than 2 sockets deliver a price within ~5 s (e.g. a network that blocks WebSockets), the page switches to HTTPS polling every 10 s of the three exchanges plus Gemini, Binance.US, Crypto.com, Blockchain.com and CoinGecko (all public, CORS-enabled, different domains), with the same median and 0.5% outlier rule; the status next to the chart then says <b>live (polling every 10s)</b> instead of <b>live</b>. Blocks fall back from mempool.space to blockstream.info to blockchain.info. If nothing has priced for 15 s the price is marked <b>STALE</b>; if nothing was reachable at all, the status shows <b>last close</b> in gray and the chart and scores use the last daily close. Its (i) note lists each source's price and connection state and which connections failed.</li>
     <li><b>Signals</b> are recomputed every second with the live price as today's daily close: Mayer Multiple (price / 200-day MA), price / 200-week (1400-day) MA, price / my power-law trend fit (refit including today), Pi Cycle ratio (111DMA / 2&times;350DMA), MVRV Z (live market cap = price &times; supply; realized cap from the latest daily print), plus halving-cycle timing. Address activity (daily) and Google search interest (monthly) only change when their sources publish.</li>
+    <li><b>Crowd euphoria (display only):</b> a contrarian gauge of trader excitement, 0-100. It is the average of the 7-day average Crypto Fear &amp; Greed Index (alternative.me, daily since Feb 2018) and a 0-100 score of the BTC perpetual-futures funding rate (what leveraged longs pay shorts; 7-day average, annualized; Deribit, with OKX as a backup). The funding score runs through 0 at -10% a year, 20 at 0%, 45 at 10% (about the normal level), 65 at 20%, 85 at 40% and 100 at 80%. Zones: calm under 25, normal 25-55, excited 55-75, euphoric 75 and up, chosen as display conventions, not fitted. It is <b>not</b> part of the Cycle Heat Score or any graded version; using it in a score would need a new locked version, reviewed no earlier than 2027-10-25.</li>
     <li><b>Wikipedia attention (display only):</b> daily views of the English Wikipedia "Bitcoin" article (Wikimedia pageviews API, users only, since July 2015). Heat = percentile of the 30-day average against the prior 8 years. It is shown next to the signals but is <b>not</b> part of either score; the pre-registered scores keep Google Trends.</li>
     <li><b>Heat</b> = percentile of today's value against every prior daily value since 2010. Timing heat = 100 at the average halving-to-peak day of past tops, bell-curve fall-off.</li>
     <li><b>Cycle Heat Score</b> = plain average of the 8 heats. Zones: hot = lowest score seen around any past top; warm = hot &minus; 15; neutral 40+; cool below 40.</li>
-    <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. On the chart it is drawn faintly, behind the forward cycle path. Fan shading is cut off at the floor line for readability; the model's 5% quantile can sit below the floor, and the floor is not guaranteed.</li>
-    <li><b>Cycle band / forward cycle path (display only):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the v3-candidate "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is a shape guide from past cycles, not a forecast, and it is not part of either score. In the 2024 cycle even the dampened path ran well above the actual 2025 top.</li>
+    <li><b>Projection fan:</b> each day the power-law trend is refit on all data; the bands come from the model's own past forecast errors at each horizon (weighted toward recent cycles, half-life 4 years), so they widen the further out you look. No single price target. On the chart it is drawn faintly, behind the forward cycle path, and it ends at its locked horizon of Dec 31 2028 (marked by a dashed line); it is never extended past that. Fan shading is cut off at the floor line for readability; the model's 5% quantile can sit below the floor, and the floor is not guaranteed.</li>
+    <li><b>Cycle band / forward cycle path (display only):</b> before now, the range of the two prior halving cycles' deviations from the trend at the same day since the halving (&plusmn;10 days, 15-day smoothing). After now, the same construction with each prior cycle's deviation scaled down by &rho;<sup>cycles back</sup>, where &rho; (&asymp;0.78) is the average shrink of successive cycle peaks above trend over the completed cycles (the v3-candidate "dampened" rule). The first 8 weeks blend from the past band so there is no step at now. It is drawn to the end of 2030, as far as the prior cycles' data reaches (each day of new data extends it by a day), together with the power-law corridor. It is a shape guide from past cycles, not a forecast, and it is not part of either score. In the 2024 cycle even the dampened path ran well above the actual 2025 top.</li>
     <li><b>Score v2 (pre-registered 2026-10-25):</b> heat = percentile vs the prior 8 years only; signals grouped into 5 independent families (price structure, on-chain valuation, network usage, attention, timing), score = mean of families; zones fixed at 80/65/40. Its code is frozen by sha256 and logged daily next to v1. See ROBUSTNESS.md.</li>
     <li><b>Backtest (walk-forward):</b> the score reached 92-93 at the 2013 and 2017 tops but only ~65-68 at the 2021 and 2025 tops; it fell to 12-25 at every cycle low. It is a description of how stretched the market is versus history, not a sell timer.</li>
   </ol>
@@ -102,7 +95,7 @@
 <footer>
   <p class="nfa"><b>Not financial advice.</b> Everything on this page is model output from public data, not a prediction or a recommendation to buy or sell. Past cycles may not repeat. Do your own research.</p>
   <p class="nfa disclosure">Disclosure: the author holds Bitcoin-related investments. The model rules are locked and graded in public so that this cannot quietly shape the results.</p>
-  <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; Wikimedia pageviews API (Wikipedia attention) &middot; Strategy.com and SEC EDGAR (MSTR holdings) &middot; Yahoo Finance (MSTR price, delayed). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
+  <p class="credits">Data: Coinbase, Kraken and Bitstamp public market data (live prices) &middot; mempool.space (blocks) &middot; CoinMetrics Community (daily price, supply, MVRV, active addresses) &middot; Google Trends (score input) &middot; Wikimedia pageviews API (Wikipedia attention) &middot; alternative.me Fear &amp; Greed Index, Deribit and OKX public funding rates (crowd euphoria). Charts drawn with the open-source <a href="https://www.tradingview.com/lightweight-charts/" rel="noopener">Lightweight Charts</a> library (Apache-2.0).</p>
   <p class="small" id="built"></p>
   <p class="small copy">Copyright 2026 Euthymia686. Free for non-commercial use (<a href="https://polyformproject.org/licenses/noncommercial/1.0.0" rel="noopener">PolyForm Noncommercial 1.0.0</a>).</p>
   <p class="small cite">Cite: My BTC Cycle Model, DOI <a href="https://doi.org/10.5281/zenodo.23643772" rel="noopener">10.5281/zenodo.23643772</a></p>
@@ -110,12 +103,12 @@
   <!-- Donate placeholder: hidden until the owner provides a link. To enable, set the href and remove the hidden attribute. -->
   <p class="donate" id="donate" hidden><a id="donateLink" href="#" rel="noopener">Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261025m"></script>
-<script src="js/explain.js?v=20261025m"></script>
-<script src="js/model.js?v=20261025m"></script>
-<script src="js/feeds.js?v=20261025m"></script>
-<script src="js/hero.js?v=20261025m"></script>
-<script src="js/app.js?v=20261025m"></script>
-<script src="js/scorecard.js?v=20261025m"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261025n"></script>
+<script src="js/explain.js?v=20261025n"></script>
+<script src="js/model.js?v=20261025n"></script>
+<script src="js/feeds.js?v=20261025n"></script>
+<script src="js/hero.js?v=20261025n"></script>
+<script src="js/app.js?v=20261025n"></script>
+<script src="js/scorecard.js?v=20261025n"></script>
 </body>
 </html>

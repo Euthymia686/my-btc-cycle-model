@@ -12,10 +12,12 @@
   }
 
   function init(ctx) {
-    const { LC, BM, M, H, MS, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C } = ctx;
+    const { LC, BM, M, H, FAN2, HEALTH, BG, FWD, cT, closes, baseOpts, priceFmt, $, usd, usdK, f, ZC, C } = ctx;
     const P = FAN2.params, g0 = BM.tsOf(M.genesis), mobile = window.matchMedia("(max-width: 700px)").matches;
     const weekStart = (t) => { const d = new Date(t * 1000).getUTCDay(); return t - ((d + 6) % 7) * DAY; };
-    const endT = BM.tsOf(FAN2.end);   // public display horizon of the projection fan (Dec 31 2028)
+    const endT = BM.tsOf(FAN2.end);   // public display horizon of the projection fan (Dec 31 2028): the fan is never drawn past it
+    // the chart's time axis, the corridor and the forward cycle path run to the end of 2030 (display only, not graded)
+    const dispEnd = BM.tsOf((FWD && FWD.display_end) || "2030-12-31");
     // set hot/warm stops from the live v1 calibration
     STOPS[3][0] = C.score_warm; STOPS[4][0] = C.score_hot;
     const scoreByT = new Map(H.t.map((t, i) => [t, H.score[i]]));
@@ -34,9 +36,10 @@
     const overlays = [];
     function halvingLines(ch, el) {   // faint vertical lines as HTML overlays (positioned from the time scale)
       el.style.position = "relative";
-      const L = [...M.halvings.map((d) => [d, "halving"]), [FAN2.next_halving_est, "est. halving", "vline est"]];
+      const L = [...M.halvings.map((d) => [d, "halving " + d.slice(0, 4)]), [FAN2.next_halving_est, "est. halving " + FAN2.next_halving_est.slice(0, 4), "vline est"],
+        [FAN2.end, mobile ? "locked forecast ends" : "locked forecast ends Dec 2028", "vline lock"]];   // after this line: corridor + cycle path only, not a graded forecast
       const items = L.map(([d, lab, cls]) => {
-        const v = document.createElement("div"); v.className = cls || "vline"; v.innerHTML = `<span>${lab} ${d.slice(0, 4)}</span>`; el.appendChild(v); return { t: weekStart(BM.tsOf(d)), v }; });
+        const v = document.createElement("div"); v.className = cls || "vline"; v.innerHTML = `<span>${lab}</span>`; el.appendChild(v); return { t: weekStart(BM.tsOf(d)), v }; });
       const place = () => { const ts = ch.timeScale(), w = ts.width(); for (const it of items) { const x = ts.timeToCoordinate(it.t); it.v.style.display = x == null || x < 0 || x > w ? "none" : "block"; if (x != null) it.v.style.left = x + "px"; } };
       ch.timeScale().subscribeVisibleLogicalRangeChange(place); ch.timeScale().subscribeSizeChange(place); overlays.push(place); return place;
     }
@@ -115,7 +118,10 @@
       const t = pr.time, d = pr.seriesData.get(histA); let h = "";
       if (t > histEnd && tipLive) { const L = tipLive, lbl = L.via === "close" ? "last close" : L.via === "stale" ? "stale" : "now";
         if (t <= histEnd + 14 * DAY) h = `<b>${lbl} ${usd(L.p, 0)}</b><br>score <b style="color:${heatColor(L.s)}">${f(L.s, 1)} ${L.z}</b>`;
-        else if (fanCache) { const r = fanCache.rows.find((x) => x.t === t); if (r) h = `${fmtD(t)}<br>fan median ${usdK(r.q.q50)}<br>5-95%: ${usdK(r.q.q5)} - ${usdK(r.q.q95)}`; } }
+        else { const r = fanCache && fanCache.rows.find((x) => x.t === t), c = fwdByT.get(t);
+          if (r) h = `${fmtD(t)}<br>fan median ${usdK(r.q.q50)}<br>5-95%: ${usdK(r.q.q5)} - ${usdK(r.q.q95)}`;
+          else if (c) h = `${fmtD(t)}<br>cycle path (shape guide, not a forecast)<br>middle ${usdK(c.md)} · range ${usdK(c.lo)} - ${usdK(c.hi)}`;
+          else { const j = BG ? BG.t.indexOf(t) : -1; if (j >= 0) h = `${fmtD(t)}<br>trend ${usdK(BG.mid[j])} · corridor ${usdK(BG.floor[j])} - ${usdK(BG.ceil[j])}`; } } }
       else { const v = d && d.value != null ? d.value : vByW.get(t), s = sByW.get(t);
         if (v != null) h = `week of ${fmtD(t)}<br><b>${usd(v, 0)}</b> close<br>score <b style="color:${heatColor(s)}">${s == null ? "n/a" : f(s, 1) + " " + zoneOf(s)}</b>`; }
       if (!h) { tip.style.display = "none"; return; }
@@ -127,13 +133,15 @@
     /* Forward cycle path (display only): dampened cycle band from data/hero_fwd.json, drawn from this week to the end of the fan,
        same light-blue band + middle line as the past band, over the (faint) fan. The first 8 weeks blend in log space from the
        past band's value to the dampened one, so the two meet without a step at "now". */
+    const fwdByT = new Map();
     const fwd = { pts: [], attached(p) { this.chart = p.chart; this.series = p.series; this.req = p.requestUpdate; }, detached() {}, updateAllViews() {}, paneViews() { return [fwdView]; } };
     if (FWD && BG) {
       const nowW = weekStart(BM.utcDay(Date.now())), bi = new Map(BG.t.map((t, i) => [t, i])), BLEND = 8;
       const mix = (b, d, w) => b == null ? d : Math.exp((1 - w) * Math.log(b) + w * Math.log(d));
-      FWD.t.forEach((t, i) => { if (t < nowW || t > endT + 6 * DAY || FWD.md[i] == null) return; const j = bi.get(t), w = Math.min(1, (t - nowW) / (7 * DAY) / BLEND);
+      FWD.t.forEach((t, i) => { if (t < nowW || t > dispEnd + 6 * DAY || FWD.md[i] == null) return; const j = bi.get(t), w = Math.min(1, (t - nowW) / (7 * DAY) / BLEND);
         fwd.pts.push({ t, lo: mix(j != null ? BG.band_lo[j] : null, FWD.lo[i], w), md: mix(j != null ? BG.band_md[j] : null, FWD.md[i], w), hi: mix(j != null ? BG.band_hi[j] : null, FWD.hi[i], w) }); });
-      window.__app.fwd = { n: fwd.pts.length, first: fwd.pts[0], rho: FWD.rho };
+      fwd.pts.forEach((q) => fwdByT.set(q.t, q));
+      window.__app.fwd = { n: fwd.pts.length, first: fwd.pts[0], last: fwd.pts[fwd.pts.length - 1], rho: FWD.rho };
     }
     const fwdView = { zOrder: () => "normal", renderer: () => ({ draw(target) {
       if (fwd.pts.length < 2 || !fwd.series) return;
@@ -153,17 +161,18 @@
     $("heroCLegend").innerHTML = `<span class="scale"><b>Line color = Cycle Heat Score</b> <i class="grad"></i><span class="ticks"><span>0 cool</span><span>40</span><span>${C.score_warm} warm</span><span>${C.score_hot}+ hot</span></span></span>`
       + `<span><i style="background:#d1d5db"></i>trend corridor</span><span><i style="background:#6b7280"></i>trend (dashed) / ceiling (dotted)</span><span><i style="background:#d97706"></i>floor</span>`
       + `<span><i style="background:#93c5fd"></i>past cycle band (prior 2 cycles)</span>`
-      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Display only, not in the score."><i style="background:#93c5fd"></i>cycle path ahead (past cycles, scaled down): shape guide only</span>` : "")
-      + `<span><i style="background:#ddd0f8"></i>range of outcomes (fan): middle 50% / 90%, median dotted</span>`
+      + (FWD ? `<span title="After now: the same cycle band, with each prior cycle's swing scaled down by the measured shrink rate of past peaks (rho ${FWD.rho.toFixed(2)}); first 8 weeks blended from the past band. Runs to late 2030, as far as the prior cycles' data reaches. Display only, not in the score, not graded."><i style="background:#93c5fd"></i>cycle path ahead (past cycles, scaled down): shape guide only</span>` : "")
+      + `<span><i style="background:#ddd0f8"></i>range of outcomes (fan, to Dec 2028): middle 50% / 90%, median dotted</span>`
+      + `<span><i style="background:#a78bfa"></i>locked forecast ends Dec 2028 (dashed): after it, corridor and cycle path only</span>`
       + `<span><i style="background:#9ca3af"></i>halvings</span>`;
     document.querySelector("#heroCLegend .grad").style.background = `linear-gradient(90deg, ${[0, 20, 30, 40, C.score_warm, C.score_hot, 90].map((s) => heatColor(s) + " " + s + "%").join(",")})`;
 
 
-    /* initial view: from 2014 (2017 on phones) through the end of the fan, with right padding so the fan's last weeks and the
-       axis labels are not clipped; price autoscale includes the fan (background layers are excluded above). Re-fit on resize. */
+    /* initial view: from 2014 (2017 on phones) through the end of 2030 (corridor + cycle path; the fan stops at Dec 2028), with right
+       padding so the last weeks and the axis labels are not clipped; price autoscale includes the fan (background layers are excluded above). Re-fit on resize. */
     function fitA() {
       if (!fanCache) return;
-      const last = fanCache.rows[fanCache.rows.length - 1].t, ts = A.timeScale();
+      const last = Math.max(fanCache.rows[fanCache.rows.length - 1].t, BG ? Math.min(weekStart(dispEnd), bgT[bgT.length - 1]) : 0), ts = A.timeScale();
       // work in logical (bar index) space: setVisibleRange + getVisibleLogicalRange can return the previous range before the chart re-lays out
       const i0 = ts.timeToIndex(weekStart(BM.tsOf(mobile ? "2017-01-01" : "2014-06-01")), true), i1 = ts.timeToIndex(last, true);
       if (i0 == null || i1 == null) { ts.fitContent(); }
@@ -183,7 +192,7 @@
     renderHealth(ctx);
 
     let lastFan = 0, firstRender = true, firstPlace = true;
-    function update(p, now, calc, v2, mnav, via) {
+    function update(p, now, calc, v2, via) {
       const wk = weekStart(BM.utcDay(now)), col = heatColor(calc.score);
       if (firstRender || now - lastFan > (mobile ? 15000 : 5000)) { const fc = computeFan(p, now); setBandsA(fc); lastFan = now; if (firstRender) fitA(); firstRender = false; }
       // week rolled over while open: move completed weeks from the tail into the weekly history
@@ -197,7 +206,7 @@
       tipLive = { p, s: calc.score, z: calc.scoreZone, via };
       window.__app.tail = { x: null, p, n: pts.length };
       { const live = !via || via === "live", c = live ? "#3b82f6" : "#9ca3af"; liveA.applyOptions({ price: p, color: c, axisLabelColor: c }); }
-      { const qe = fanCache.qe; $("heroAlt").textContent = `Range of outcomes (fan) at Dec 31 2028, recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. Model ranges, not predictions; not financial advice.`; }
+      { const qe = fanCache.qe; $("heroAlt").textContent = `Range of outcomes (fan) at Dec 31 2028, recomputed with the live price: 5% ${usdK(qe.q5)} \u00b7 median ${usdK(qe.q50)} \u00b7 95% ${usdK(qe.q95)}. The fan is the locked, graded forecast and stops there; 2029-2030 shows only the trend corridor and the cycle path from past cycles (shape guide, not graded). Model ranges, not predictions; not financial advice.`; }
       const today = BM.utcDay(now);
       if (firstPlace) { overlays.forEach((f) => f()); firstPlace = false; }
       // one-line summary under the combined chart

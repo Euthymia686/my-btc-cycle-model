@@ -27,11 +27,15 @@ def damp_band(dates):
     t = charts.trend_at(a, b, dates)
     return pd.DataFrame({"lo": t * 10 ** o.lo, "hi": t * 10 ** o.hi, "md": t * 10 ** o.md}, index=dates)
 
-days = pd.date_range("2024-04-20", "2029-01-31", freq="D"); D = damp_band(days)
-mon = pd.date_range("2024-04-22", "2029-01-15", freq="W-MON"); W = D.reindex(mon)
+# display range: through the end of 2030 so the next potential cycle top (2029) and the drawdown after it are visible.
+# Beyond the 2028 halving the path needs the 2024 cycle at the same day since halving, so it ends where that cycle's data ends
+# (moves forward by one day per day) and nothing is extrapolated. Values before Dec 2028 are identical to the old Jan-2029 range.
+DISPLAY_END = pd.Timestamp("2030-12-31")
+days = pd.date_range("2024-04-20", DISPLAY_END + pd.Timedelta(days=31), freq="D"); D = damp_band(days)
+mon = pd.date_range("2024-04-22", DISPLAY_END + pd.Timedelta(days=13), freq="W-MON"); W = D.reindex(mon)
 rd = lambda v: None if not np.isfinite(v) else round(float(v), 2)
 out = {"t": [int(x.timestamp()) for x in mon], "lo": [rd(v) for v in W.lo], "md": [rd(v) for v in W.md], "hi": [rd(v) for v in W.hi],
        "rho": round(rho, 4), "peak_excess": {str(starts[j].date()): round(E[j], 4) for j in range(len(E))}, "data_to": str(p.index[-1].date()),
-       "note": "display only; dampened cycle band (v3 candidate rule), full-data trend fit; shape guide, not a forecast"}
+       "display_end": str(DISPLAY_END.date()), "note": "display only; dampened cycle band (v3 candidate rule), full-data trend fit; shape guide, not a forecast"}
 json.dump(out, open(os.path.join(lib.HERE, "..", "data", "hero_fwd.json"), "w"), separators=(",", ":"))
 print("wrote data/hero_fwd.json", len(mon), "rho", round(rho, 3))

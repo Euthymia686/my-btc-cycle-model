@@ -5,10 +5,11 @@ from playwright.sync_api import sync_playwright
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8765/"
 import os; OUT = os.environ.get("OUT_DIR", "./")
 JS = """() => ({...(window.__app.last||{}), ticks: window.__app.ticks, errors: window.__app.errors.slice(),
-  px: document.getElementById('px').textContent, score: document.getElementById('score').textContent,
+  status: document.getElementById('liveTxt').textContent, statusCls: document.getElementById('liveSt').className, score: document.getElementById('score').textContent,
   heroLine: document.getElementById('heroLine').textContent, heroAlt: (document.getElementById('heroAlt').textContent||'').slice(0,160),
   tilesPending: [...document.querySelectorAll('.tile .val.pending')].length,
-  feeds: [...document.querySelectorAll('.feed')].map(e => e.querySelector('.dot').className.replace('dot ','') + ' ' + e.textContent.trim())})"""
+  fwd: window.__app.fwd ? {n: window.__app.fwd.n, last: window.__app.fwd.last && window.__app.fwd.last.t} : null,
+  feeds: (window.__app.feeds||[]).map(f => f.src.name + ' ' + f.status())})"""
 with sync_playwright() as pw:
     _exe = os.environ.get("CHROME"); b = pw.chromium.launch(args=["--no-sandbox"], **({"executable_path": _exe} if _exe else {}))
     res = {}
@@ -22,7 +23,7 @@ with sync_playwright() as pw:
             time.sleep(3); samples.append(pg.evaluate(JS))
         pg.screenshot(path=f"{OUT}preview_{name}.png", full_page=True)
         if name == "desktop":
-            for sel, fn in [(".hero", "hero_live.png"), ("#heroScore", "hero_score.png")]:
+            for sel, fn in [(".hero", "hero_live.png")]:
                 el = pg.locator(sel).first
                 (el.locator("xpath=..") if sel.startswith("#") else el).screenshot(path=OUT + fn)
         res[name] = {"console_errors": errs, "websockets": ws, "first_tick_s": first, "samples": samples}

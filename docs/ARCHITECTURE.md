@@ -8,7 +8,7 @@ This is a model, not a prediction, and not financial advice.
 browser ──WebSocket──> Coinbase / Kraken / Bitstamp   (trades and tickers; median = own index, recomputed every 1 s)
         ──WebSocket──> mempool.space                  (new blocks: height, halving countdown)
         ──REST(CORS)─> Coinbase candles, CoinGecko    (gap fill and fallback price)
-        ──static────> data/*.json                     (history, calibration, distributions, fan, MSTR snapshot)
+        ──static────> data/*.json                     (history, calibration, distributions, fan, chart layers)
 ```
 
 * All maths runs in the browser (`js/model.js`, which mirrors `cycle_signals/lib.py`), so no server is needed.
@@ -22,8 +22,7 @@ browser ──WebSocket──> Coinbase / Kraken / Bitstamp   (trades and ticker
 * Limits in phase 1, and why:
   * **Realized cap, active addresses and supply are daily.** They come from CoinMetrics community data. Computing them in real time needs your own node and indexer (phase 2).
   * **Google Trends is monthly.** That is the only resolution Google publishes for this term over long ranges.
-  * **The MSTR price is a delayed snapshot.** There is no free, browser-accessible (CORS) real-time stock feed.
-  * **Holdings and shares change when Strategy files an 8-K.** Real-time doesn't apply to them.
+  * **The MSTR premium (mNAV) is no longer shown on the site.** The daily pipeline still writes `data/mstr.json` (delayed MSTR price, holdings, shares) for private use.
 
 ## Phase 2: our own raw data
 
@@ -58,11 +57,11 @@ What this gives you: per-block (about every 10 minutes) MVRV, realized cap and a
   * Versioned methodology page and a changelog for model recalibrations.
 
 ## Page layout (current)
-* **Hero: "My BTC Cycle Model"** (`js/hero.js`): one white-background panel. Log BTC price (weekly) coloured by the live v1 Cycle Heat Score over the trend corridor 5-95%, ceiling (dotted), trend (dashed), floor, cycle band, and the projection fan (25-75% and 5-95%, median dotted) recomputed from the live price to its display horizon of Dec 31 2028. Halving / est. halving lines, a blue live-price tag and a "now" point updated every second. The initial view fits 2014 (2017 on phones) through the end of the fan with the fan included in the price autoscale; it re-fits on resize, on double-click and with "Reset view".
+* **Hero: "My BTC Cycle Model"** (`js/hero.js`): one white-background panel. Log BTC price (weekly) coloured by the live v1 Cycle Heat Score over the trend corridor 5-95%, ceiling (dotted), trend (dashed), floor, cycle band, and the projection fan (25-75% and 5-95%, median dotted) recomputed from the live price to its locked horizon of Dec 31 2028 (never extended; a dashed "locked forecast ends Dec 2028" line marks it). The time axis, the corridor (`data/hero_bg.json`) and the dampened forward cycle path (`data/hero_fwd.json`) run on to Dec 31 2030 as display context only, not graded forecasts; the cycle path stops where the prior cycles' data ends. Halving / est. halving lines, a blue live-price tag and a "now" point updated every second. A small status in the chart header (live / live (polling every 10s) / STALE / last close) replaces the old price header; its (i) lists each feed's connection state. The initial view fits 2014 (2017 on phones) through the end of the forward layers with the fan included in the price autoscale; it re-fits on resize, on double-click and with "Reset view".
 * **Directly under the hero:** the live Cycle Heat Score panel and the cycle facts next to it (signals at hot level, halving-cycle day, block height, next halving, drawdown).
 * **Cycle Heat Score history** (v1, v1 walk-forward, pre-registered v2).
 * Below: candle chart, signal tiles, **Model health** (backtest coverage, forward coverage since freeze, integrity hashes, trend drift), freshness table, method.
-* If no exchange feed has delivered a price yet, the page computes everything on the last daily close and says so; each tile shows a value or "updated daily, last: date".
+* If no exchange feed has delivered a price yet, the page computes everything on the last daily close and the chart status says "last close"; each tile shows a value or "updated daily, last: date".
 * All hero charts use weekly points because lightweight-charts spaces points evenly by index; mixing daily history with a weekly forecast would distort time.
 * Data: `data/fan2.json` (fan parameters + frozen fan), `data/health.json`, `data/hero_bg.json` (background layers from `pipeline/hero_png.py`, same `charts.fits` / `charts.cycle_band`), `model.json.v2` (8-year window distributions). See ROBUSTNESS.md.
 * Static high-res PNG: `hero_combined.png` from `pipeline/hero_png.py`, using the frozen fan file.
