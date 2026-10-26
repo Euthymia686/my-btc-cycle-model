@@ -13,9 +13,15 @@ UA = {"User-Agent": "my-btc-cycle-model/1.0 (build_data)"}
 def g(v, n=6):
     if v is None: return None
     v = float(v); return None if not np.isfinite(v) else float(f"{v:.{n}g}")
+def _finite(o):
+    """NaN/inf are not valid JSON and stop the page loading; write them as null."""
+    if isinstance(o, dict): return {k: _finite(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)): return [_finite(v) for v in o]
+    if isinstance(o, (float, np.floating)): return float(o) if np.isfinite(o) else None
+    return o
 def dump(name, obj):
     p = os.path.join(OUT, name); tmp = p + ".tmp"
-    with open(tmp, "w") as f: json.dump(obj, f, separators=(",", ":"), default=str)
+    with open(tmp, "w") as f: json.dump(_finite(obj), f, separators=(",", ":"), default=str, allow_nan=False)
     os.replace(tmp, p); return os.path.getsize(p)
 def ts(d): return int(pd.Timestamp(d).timestamp())
 
@@ -54,7 +60,9 @@ def main():
     # ---- running sums so the browser can add today's live price exactly
     d = (df.index - lib.GENESIS).days.values.astype(float); x, y = np.log10(d), np.log10(p.values)
     mc = df["mcap"].dropna()
-    rcap = float(df["mcap"].iloc[-1] / df["mvrv"].iloc[-1])
+    # realized cap / supply from the last day CoinMetrics has published them (its on-chain fields can lag the price by a day)
+    _rc = df[["mcap", "mvrv", "supply"]].dropna(); _rc = _rc[_rc["mvrv"] > 0]; rc_day = _rc.index[-1]
+    rcap = float(_rc["mcap"].iloc[-1] / _rc["mvrv"].iloc[-1])
     a_f, b_f, res, q = charts.fits(p)
     dist = {}
     for s in ["mayer", "p200w", "trend_mult", "mvrv_z", "pi_ratio"]:
@@ -76,7 +84,7 @@ def main():
         "trend_expanding_sums": {"n": int(len(x)), "sx": float(x.sum()), "sy": float(y.sum()), "sxx": float((x * x).sum()), "sxy": float((x * y).sum())},
         "trend_full_fit": {"a": a_f, "b": b_f, "q_floor": q["floor"], "q_mid": q["mid"], "q_ceil": q["ceil"], "fit_range": [str(p.index[0].date()), str(last.date())]},
         "mcap_moments": {"n": int(len(mc)), "mean": float(mc.mean()), "m2": float(((mc - mc.mean()) ** 2).sum())},
-        "realized_cap": rcap, "realized_cap_asof": str(last.date()), "supply": float(df["supply"].iloc[-1]),
+        "realized_cap": rcap, "realized_cap_asof": str(rc_day.date()), "supply": float(_rc["supply"].iloc[-1]),
         "fixed": fixed, "distributions": dist,
         "tops": {k: str(v.date()) for k, v in tops.items()}, "bottoms": {k: str(v.date()) for k, v in bottoms.items()},
     }
