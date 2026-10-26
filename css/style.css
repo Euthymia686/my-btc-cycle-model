@@ -169,3 +169,20 @@ details.faq[open]>summary::before{content:"\2212"}
 details.faq>p{margin:0 0 10px 16px;font-size:14px;line-height:1.5;max-width:760px}
 .faqbody a{color:#7aa2ff}
 .tile .d a{color:#7aa2ff}
+/* live indicator on signal tiles: small pulsing dot (live), amber (stale), gray (last close); plain muted text for daily */
+.lt{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);vertical-align:middle;white-space:nowrap}
+.lt.live,.lt.stale,.lt.close{gap:4px}.lt.live::before,.lt.stale::before,.lt.close::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#9ca3af}
+.lt.live{color:#22c55e}.lt.live::before{background:#22c55e;animation:ltpulse 2s ease-in-out infinite}
+.lt.stale{color:#f59e0b}.lt.stale::before{background:#f59e0b}
+@keyframes ltpulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+.tile .val.up{animation:ltup 1.2s ease-out}.tile .val.dn{animation:ltdn 1.2s ease-out}
+@keyframes ltup{0%{color:#22c55e}100%{color:var(--text)}}@keyframes ltdn{0%{color:#ef4444}100%{color:var(--text)}}
+@media (prefers-reduced-motion:reduce){.lt.live::before,.tile .val.up,.tile .val.dn{animation:none}}
+/* provisional zone (live reading differs from the last daily close) and a one-shot pulse when a zone changes live */
+.zn.prov,.zone.prov{outline:1px dashed currentColor;outline-offset:1px}
+.tile.zx{animation:ltzx 1.6s ease-out}.zone.zx{animation:ltzx 1.6s ease-out}
+@keyframes ltzx{0%{box-shadow:0 0 0 3px rgba(245,158,11,.75)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+@media (prefers-reduced-motion:reduce){.tile.zx,.zone.zx{animation:none}}
+/* fallback: one calm line when no live price is reachable / the feed paused; tiles then show daily values without the live dot */
+.feednote{font-size:12.5px;color:var(--mute);margin:2px 0 6px;line-height:1.4}
+.lt.close::before{display:none}

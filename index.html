@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.kraken.com wss://ws.kraken.com https://www.bitstamp.net wss://ws.bitstamp.net https://api.gemini.com https://api.binance.us https://api.crypto.com https://blockchain.info https://api.coingecko.com https://mempool.space wss://mempool.space https://blockstream.info; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.kraken.com wss://ws.kraken.com https://www.bitstamp.net wss://ws.bitstamp.net https://api.gemini.com https://api.binance.us https://api.crypto.com https://blockchain.info https://api.coingecko.com https://mempool.space wss://mempool.space https://blockstream.info https://www.deribit.com; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My BTC Cycle Model - live</title>
 <meta name="description" content="A live Bitcoin cycle model: where Bitcoin is in its ~4-year cycle, with a Cycle Heat Score recomputed every second, locked rules, Bitcoin timestamps and a public scorecard.">
@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="Where Bitcoin is in its ~4-year cycle: locked rules, Bitcoin-timestamped, graded in public.">
 <meta name="twitter:image" content="https://euthymia686.github.io/my-btc-cycle-model/og-image.png">
 <meta name="twitter:image:alt" content="Weekly Bitcoin price on a log scale, colored by the Cycle Heat Score, with the trend corridor and a blue band from past cycles to 2030.">
-<link rel="stylesheet" href="css/style.css?v=20261026credits">
+<link rel="stylesheet" href="css/style.css?v=20261026live2">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -39,6 +39,7 @@
 
 <section class="panel hero" id="model">
   <h2 class="herohead"><span class="htitle">My BTC Cycle Model <button type="button" class="info" data-k="chart" aria-label="What is this?">i</button></span><span class="hctl"><span class="livewrap"><span class="livest m-close" id="liveSt"><span class="ldot"></span><span id="liveTxt">connecting...</span></span><button type="button" class="info" data-k="live" aria-label="Live price status and connection details">i</button></span> <button id="heroFit" class="mini" title="Reset the chart to the full view (or double-click the chart)">Reset view</button></span><span class="small hsub" id="read30">The line is Bitcoin's weekly price (log scale), colored from cool (blue) to hot (red) by the Cycle Heat Score; the light blue band shows where past cycles would put price. <span id="r30now" hidden>Today it reads <b id="r30zone"></b>.</span> Hover or tap the chart for details.</span></h2>
+  <div class="feednote" id="feedNote" role="status" hidden></div>
   <div id="heroC" class="chart heroc"></div>
   <div class="heroline" id="heroLine" hidden>connecting to exchanges...</div>
   <div class="legend" id="heroCLegend"></div>
@@ -46,7 +47,7 @@
   <details class="howto" id="howto">
     <summary>How to read this chart</summary>
     <ul>
-      <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. The blue tag on the right axis and the dot at the end of the line are the live price; the small status next to "Reset view" says whether it is live, polling, STALE or the last daily close. Hover or tap the chart for the price and score of any week.</li>
+      <li><b>The colored line</b> is Bitcoin's weekly price. Its color is the Cycle Heat Score at that time: blue = cool, gray = neutral, orange = warm, red = hot. The blue tag on the right axis and the dot at the end of the line are the live price; the small status next to "Reset view" says whether it is live (with the age of the last price), polling, paused or showing the last daily close. Hover or tap the chart for the price and score of any week.</li>
       <li><b>The gray corridor</b> runs from the orange <b>floor</b> line up to the dotted <b>ceiling</b> line, around the dashed <b>trend</b> line. All three come from one long-term curve fitted to Bitcoin's whole history. Price has rarely left this corridor, but nothing guarantees it stays inside.</li>
       <li><b>The light blue band</b> shows where price was in the previous two halving cycles at the same point in the cycle. After "now" it continues in the same style, built from the same past cycles but scaled down because each cycle has peaked less far above trend. It shows the next possible top (around 2029, marked with a small dot) and the fall after it (around 2030, second dot); hover or tap for the month and the band's middle and range. It runs only as far as the previous cycles' data reaches (late 2030 for now, one more day each day). The band on the chart is recomputed daily; the copy frozen on 2026-10-25 is the pre-registered claim graded in the <a href="#scorecardSec">scorecard</a>. Last cycle it pointed far above the actual 2025 top, so the test may well fail.</li>
       <li><b>The graded forecast range is not on this chart.</b> The model's locked range of outcomes (the "fan", frozen on 2026-10-25, to the end of 2028) is the part that gets graded. It is shown as a small table in the <a href="#scorecardSec">scorecard section</a>, next to its public grades, so it is not confused with the blue shape guide here.</li>
@@ -59,7 +60,7 @@
 
 <section class="scorebar">
   <div class="score-main">
-    <div class="lbl">Cycle Heat Score <span class="badge live">LIVE</span> <button type="button" class="info" data-k="score" aria-label="What is this?">i</button></div>
+    <div class="lbl">Cycle Heat Score <span class="lt" id="scoreLt">daily</span> <button type="button" class="info" data-k="score" aria-label="What is this?">i</button></div>
     <div class="score-row"><span class="score" id="score">--</span><span class="zone" id="scoreZone">--</span></div>
     <div class="meter"><div class="meter-fill" id="meterFill"></div><div class="meter-mark" id="markWarm"></div><div class="meter-mark hot" id="markHot"></div></div>
     <div class="small" id="scoreNote"></div>
@@ -174,13 +175,13 @@
   <!-- Contact + optional tip link (Ko-fi). Footer only, kept away from the forecasts. To hide the tip link again, add the hidden attribute to #donateLink. -->
   <p class="donate" id="donate"><a id="contactLink" href="mailto:btc.cycle.model@gmail.com"><span aria-hidden="true">&#9993;</span> Contact: btc.cycle.model@gmail.com</a><span class="sep" aria-hidden="true"> &middot; </span><a id="donateLink" href="https://ko-fi.com/euthymia686" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">&#9749;</span> Support this project</a></p>
 </footer>
-<script src="js/vendor/lightweight-charts.js?v=20261026credits"></script>
-<script src="js/explain.js?v=20261026credits"></script>
-<script src="js/model.js?v=20261026credits"></script>
-<script src="js/feeds.js?v=20261026credits"></script>
-<script src="js/hero.js?v=20261026credits"></script>
-<script src="js/app.js?v=20261026credits"></script>
-<script src="js/scorecard.js?v=20261026notes"></script>
-<script src="js/nav.js?v=20261026credits"></script>
+<script src="js/vendor/lightweight-charts.js?v=20261026live2"></script>
+<script src="js/explain.js?v=20261026live2"></script>
+<script src="js/model.js?v=20261026live2"></script>
+<script src="js/feeds.js?v=20261026live2"></script>
+<script src="js/hero.js?v=20261026live2"></script>
+<script src="js/app.js?v=20261026live2"></script>
+<script src="js/scorecard.js?v=20261026live2"></script>
+<script src="js/nav.js?v=20261026live2"></script>
 </body>
 </html>

@@ -8,7 +8,8 @@ Gauge (0-100) = average of the 7-day average Fear & Greed and a 0-100 funding sc
 Funding score: piecewise linear through (-10%, 0), (0%, 20), (10%, 45), (20%, 65), (40%, 85), (80%, 100); about 11% a year is
 the exchanges' default when the market is balanced. Zones: calm < 25 <= normal < 55 <= excited < 75 <= euphoric.
 These cut-offs are display conventions chosen on 2026-10-25, not fitted or calibrated.
-NOT an input of the Cycle Heat Score or of any graded version (v1, v2, v3). Writes data/crowd.json. Failure-tolerant: each
+NOT an input of the Cycle Heat Score or of any graded version (v1, v2, v3). Writes data/crowd.json. The page recomputes the same gauge live from Deribit's public funding history
+(BTCModel.crowdLive in js/model.js), using fng.window and curve from this file. Failure-tolerant: each
 source falls back to its cache; on total failure the previous data/crowd.json stays. Not financial advice."""
 import json, os, sys, time, datetime as dt
 import numpy as np, pandas as pd, requests
@@ -109,13 +110,15 @@ def main():
                      ", ".join(f"({int(x*100)}%, {y})" for x, y in zip(FUND_X, FUND_Y)) + "; zones calm < 25 <= normal < 55 <= excited < 75 <= euphoric (display conventions, not calibrated)",
            "asof": gl.strftime("%Y-%m-%d") if gl is not None else None, "gauge": r(gauge[gl]) if gl is not None else None, "zone": zone(gauge[gl]) if gl is not None else None,
            "fng": {"asof": fl.strftime("%Y-%m-%d") if fl is not None else None, "value": r(g[fl], 0) if fl is not None else None, "avg7": r(g7[lv(g7)]) if lv(g7) is not None else None,
-                   "source": "alternative.me Crypto Fear & Greed Index", "error": e_fng, "first": min(fng["daily"]) if fng else None},
+                   "source": "alternative.me Crypto Fear & Greed Index", "error": e_fng, "first": min(fng["daily"]) if fng else None,
+                   "window": {d.strftime("%Y-%m-%d"): int(v) for d, v in g.iloc[-8:].items() if np.isfinite(v)}},   # raw daily values, so the page can recompute g7 for a live funding reading
            "funding": {"asof": ffl.strftime("%Y-%m-%d") if ffl is not None else None, "ann7": r(100 * f7[ffl], 1) if ffl is not None else None,
                        "ann30": r(100 * f30[lv(f30)], 1) if lv(f30) is not None else None, "score": r(fs[lv(fs)]) if lv(fs) is not None else None,
                        "unit": "percent a year (mean 8-hour rate x 3 x 365)", "days_used": used,
                        "sources": {k: {"source": (v["data"] or {}).get("source"), "fetched_utc": (v["data"] or {}).get("fetched_utc"), "error": v["error"],
                                        "first": min(v["data"]["daily"]) if v["data"] and v["data"].get("daily") else None,
                                        "last": max(v["data"]["daily"]) if v["data"] and v["data"].get("daily") else None} for k, v in srcs.items()}},
+           "curve": {"funding_x": FUND_X, "funding_y": FUND_Y, "zones": [[c, z] for c, z in ZONES], "fng_min_days": 5, "funding_min_days": 5, "ann_factor": 3 * 365},   # the page's live recompute reads these (one source of truth)
            "t0": idx[0].strftime("%Y-%m-%d"), "gauge_daily": [r(x) for x in gauge.to_numpy()]}
     os.makedirs(os.path.dirname(OUT), exist_ok=True); tmp = OUT + ".tmp"; json.dump(out, open(tmp, "w"), separators=(",", ":")); os.replace(tmp, OUT)
     print(f"crowd: asof {out['asof']} gauge {out['gauge']} ({out['zone']}) · F&G {out['fng']['value']} (7d {out['fng']['avg7']}) · funding 7d {out['funding']['ann7']}%/yr, 30d {out['funding']['ann30']}%/yr · days {used}"

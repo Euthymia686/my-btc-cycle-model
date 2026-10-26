@@ -72,7 +72,8 @@
         const silentFor = now - (this.lastMsg || this.openedAt);
         if (silentFor > SILENCE_MS) this.reconnect();               // open-but-dead (phone slept, NAT dropped) or stuck connecting
       }
-      if (now - this.wsAt > WS_GRACE_MS && now - (this.restAt || 0) >= POLL_MS) { this.restAt = now; this.rest(); }
+      const every = !this.restOk && !this.wsOpens && now - this.born > 60000 ? 60000 : POLL_MS;   // never reached (blocked network?): retry once a minute
+      if (now - this.wsAt > WS_GRACE_MS && now - (this.restAt || 0) >= every) { this.restAt = now; this.rest(); }
     }
     wake() {    // page visible again / back online / focus: do not trust an old socket
       this.tries = 0; const now = Date.now();
@@ -91,11 +92,28 @@
     }
   }
 
+  /* BTC perpetual funding for the crowd gauge: Deribit public funding-rate history (hourly interest_8h records), fetched
+     directly by the visitor's browser every 60 s (a new record lands each hour). Last 7 UTC days + today. If it never
+     succeeds (blocked network) it backs off to once every 5 minutes; the page then shows the daily gauge. */
+  class Funding {
+    constructor(onUpdate) { Object.assign(this, { onUpdate, rows: [], at: 0, okAt: 0, err: null, tries: 0, busy: false }); this.poll(); this.timer = setInterval(() => this.watch(), 5000); }
+    watch() { const every = !this.okAt && this.tries >= 3 ? 300000 : 60000; if (Date.now() - this.at >= every) this.poll(); }
+    wake() { if (Date.now() - this.at > 15000) this.poll(); }
+    fresh() { return this.okAt && Date.now() - this.okAt < 180000; }
+    async poll() { if (this.busy) return; this.busy = true; this.at = Date.now(); this.tries++;
+      try { const end = Date.now(), start = (Math.floor(end / 86400000) - 7) * 86400000;
+        const j = await getJSON(`https://www.deribit.com/api/v2/public/get_funding_rate_history?instrument_name=BTC-PERPETUAL&start_timestamp=${start}&end_timestamp=${end}`);
+        const r = (j && j.result || []).map((x) => ({ t: +x.timestamp, r: +x.interest_8h })).filter((x) => isFinite(x.t) && isFinite(x.r));
+        if (!r.length) throw new SyntaxError("no funding rows");
+        this.rows = r; this.okAt = Date.now(); this.err = null; this.onUpdate && this.onUpdate(this);
+      } catch (e) { this.err = why(e); } finally { this.busy = false; } }
+  }
+
   /* REST-only source: polls every 10 s while active (polling mode). Same interface as Feed for combine() and the header. */
   class Poller {
-    constructor(src) { Object.assign(this, { src, price: null, at: 0, via: "rest", active: false, busy: false, restOk: 0, restErr: null, restTries: 0 }); this.timer = setInterval(() => this.watch(), 1000); }
+    constructor(src) { Object.assign(this, { src, price: null, at: 0, via: "rest", active: false, busy: false, restOk: 0, restErr: null, restTries: 0, born: Date.now() }); this.timer = setInterval(() => this.watch(), 1000); }
     setActive(on) { if (on && !this.active) this.lastPoll = 0; this.active = on; if (on) this.watch(); }
-    watch() { const now = Date.now(); if (this.active && now - (this.lastPoll || 0) >= POLL_MS) { this.lastPoll = now; this.poll(); } }
+    watch() { const now = Date.now(), every = !this.restOk && this.restTries >= 3 ? 60000 : POLL_MS; if (this.active && now - (this.lastPoll || 0) >= every) { this.lastPoll = now; this.poll(); } }
     async poll() { if (this.busy) return; this.busy = true; this.restTries++;
       try { const p = await this.src.rest(); if (!p) throw new SyntaxError("no price"); this.price = p; this.at = this.restOk = Date.now(); this.restErr = null; }
       catch (e) { this.restErr = why(e); } finally { this.busy = false; } }
@@ -163,5 +181,5 @@
     window.addEventListener("online", () => go("online")); window.addEventListener("focus", () => go("focus"));
     window.addEventListener("pageshow", (e) => { if (e.persisted) go("pageshow"); });
   }
-  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, getJSON, combine, onWake, num, int, esc, clean, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
+  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, Funding, getJSON, combine, onWake, num, int, esc, clean, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
 })(this);

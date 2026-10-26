@@ -233,6 +233,7 @@
     renderHealth(ctx);
 
     let firstRender = true, firstPlace = true;
+    const setH = (id, h) => { const e = $(id); if (e && e.innerHTML !== h && e.dataset.h !== h) { e.innerHTML = h; e.dataset.h = h; } };   // touch the DOM only when the text changed
     function update(p, now, calc, v2, via) {
       const wk = weekStart(BM.utcDay(now)), col = heatColor(calc.score);
       if (firstRender) { fitA(); firstRender = false; }
@@ -252,10 +253,10 @@
       // one-line summary under the combined chart
       const ath = Math.max(...closes, p), athI = closes.lastIndexOf(Math.max(...closes)), athT = p >= ath ? today : cT[athI];
       { const e = document.getElementById("v2Score"); if (e) e.innerHTML = `<span style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</span>`; }
-      $("heroLine").innerHTML = `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (stricter v2 score <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b> ${Explain.i("v2")}) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`;
+      setH("heroLine", `<b>${usd(p, 0)}</b> · score <b style="color:${col}">${f(calc.score, 1)} ${calc.scoreZone}</b> (stricter v2 score <b style="color:${ZC[v2.zone] || "#999"}">${f(v2.score, 1)} ${v2.zone}</b> ${Explain.i("v2")}) · day <b>${calc.cycleDay}</b> since halving · <b>${Math.round((today - athT) / DAY)}</b> days since peak ${usdK(ath)} (${(100 * (p / ath - 1)).toFixed(1)}%)`);
       // live position of today's price inside the frozen fan
       const FZ = FAN2.frozen; if (FZ) { const j = FZ.today.t.indexOf(today); if (j >= 0) { const q = { q5: FZ.today.q5[j], q25: FZ.today.q25[j], q50: FZ.today.q50[j], q75: FZ.today.q75[j], q95: FZ.today.q95[j] };
-        $("hLive").innerHTML = `Live price is at model percentile <b>${f(BM.fanPos(q, p), 0)}</b> of the frozen fan for today (5-95%: ${usdK(q.q5)}-${usdK(q.q95)}; inside the 90% band: <b>${p >= q.q5 && p <= q.q95 ? "yes" : "NO"}</b>).`; }
+        setH("hLive", `Live price is at model percentile <b>${f(BM.fanPos(q, p), 0)}</b> of the frozen fan for today (5-95%: ${usdK(q.q5)}-${usdK(q.q95)}; inside the 90% band: <b>${p >= q.q5 && p <= q.q95 ? "yes" : "NO"}</b>).`); }
         else $("hLive").textContent = "Today is outside the frozen fan's weekly cache; see the daily journal for coverage."; }
     }
     function renderHealth() {
