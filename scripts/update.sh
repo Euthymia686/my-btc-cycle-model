@@ -6,13 +6,21 @@ set -u; cd "$(dirname "$0")/.."; PY=${PY:-python}
 ( cd pipeline && $PY backtest.py >/dev/null ) || echo "::warning::backtest.py failed"
 ( cd pipeline && $PY signals.py >/dev/null ) || echo "::warning::signals.py (2nd pass) failed"
 $PY build_data.py --cycle-dir pipeline || echo "::warning::build_data.py failed - site keeps previous data"
+# Scorecard timing gate (scripts/score_gate.py, operational only): decided right after build_data.py, on the same CoinMetrics
+# data the Heat Score in data/history.json was just built from. "wait" = the latest close has no on-chain fields yet.
+GATE=$($PY scripts/score_gate.py decide) || GATE=error
 # Wikipedia pageviews: no longer shown on the site; still collected (pipeline/cache, data/wiki.json) for the yearly signal review
 $PY attention.py || echo "::warning::attention.py (Wikipedia pageviews, collected for the yearly review, not shown) failed - previous file kept"
 $PY crowd.py || echo "::warning::crowd.py (crowd euphoria gauge, display only) failed - previous file kept"
 # forward_band.py first: hero_png.py draws its forward cycle path from data/hero_fwd.json
 ( cd pipeline && $PY forward_band.py >/dev/null ) || echo "::warning::forward_band.py (display only) failed - previous file kept"
 ( cd pipeline && $PY hero_png.py >/dev/null ) || echo "::warning::hero_png.py failed - previous PNG kept"
-( cd pipeline && $PY scorecard.py ) || echo "::warning::scorecard.py failed - previous scorecard kept"
+if [ "$GATE" = "wait" ]; then
+  echo "::notice::scorecard waits: CoinMetrics has not published every on-chain field for the latest close yet (retried later today; written anyway from 12:00 UTC with a note)"
+else
+  ( cd pipeline && $PY scorecard.py ) || echo "::warning::scorecard.py failed - previous scorecard kept"
+fi
+$PY scripts/score_gate.py note || echo "::warning::score_gate.py note failed"
 # locked fan range table for the scorecard section (display only; reads the frozen fan file, never writes under frozen/)
 ( cd pipeline && $PY fan_locked.py >/dev/null ) || echo "::warning::fan_locked.py (display only) failed - previous file kept"
 # Blue band pre-registration (PREREG_BAND.md): append-only price/band logs, then grading. Frozen code, run in place, writes only under data/.

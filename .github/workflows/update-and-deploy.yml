@@ -2,8 +2,20 @@ name: Update data and deploy site
 
 on:
   schedule:
-    - cron: "30 0 * * *"      # daily ~00:30 UTC
+    - cron: "30 0 * * *"      # daily ~00:30 UTC: full site refresh; scorecard rows only if CoinMetrics has the whole day
+    # Retries (scripts/score_gate.py): each one exits at once, with no commit, if yesterday's scorecard rows and today's
+    # daily record already exist. From 12:00 UTC the rows are written even with missing on-chain fields, with a public note.
+    - cron: "0 3 * * *"
+    - cron: "0 6 * * *"
+    - cron: "0 9 * * *"
+    - cron: "0 12 * * *"      # deadline
+    - cron: "0 18 * * *"      # backstop in case GitHub drops a scheduled run
   workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: "Refresh the site even if today's scorecard rows and daily record already exist (never writes them twice)"
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -37,9 +49,27 @@ jobs:
           echo "$BAND_LIST_SHA256  pipeline/frozen/band/BAND_SHA256SUMS" | sha256sum -c
           sha256sum -c pipeline/frozen/band/BAND_SHA256SUMS
 
-  update:
+  check:
     needs: guard
     if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.c.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Anything left to do today? (00:30 UTC run and full_refresh always run; retries only if rows or record are missing)
+        id: c
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          FULL: ${{ inputs.full_refresh }}
+        run: |
+          if [ "$SCHEDULE" = "30 0 * * *" ] || [ "$FULL" = "true" ]; then echo "needed=true" >> "$GITHUB_OUTPUT"
+          else python3 scripts/score_gate.py needed >> "$GITHUB_OUTPUT"; fi
+          cat "$GITHUB_OUTPUT"
+
+  update:
+    needs: [guard, check]
+    if: needs.check.outputs.needed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -73,7 +103,14 @@ jobs:
           sha256sum -c pipeline/frozen/band/BAND_SHA256SUMS
       - name: Guard - append-only records (band logs, price log, hash chain, scorecard) keep every earlier row
         run: python scripts/check_append_only.py HEAD
+      # The day's snapshot and hash-chain record wait until yesterday's scorecard rows are written (or 12:00 UTC has passed),
+      # so the record covers them; scripts/score_gate.py settled. Both stay one per UTC day and are never rewritten.
+      - name: Ready to write today's snapshot and daily record?
+        id: settled
+        run: |
+          if python scripts/score_gate.py settled; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
       - name: Save the dated raw-data snapshot (daily small files, weekly large files; failure-tolerant)
+        if: steps.settled.outputs.ok == 'true'
         run: bash scripts/snapshot.sh || echo "::warning::snapshot failed"
       - name: Save private raw data for the next run (not published)
         uses: actions/cache/save@v4
@@ -87,6 +124,7 @@ jobs:
             pipeline/cache/crowd_bitmex.json
           key: raw-private-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Daily hash-chain record + OpenTimestamps stamp (never fails the run; a missed stamp is retried next day)
+        if: steps.settled.outputs.ok == 'true'
         run: |
           pip install -q opentimestamps-client==0.7.2 || true
           python scripts/stamp_daily.py || true
@@ -105,8 +143,9 @@ jobs:
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "Daily data refresh $(date -u +%F)" && git push; fi
 
   deploy:
-    needs: [guard, update]
-    if: always() && needs.guard.result == 'success' && (needs.update.result == 'success' || needs.update.result == 'skipped')
+    needs: [guard, check, update]
+    # push: deploy the committed site; scheduled/dispatch: deploy only if the update job ran (a no-op retry deploys nothing)
+    if: always() && needs.guard.result == 'success' && ((github.event_name == 'push' && needs.update.result == 'skipped') || needs.update.result == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -2,7 +2,8 @@
 Usage: python scripts/check_append_only.py <base_ref>      (e.g. HEAD~1 or origin/main before the run's commit)"""
 import subprocess, sys
 base = sys.argv[1] if len(sys.argv) > 1 else "HEAD"
-STRICT = ["data/band_log.csv", "data/band_prices.csv", "data/band_price_revisions.csv", "pipeline/timestamps/chain.csv"]
+STRICT = ["data/band_log.csv", "data/band_prices.csv", "data/band_price_revisions.csv", "pipeline/timestamps/chain.csv",
+          "data/scorecard_notes.csv"]   # notes on scorecard rows (scripts/score_gate.py): added 2026-10-26, append-only
 WRITE_ONCE = ["data/band_rerun.json", "data/halving_2028.json"]
 FILL_LATER = {"data/scorecard.csv": ("_actual", "in50", "in90", "log_score")}   # only these cells may be filled in later
 bad = []
