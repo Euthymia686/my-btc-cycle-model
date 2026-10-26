@@ -1,0 +1,12 @@
+{
+ "source": "data/scorecard_notes.csv (append-only)",
+ "notes": [
+  {
+   "close_date": "2026-10-25",
+   "noted_utc": "2026-10-26T09:37:59+00:00",
+   "kind": "inputs_incomplete_retro",
+   "missing_fields": "CapMrktCurUSD|CapMVRVCur|SplyCur|AdrActCnt",
+   "note": "Written by the 2026-10-26 01:24 UTC run before CoinMetrics had published the on-chain fields for 2026-10-25 (only PriceUSD was out). The heat_score (33.2) and heat_score_v2 (26.6) in these rows were computed without them; recomputed later with the complete row they read about 33.7 and 33.0 (information only, the rows are not edited). The forecast ranges and their grading use the price only and are unaffected. From 2026-10-26 the daily run waits for a complete CoinMetrics row before writing the scorecard (RESEARCH_LOG.md)."
+  }
+ ]
+}

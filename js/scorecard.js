@@ -108,7 +108,7 @@
       `<li><b>The 90% band is too wide.</b> Checked up to 3 years ahead, about 98.6% of past prices landed inside the v3 90% band (99.4% for v2) instead of 90%. v3 narrows it, but not enough yet.</li>` +
       flags(S.tests_backtest).map((t) => `<li><b>Backtest test result.</b> ${t}</li>`).join("") +
       `<li><b>Few cycles, and the market may be changing.</b> There are only four past cycle tops to learn from, and ETFs and large institutions may make the next cycle behave differently, so past patterns may not repeat.</li>` +
-      `<li><b>Data sources can fail.</b> If a source is down, the site keeps the last good data and the scorecard skips that day rather than guessing.</li></ul>`;
+      `<li><b>Data sources can fail or be late.</b> If a source is down, the site keeps the last good data. The scorecard waits until CoinMetrics has published the whole day (retried until 12:00 UTC the next day); if it is still incomplete then, the day is written anyway and listed in the notes below.</li></ul>`;
     if (ws) ws.innerHTML = weak; else el.innerHTML += weak;
     el.innerHTML +=
       `<p class="small">Promotion rule, set ${S.live_since || "2026-10-25"} before any result: v3 replaces v2 only if, from ${S.promotion_check_earliest || "2027-10-25"} on, it has the better log score <b>and</b> its 90% band is closer to 90% <b>and</b> it stays at or above 80% at every horizon. ` +
@@ -153,7 +153,18 @@
   }).catch(() => { bs.innerHTML = ""; });
   const getJ = (n) => fetch("data/" + n + ".json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(n + " " + r.status); return r.json(); }).then(CLEAN);
   const pS = getJ("scorecard"), pG = getJ("band_grades").catch(() => null), pF = getJ("fan_locked").catch(() => null);
-  pS.then(render).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
+  /* Append-only notes on specific scorecard rows (data/scorecard_notes.csv, scripts/score_gate.py): rows are never edited,
+     so a known problem with a row is explained here instead. Shown at the end of the scorecard details. */
+  const pN = getJ("scorecard_notes").catch(() => null);
+  function notes(N) {
+    const L = (N && N.notes) || []; if (!L.length) return;
+    const box = document.createElement("div"); box.className = "scnotes";
+    box.innerHTML = `<h3>Notes on specific rows</h3><ul class="small">` + L.map((n) => `<li><b>${fmtDay(n.close_date)} close</b> (noted ${String(n.noted_utc).slice(0, 10)}): ${n.note}` +
+      (n.missing_fields ? ` <span class="mono">Missing: ${String(n.missing_fields).split("|").join(", ")}.</span>` : "") + `</li>`).join("") +
+      `</ul><p class="small">The rows themselves are never edited. Raw: <a href="data/scorecard_notes.csv">scorecard_notes.csv</a> (append-only).</p>`;
+    el.appendChild(box);
+  }
+  pS.then(render).then(() => pN).then(notes).catch(() => { el.innerHTML = `<p class="small">Scorecard data is not available yet. First results on 2026-11-24 (30-day horizon).</p>`; });
   /* Plain-language summary at the top of the scorecard: one row per pre-registered prediction, its status and when it is graded.
      Display only: it reads the same published files as the detailed tables below and computes nothing new. */
   const sum = document.getElementById("scoreSummary");
