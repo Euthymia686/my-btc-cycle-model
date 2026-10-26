@@ -44,15 +44,22 @@ def merge_daily(old, rows, src):   # rows: list of (day, 8h-rate); daily mean, n
     daily = dict((old or {}).get("daily", {})); daily.update({d: float(np.mean(v)) for d, v in by.items()})
     return {"source": src, "fetched_utc": now().isoformat(timespec="seconds") + "Z", "unit": "mean 8-hour funding rate per day", "daily": dict(sorted(daily.items()))}
 
+DERIBIT_REFETCH_DAYS = 7   # re-read the last week each run (cheap: one request), so every day in the 7-day window has all 24 hourly records
+
 def f_deribit(old):
-    start = pd.Timestamp("2019-04-30") if not old or not old.get("daily") else pd.Timestamp(max(old["daily"])) - pd.Timedelta(days=2)
-    end = pd.Timestamp(now()); rows = []; t = start
+    first = pd.Timestamp("2019-04-30") if not old or not old.get("daily") else pd.Timestamp(max(old["daily"])) - pd.Timedelta(days=DERIBIT_REFETCH_DAYS)
+    # Deribit's start_timestamp is exclusive (a record exactly at it is not returned) and end_timestamp is inclusive, so the
+    # request starts one hour before the first day's 00:00; otherwise that day was averaged from 23 of its 24 records
+    # (bug fixed 2026-10-26, see RESEARCH_LOG.md). Records are keyed by timestamp, so chunk edges cannot double-count.
+    end = pd.Timestamp(now()); recs = {}; t = first - pd.Timedelta(hours=1)
     while t < end:
         t2 = min(t + pd.Timedelta(hours=743), end)
         r = get("https://www.deribit.com/api/v2/public/get_funding_rate_history", params={"instrument_name": "BTC-PERPETUAL",
                 "start_timestamp": int(t.timestamp() * 1000), "end_timestamp": int(t2.timestamp() * 1000)})["result"]
-        rows += [(dt.datetime.fromtimestamp(x["timestamp"] / 1000, dt.timezone.utc).strftime("%Y-%m-%d"), float(x["interest_8h"])) for x in r]
+        recs.update({int(x["timestamp"]): float(x["interest_8h"]) for x in r})
         t = t2; time.sleep(0.15)
+    day = lambda ms: dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc).strftime("%Y-%m-%d")
+    rows = [(day(k), v) for k, v in sorted(recs.items()) if day(k) >= first.strftime("%Y-%m-%d")]   # never a partial earlier day
     if not rows: raise RuntimeError("no rows")
     return merge_daily(old, rows, "Deribit BTC-PERPETUAL funding (hourly interest_8h)")
 
