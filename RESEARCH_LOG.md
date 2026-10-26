@@ -86,6 +86,7 @@ The same entries are kept in `IDEAS.md`.
 
 - 2026-10-25: Crowd-euphoria signal (funding rates + Fear & Greed) added as display only. Proposed as a v4 candidate. A shadow candidate score will be pre-registered and tracked live until the 2027-10-25 review.
 - 2026-10-25: Signal review for v4 candidate. Price-stretch family (Mayer, 200W, trend multiple, Pi Cycle) is largely redundant; family averaging already limits its weight. Candidates for the 2027-10-25 review: add crowd euphoria (funding rates + Fear & Greed); consider dropping or down-weighting Pi Cycle ratio (did not fire at the 2025 top) and active addresses (weakened by ETF/exchange custody and off-chain activity); add a long-term-holder selling signal if a free, reliable data source exists. No change to v2/v3.
+- 2026-10-26: Four candidates logged and pre-registered before any forward data (`pipeline/candidates/PREREG_CANDIDATES.md`, hash-locked, timestamped with OpenTimestamps): Puell Multiple, futures leverage (CME open interest vs market cap, from CFTC reports), global liquidity (Fed net liquidity and the dollar; a skeptical test), and spot ETF flows (display only; not sourced yet: no free source allows republishing). Daily shadow log in `data/candidates/` (history back-filled once and flagged in-sample). Review rule: drop on poor data coverage, a failed history check or redundancy with the price-stretch family; adopt into a v4 candidate only if everything passes. No change to v1/v2/v3.
 
 ## How to add an entry
 

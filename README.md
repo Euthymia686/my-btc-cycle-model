@@ -63,6 +63,7 @@ The bundled Lightweight Charts library is (c) TradingView and stays under its ow
 Third-party data is not covered by this license. It stays under each provider's own terms, and the names belong to their owners:
 - Coin Metrics Community data: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) (values are transformed).
 - [alternative.me Crypto Fear & Greed Index](https://alternative.me/crypto/fear-and-greed-index/), price data by [CoinGecko](https://www.coingecko.com/), data source: [Google Trends](https://www.google.com/trends), Wikimedia pageviews (CC0).
+- Shadow candidates (research only, `pipeline/candidates/`): CFTC Commitments of Traders (public domain), FRED / Federal Reserve and New York Fed series (public domain), Coin Metrics Community issuance (CC BY-NC 4.0); OKX and Deribit open interest is used but only a derived share of market cap is published.
 - Bitstamp daily price history (`data/ohlc_daily.json`), Coinbase, Kraken and Bitstamp live prices, mempool.space blocks, Strategy.com and SEC EDGAR. Raw Yahoo Finance, Deribit and OKX data is used but not republished.
 
 ## Prior work and credits
@@ -70,6 +71,7 @@ Third-party data is not covered by this license. It stays under each provider's 
 This model builds on public ideas by others:
 - Time-based power-law trend: Giovanni Santostasi (r/Bitcoin, 2018) and Harold Christopher Burger, "Bitcoin's natural long-term power-law corridor of growth" (2019).
 - Mayer Multiple (price / 200-day average): Trace Mayer.
+- Puell Multiple (shadow candidate only): David Puell (2019).
 - MVRV ratio: Murad Mahmudov and David Puell (2018), building on realized cap by Nic Carter and Antoine Le Calvez. MVRV Z-score: Awe & Wonder (2018).
 - Pi Cycle Top indicator: Philip Swift (2019).
 - Stock-to-flow (discussed as a cautionary example, not used): PlanB, "Modeling Bitcoin's Value with Scarcity" (2019).

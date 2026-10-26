@@ -33,6 +33,9 @@ env:
   FROZEN_LIST_SHA256: 96f83fc4e0e34d1e0efaf0a097f35e2b323dc0edb4e80d8b692f63b3f0031234
   # sha256 of pipeline/frozen/band/BAND_SHA256SUMS (blue band pre-registration, PREREG_BAND.md). Set on the freeze day.
   BAND_LIST_SHA256: 0ad5244cacdf0a3d21a8d7fe3506f028ceb1ef434f32f9bf377c4ae107cd427b
+  # sha256 of pipeline/candidates/CANDIDATES_SHA256SUMS (shadow candidates pre-registration, 2026-10-26). Research only: a
+  # mismatch fails its own job and skips the shadow log, but never blocks the official update, scorecard or daily record.
+  CANDIDATES_LIST_SHA256: f84d7d632310be8edb6895fb4e3ebff6b6470d590dccbfffa23404d4bfb5b16c
 
 jobs:
   guard:
@@ -48,6 +51,15 @@ jobs:
         run: |
           echo "$BAND_LIST_SHA256  pipeline/frozen/band/BAND_SHA256SUMS" | sha256sum -c
           sha256sum -c pipeline/frozen/band/BAND_SHA256SUMS
+
+  guard-candidates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guard - shadow candidates pre-registration must not change (separate job; does not gate the update)
+        run: |
+          echo "$CANDIDATES_LIST_SHA256  pipeline/candidates/CANDIDATES_SHA256SUMS" | sha256sum -c
+          cd pipeline/candidates && sha256sum -c CANDIDATES_SHA256SUMS
 
   check:
     needs: guard
@@ -79,7 +91,7 @@ jobs:
           python-version: "3.12.15"
           cache: pip
       - run: pip install -r requirements.txt
-      # Yahoo Finance, Deribit and OKX raw files may not be republished, so they are not in git. The runner keeps
+      # Yahoo Finance, Deribit and OKX raw files (crowd gauge and shadow candidates) may not be republished, so they are not in git. The runner keeps
       # them between runs in the Actions cache; on a cache miss update.sh simply fetches them fresh.
       - name: Restore private raw data (not published)
         uses: actions/cache/restore@v4
@@ -90,6 +102,8 @@ jobs:
             pipeline/cache/crowd_deribit.json
             pipeline/cache/crowd_okx.json
             pipeline/cache/crowd_bitmex.json
+            pipeline/cache/candidates/okx_oi.json
+            pipeline/cache/candidates/deribit_oi.json
           key: raw-private-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: raw-private-
       - name: Rebuild data (failure-tolerant; keeps last data on source errors)
@@ -122,24 +136,29 @@ jobs:
             pipeline/cache/crowd_deribit.json
             pipeline/cache/crowd_okx.json
             pipeline/cache/crowd_bitmex.json
+            pipeline/cache/candidates/okx_oi.json
+            pipeline/cache/candidates/deribit_oi.json
           key: raw-private-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Daily hash-chain record + OpenTimestamps stamp (never fails the run; a missed stamp is retried next day)
         if: steps.settled.outputs.ok == 'true'
         run: |
           pip install -q opentimestamps-client==0.7.2 || true
           python scripts/stamp_daily.py || true
+      - name: Shadow candidates hash-chain record + OpenTimestamps stamp (separate chain; never fails the run)
+        if: steps.settled.outputs.ok == 'true'
+        run: python scripts/stamp_candidates.py || true
       - name: Upgrade the OpenTimestamps proofs once Bitcoin confirms them (failure-tolerant)
         run: |
-          for f in pipeline/timestamps/*.ots pipeline/timestamps/chain/*.ots pipeline/frozen/band/*.ots; do
+          for f in pipeline/timestamps/*.ots pipeline/timestamps/chain/*.ots pipeline/timestamps/candidates/*.ots pipeline/frozen/band/*.ots pipeline/candidates/*.ots; do
             [ -e "$f" ] || continue
             ots upgrade "$f" || echo "::notice::$f not upgraded yet (still pending or calendar unreachable)"
           done
-          rm -f pipeline/timestamps/*.ots.bak pipeline/timestamps/chain/*.ots.bak pipeline/frozen/band/*.ots.bak
+          rm -f pipeline/timestamps/*.ots.bak pipeline/timestamps/chain/*.ots.bak pipeline/timestamps/candidates/*.ots.bak pipeline/frozen/band/*.ots.bak pipeline/candidates/*.ots.bak
       - name: Commit refreshed data if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps snapshots pipeline/frozen/band/*.ots
+          git add data hero_combined.png pipeline/out pipeline/cache pipeline/timestamps snapshots pipeline/frozen/band/*.ots pipeline/candidates/*.ots
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "Daily data refresh $(date -u +%F)" && git push; fi
 
   deploy:

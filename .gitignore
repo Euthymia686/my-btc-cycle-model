@@ -25,6 +25,9 @@ pipeline/cache/yahoo_mstr.json
 pipeline/cache/crowd_deribit.json
 pipeline/cache/crowd_okx.json
 pipeline/cache/crowd_bitmex.json
+pipeline/cache/candidates/okx_oi.json
+pipeline/cache/candidates/deribit_oi.json
+pipeline/cache/candidates/*.tmp
 
 # per-run scorecard gate decision (scripts/score_gate.py)
 pipeline/.score_gate.json

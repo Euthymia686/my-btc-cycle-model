@@ -21,6 +21,11 @@ else
   ( cd pipeline && $PY scorecard.py ) || echo "::warning::scorecard.py failed - previous scorecard kept"
 fi
 $PY scripts/score_gate.py note || echo "::warning::score_gate.py note failed"
+# Shadow candidates (pipeline/candidates/PREREG_CANDIDATES.md): research log only, after the scorecard so it can never delay or
+# change it. Runs only if the pre-registered files still match their hash list; writes only data/candidates* and its own caches.
+if ( cd pipeline/candidates && sha256sum -c --quiet CANDIDATES_SHA256SUMS ); then
+  $PY candidates.py || echo "::warning::candidates.py (shadow candidates, research only) failed - log unchanged, retried next run"
+else echo "::warning::candidate pre-registration files do not match CANDIDATES_SHA256SUMS - shadow log skipped"; fi
 # locked fan range table for the scorecard section (display only; reads the frozen fan file, never writes under frozen/)
 ( cd pipeline && $PY fan_locked.py >/dev/null ) || echo "::warning::fan_locked.py (display only) failed - previous file kept"
 # Blue band pre-registration (PREREG_BAND.md): append-only price/band logs, then grading. Frozen code, run in place, writes only under data/.

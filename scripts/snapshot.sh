@@ -11,7 +11,7 @@
 # Idempotent: a date that already has a snapshot is not written again. Failure-tolerant.
 set -u; cd "$(dirname "$0")/.."
 BIG="pipeline/cache/coinmetrics.json data/ohlc_daily.json"
-PRIVATE='/(yahoo_btc|yahoo_mstr|crowd_deribit|crowd_okx|crowd_bitmex)\.json$'
+PRIVATE='/(yahoo_btc|yahoo_mstr|crowd_deribit|crowd_okx|crowd_bitmex|okx_oi|deribit_oi)\.json$'
 D=${SNAP_DATE:-$(date -u +%F)}; Y=${D:0:4}; OUT=snapshots/$Y; mkdir -p "$OUT"; M=snapshots/MANIFEST.csv
 test -s "$M" || echo "date,file,bytes,sha256" > "$M"
 if [ ! -e "$OUT/$D.tar.xz" ]; then
