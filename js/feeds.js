@@ -109,6 +109,22 @@
       } catch (e) { this.err = why(e); } finally { this.busy = false; } }
   }
 
+  /* Shadow candidate "leverage" (display only, being tested): Deribit public book summary, BTC futures + perpetual open
+     interest in USD (inverse contracts are quoted in USD), fetched directly by the visitor's browser every 60 s. Same
+     endpoint and sum as candidates.py's daily snapshot. Never feeds any score. Backs off to every 5 min if it never succeeds. */
+  class DeribitOI {
+    constructor(onUpdate) { Object.assign(this, { onUpdate, usd: null, at: 0, okAt: 0, err: null, tries: 0, busy: false }); this.poll(); this.timer = setInterval(() => this.watch(), 5000); }
+    watch() { const every = !this.okAt && this.tries >= 3 ? 300000 : 60000; if (Date.now() - this.at >= every) this.poll(); }
+    wake() { if (Date.now() - this.at > 15000) this.poll(); }
+    fresh() { return this.okAt && Date.now() - this.okAt < 180000; }
+    async poll() { if (this.busy) return; this.busy = true; this.at = Date.now(); this.tries++;
+      try { const j = await getJSON("https://www.deribit.com/api/v2/public/get_book_summary_by_currency?currency=BTC&kind=future");
+        const r = (j && j.result || []).map((x) => +x.open_interest).filter((x) => isFinite(x) && x >= 0);
+        if (!r.length) throw new SyntaxError("no open interest rows");
+        this.usd = r.reduce((a, b) => a + b, 0); this.okAt = Date.now(); this.err = null; this.onUpdate && this.onUpdate(this);
+      } catch (e) { this.err = why(e); } finally { this.busy = false; } }
+  }
+
   /* REST-only source: polls every 10 s while active (polling mode). Same interface as Feed for combine() and the header. */
   class Poller {
     constructor(src) { Object.assign(this, { src, price: null, at: 0, via: "rest", active: false, busy: false, restOk: 0, restErr: null, restTries: 0, born: Date.now() }); this.timer = setInterval(() => this.watch(), 1000); }
@@ -181,5 +197,5 @@
     window.addEventListener("online", () => go("online")); window.addEventListener("focus", () => go("focus"));
     window.addEventListener("pageshow", (e) => { if (e.persisted) go("pageshow"); });
   }
-  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, Funding, getJSON, combine, onWake, num, int, esc, clean, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
+  root.Feeds = { SOURCES, POLL_SOURCES, Feed, Poller, Blocks, Funding, DeribitOI, getJSON, combine, onWake, num, int, esc, clean, FRESH_MS, SILENCE_MS, OUTLIER, POLL_MS, WS_GRACE_MS };
 })(this);
