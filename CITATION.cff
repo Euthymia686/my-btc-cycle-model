@@ -17,6 +17,9 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.23643773"
     description: "v3-freeze-2026-10-25"
+  - type: doi
+    value: "10.5281/zenodo.23668221"
+    description: "band-test-freeze-2026-10-25"
 repository-code: "https://github.com/Euthymia686/my-btc-cycle-model"
 url: "https://euthymia686.github.io/my-btc-cycle-model/"
 license: PolyForm-Noncommercial-1.0.0

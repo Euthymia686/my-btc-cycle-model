@@ -44,7 +44,7 @@ See `docs/ARCHITECTURE.md`, `docs/ROBUSTNESS.md` and `pipeline/SOURCES.md`.
 Raw Yahoo Finance, Deribit and OKX files are no longer in the repo or the newer snapshots, only their sha256 in `snapshots/MANIFEST.csv`. They feed only the display-only crowd gauge (`data/crowd.json`) and a fallback MSTR price and cross-check; nothing graded or in the daily hash chain uses them. To rebuild `data/crowd.json` exactly, fetch the funding history again from Deribit or OKX.
 
 ## How to cite
-See `CITATION.cff`. Releases are archived on Zenodo. DOI for all versions: [10.5281/zenodo.23643772](https://doi.org/10.5281/zenodo.23643772). First release (v3-freeze-2026-10-25): [10.5281/zenodo.23643773](https://doi.org/10.5281/zenodo.23643773).
+See `CITATION.cff`. Releases are archived on Zenodo. DOI for all versions: [10.5281/zenodo.23643772](https://doi.org/10.5281/zenodo.23643772). First release (v3-freeze-2026-10-25): [10.5281/zenodo.23643773](https://doi.org/10.5281/zenodo.23643773). Locked blue cycle band test (band-test-freeze-2026-10-25): [10.5281/zenodo.23668221](https://doi.org/10.5281/zenodo.23668221).
 
 ## How this was built
 
