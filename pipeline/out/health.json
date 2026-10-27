@@ -8,12 +8,12 @@
   "v2_spec_sha256": "1ed15c4c00d49512ceacfeb6b00ca5d4dba2ba665f3ace9e1bc4ad3b6a1e2162"
  },
  "v2_today": {
-  "value": 26.4,
+  "value": 33.2,
   "zone": "cool",
   "families": {
    "price_structure": 33.7,
-   "onchain_valuation": null,
-   "network_usage": null,
+   "onchain_valuation": 37.1,
+   "network_usage": 49.6,
    "attention": 45.5,
    "timing": 0.0
   },
