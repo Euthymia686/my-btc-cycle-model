@@ -41,9 +41,7 @@
      "first_cross": "2013-01-16",
      "lead_days": 322,
      "price_pct_of_top": 1.3,
-     "false_episodes": [
-      "2016-12-23..2016-12-29"
-     ]
+     "false_episodes": []
     },
     "T80": {
      "first_cross": "2013-02-22",
@@ -59,9 +57,9 @@
     },
     "bottom": "2015-01-14",
     "bottom_price": 176,
-    "score_at_bottom": 20.5,
+    "score_at_bottom": 20.3,
     "min_near_bottom": 20.3,
-    "min_near_bottom_date": "2015-05-01"
+    "min_near_bottom_date": "2015-01-14"
    },
    "fitted": {
     "top": "2013-12-04",
@@ -75,9 +73,7 @@
      "first_cross": "2013-01-16",
      "lead_days": 322,
      "price_pct_of_top": 1.3,
-     "false_episodes": [
-      "2016-12-23..2016-12-29"
-     ]
+     "false_episodes": []
     },
     "T80": {
      "first_cross": "2013-02-22",
@@ -93,9 +89,9 @@
     },
     "bottom": "2015-01-14",
     "bottom_price": 176,
-    "score_at_bottom": 20.5,
+    "score_at_bottom": 20.3,
     "min_near_bottom": 20.3,
-    "min_near_bottom_date": "2015-05-01"
+    "min_near_bottom_date": "2015-01-14"
    },
    "rules": null
   },
@@ -119,12 +115,12 @@
      "activity"
     ],
     "fitted_weights": {
-     "mayer": 0.21066578002211162,
-     "trend_mult": 0.19938262060761971,
-     "mvrv_z": 0.1818633161317204,
-     "pi_ratio": 0.10615179183864404,
-     "trends": 0.08944865895436753,
-     "activity": 0.2124878324455366
+     "mayer": 0.2111721190581809,
+     "trend_mult": 0.1998618403647005,
+     "mvrv_z": 0.18230042792166956,
+     "pi_ratio": 0.10640692960212403,
+     "trends": 0.08726013223556078,
+     "activity": 0.2129985508177641
     },
     "score_hot": {
      "equal": 92.0,
@@ -174,7 +170,7 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 24.7,
+    "score_at_bottom": 24.8,
     "min_near_bottom": 23.2,
     "min_near_bottom_date": "2019-02-07"
    },
@@ -213,8 +209,8 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 18.8,
-    "min_near_bottom": 18.7,
+    "score_at_bottom": 18.7,
+    "min_near_bottom": 18.6,
     "min_near_bottom_date": "2019-02-07"
    },
    "rules": {
@@ -262,14 +258,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.029859920845353178,
-     "mayer": 0.17394092417286708,
-     "p200w": 0.15099316034551033,
-     "trend_mult": 0.13981653742305927,
-     "mvrv_z": 0.15051847919956424,
-     "pi_ratio": 0.11447505655088135,
-     "trends": 0.05752978030377956,
-     "activity": 0.18286614115898508
+     "cycle_day": 0.029932683490517392,
+     "mayer": 0.17436478335892033,
+     "p200w": 0.15136110042831713,
+     "trend_mult": 0.14015724231485363,
+     "mvrv_z": 0.15088526257951282,
+     "pi_ratio": 0.11475400933053219,
+     "trends": 0.05523316918653093,
+     "activity": 0.1833117493108155
     },
     "score_hot": {
      "equal": 88.0,
@@ -314,17 +310,17 @@
     },
     "bottom": "2022-11-09",
     "bottom_price": 15758,
-    "score_at_bottom": 15.6,
-    "min_near_bottom": 15.6,
+    "score_at_bottom": 15.5,
+    "min_near_bottom": 15.5,
     "min_near_bottom_date": "2022-11-09"
    },
    "fitted": {
     "top": "2021-11-08",
     "top_price": 67542,
-    "score_at_top": 63.8,
-    "max_near_top": 63.8,
+    "score_at_top": 63.7,
+    "max_near_top": 63.7,
     "max_near_top_date": "2021-11-08",
-    "max_in_window": 82.8,
+    "max_in_window": 82.7,
     "max_in_window_date": "2021-01-14",
     "T70": {
      "first_cross": "2021-01-01",
@@ -348,8 +344,8 @@
     },
     "bottom": "2022-11-09",
     "bottom_price": 15758,
-    "score_at_bottom": 12.3,
-    "min_near_bottom": 12.3,
+    "score_at_bottom": 12.1,
+    "min_near_bottom": 12.1,
     "min_near_bottom_date": "2022-11-09"
    },
    "rules": {
@@ -393,14 +389,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.1954563380642438,
-     "mayer": 0.15063671416865237,
-     "p200w": 0.13996422633896435,
-     "trend_mult": 0.1343117871808743,
-     "mvrv_z": 0.13498679660299154,
-     "pi_ratio": 0.07521756830736179,
-     "trends": 0.0475298914954985,
-     "activity": 0.12189667784141324
+     "cycle_day": 0.1956584996611589,
+     "mayer": 0.15079251857485362,
+     "p200w": 0.14010899213058767,
+     "trend_mult": 0.1344507066226786,
+     "mvrv_z": 0.1351264142108623,
+     "pi_ratio": 0.07529536626405985,
+     "trends": 0.04654474627045179,
+     "activity": 0.1220227562653473
     },
     "score_hot": {
      "equal": 68.0,
@@ -420,10 +416,10 @@
    "equal": {
     "top": "2025-10-06",
     "top_price": 124824,
-    "score_at_top": 62.1,
-    "max_near_top": 68.0,
+    "score_at_top": 62.2,
+    "max_near_top": 67.9,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 68.0,
+    "max_in_window": 67.9,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": null,
@@ -446,9 +442,9 @@
     "top": "2025-10-06",
     "top_price": 124824,
     "score_at_top": 63.0,
-    "max_near_top": 70.3,
+    "max_near_top": 70.2,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 70.3,
+    "max_in_window": 70.2,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": "2025-08-13",
