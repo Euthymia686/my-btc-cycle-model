@@ -8,13 +8,13 @@
   "v2_spec_sha256": "1ed15c4c00d49512ceacfeb6b00ca5d4dba2ba665f3ace9e1bc4ad3b6a1e2162"
  },
  "v2_today": {
-  "value": 31.2,
+  "value": 32.5,
   "zone": "cool",
   "families": {
    "price_structure": 35.4,
-   "onchain_valuation": null,
+   "onchain_valuation": 38.0,
    "network_usage": 49.3,
-   "attention": 40.2,
+   "attention": 39.7,
    "timing": 0.0
   },
   "date": "2026-10-28"
