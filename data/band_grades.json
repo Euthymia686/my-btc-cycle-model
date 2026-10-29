@@ -1,5 +1,5 @@
 {
- "asof": "2026-10-27",
+ "asof": "2026-10-28",
  "status": {
   "top": {
    "final": false,
@@ -105,7 +105,7 @@
  "benchmarks": {
   "trend": {
    "height": {
-    "point": 290860.03026308346,
+    "point": 290860.03026308585,
     "range": [
      null,
      null
