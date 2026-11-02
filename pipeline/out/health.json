@@ -8,16 +8,16 @@
   "v2_spec_sha256": "1ed15c4c00d49512ceacfeb6b00ca5d4dba2ba665f3ace9e1bc4ad3b6a1e2162"
  },
  "v2_today": {
-  "value": 31.3,
+  "value": 15.8,
   "zone": "cool",
   "families": {
-   "price_structure": 31.0,
-   "onchain_valuation": 34.7,
-   "network_usage": 46.9,
-   "attention": 43.8,
+   "price_structure": 31.8,
+   "onchain_valuation": null,
+   "network_usage": null,
+   "attention": 15.6,
    "timing": 0.0
   },
-  "date": "2026-10-31"
+  "date": "2026-11-01"
  },
  "fan_backtest": {
   "freezes": [
@@ -185,7 +185,7 @@
    },
    {
     "freeze": "2024-01-01",
-    "days": 1034,
+    "days": 1035,
     "in90": 1.0,
     "in50": 0.773,
     "below5": 0.0,
@@ -194,16 +194,16 @@
    },
    {
     "freeze": "2024-07-01",
-    "days": 852,
+    "days": 853,
     "in90": 0.996,
-    "in50": 0.832,
+    "in50": 0.831,
     "below5": 0.004,
     "above95": 0.0,
     "fixed_corridor_in90": 0.979
    },
    {
     "freeze": "2025-01-01",
-    "days": 668,
+    "days": 669,
     "in90": 0.999,
     "in50": 0.987,
     "below5": 0.0,
@@ -212,7 +212,7 @@
    },
    {
     "freeze": "2025-07-01",
-    "days": 487,
+    "days": 488,
     "in90": 0.998,
     "in50": 0.598,
     "below5": 0.0,
@@ -224,7 +224,7 @@
    "all": {
     "in90": 0.982,
     "in50": 0.707,
-    "days": 23741
+    "days": 23745
    },
    "0-1y": {
     "in90": 0.969,
@@ -234,12 +234,12 @@
    "1-2y": {
     "in90": 0.976,
     "in50": 0.678,
-    "days": 7725
+    "days": 7727
    },
    "2-3y": {
     "in90": 1.0,
     "in50": 0.81,
-    "days": 7986
+    "days": 7988
    },
    "fixed_corridor_all_in90": 0.902
   },
@@ -247,55 +247,55 @@
   "note": "Each freeze uses only data up to that date. Overlapping windows (every 6 months), so the rows are not independent; about 2.5 halving cycles of out-of-sample history in total."
  },
  "forward": {
-  "days": 6,
+  "days": 7,
   "in90": 1.0,
-  "in50": 0.5,
+  "in50": 0.5714285714285714,
   "below5": 0.0,
   "above95": 0.0,
   "since": "2026-10-25",
   "last": {
-   "date": "2026-10-31",
-   "close": 77401.0172870368,
+   "date": "2026-11-01",
+   "close": 78135.0802893045,
    "in90": true,
-   "in50": false,
-   "position_pct": 23.481832011103094
+   "in50": true,
+   "position_pct": 27.768294362181024
   }
  },
  "trend_drift": [
   {
-   "fit_date": "2026-10-31",
+   "fit_date": "2026-11-01",
    "slope_b": 5.637,
-   "trend_at_horizon": 276456.0
+   "trend_at_horizon": 276376.0
   },
   {
-   "fit_date": "2025-10-31",
+   "fit_date": "2025-11-01",
    "slope_b": 5.705,
-   "trend_at_horizon": 303864.0
+   "trend_at_horizon": 303859.0
   },
   {
-   "fit_date": "2024-10-31",
-   "slope_b": 5.697,
-   "trend_at_horizon": 300263.0
+   "fit_date": "2024-11-01",
+   "slope_b": 5.696,
+   "trend_at_horizon": 300240.0
   },
   {
-   "fit_date": "2022-10-31",
+   "fit_date": "2022-11-01",
    "slope_b": 5.846,
-   "trend_at_horizon": 376472.0
+   "trend_at_horizon": 376252.0
   },
   {
-   "fit_date": "2018-10-31",
+   "fit_date": "2018-11-01",
    "slope_b": 5.891,
-   "trend_at_horizon": 408950.0
+   "trend_at_horizon": 408961.0
   }
  ],
  "fan_today": {
-  "asof": "2026-10-31",
+  "asof": "2026-11-01",
   "at_horizon": {
-   "q5": 79818.0,
-   "q25": 154797.0,
-   "q50": 232377.0,
-   "q75": 343245.0,
-   "q95": 790838.0
+   "q5": 79484.0,
+   "q25": 154321.0,
+   "q50": 231375.0,
+   "q75": 341867.0,
+   "q95": 787447.0
   }
  }
 }
