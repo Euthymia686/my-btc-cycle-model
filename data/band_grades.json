@@ -1,5 +1,5 @@
 {
- "asof": "2026-11-07",
+ "asof": "2026-11-08",
  "status": {
   "top": {
    "final": false,
@@ -38,7 +38,7 @@
     "date": "2030-06-04",
     "source": "band at its post-peak low date"
    },
-   "path_mae": 0.07956854671858249
+   "path_mae": 0.08800955401189103
   },
   "C1": {
    "label": "Competitor 1: ensemble-corrected band (frozen snapshot)",
@@ -64,7 +64,7 @@
     "date": "2030-06-04",
     "source": "equal-weight ensemble"
    },
-   "path_mae": 0.07956854671858249
+   "path_mae": 0.08800955401189103
   },
   "C2": {
    "label": "Competitor 2: S1 size law (frozen snapshot value)",
@@ -104,11 +104,11 @@
   "low": null,
   "path": {
    "mae": {
-    "band": 0.07956854671858249,
-    "C1": 0.07956854671858249,
-    "trend": 0.20181240450229954,
-    "unscaled2": 0.0026433351772592317,
-    "last_cycle": 0.06001672063918395
+    "band": 0.08800955401189103,
+    "C1": 0.08800955401189103,
+    "trend": 0.21211392776704718,
+    "unscaled2": 0.009787766996173453,
+    "last_cycle": 0.049175244999315915
    },
    "best": "unscaled2",
    "final": false
@@ -192,20 +192,20 @@
   }
  },
  "path": {
-  "weeks": 1,
+  "weeks": 2,
   "final": false,
   "formal_results_allowed": false,
   "mae": {
-   "band": 0.07956854671858249,
-   "C1": 0.07956854671858249,
-   "trend": 0.20181240450229954,
-   "unscaled2": 0.0026433351772592317,
-   "last_cycle": 0.06001672063918395
+   "band": 0.08800955401189103,
+   "C1": 0.08800955401189103,
+   "trend": 0.21211392776704718,
+   "unscaled2": 0.009787766996173453,
+   "last_cycle": 0.049175244999315915
   },
   "coverage": {
-   "band": 1.0,
+   "band": 0.5,
    "constant_width": 0.0,
-   "C1": 1.0
+   "C1": 0.5
   },
   "H4_primary_DM_band_vs_trend": null,
   "secondary_DM_holm": {
