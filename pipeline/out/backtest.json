@@ -42,13 +42,13 @@
      "lead_days": 322,
      "price_pct_of_top": 1.3,
      "false_episodes": [
-      "2016-12-23..2016-12-28"
+      "2016-12-23..2016-12-29"
      ]
     },
     "T80": {
-     "first_cross": "2013-02-22",
-     "lead_days": 285,
-     "price_pct_of_top": 2.7,
+     "first_cross": "2013-02-19",
+     "lead_days": 288,
+     "price_pct_of_top": 2.6,
      "false_episodes": []
     },
     "T90": {
@@ -76,13 +76,13 @@
      "lead_days": 322,
      "price_pct_of_top": 1.3,
      "false_episodes": [
-      "2016-12-23..2016-12-28"
+      "2016-12-23..2016-12-29"
      ]
     },
     "T80": {
-     "first_cross": "2013-02-22",
-     "lead_days": 285,
-     "price_pct_of_top": 2.7,
+     "first_cross": "2013-02-19",
+     "lead_days": 288,
+     "price_pct_of_top": 2.6,
      "false_episodes": []
     },
     "T90": {
@@ -119,12 +119,12 @@
      "activity"
     ],
     "fitted_weights": {
-     "mayer": 0.2098045381143126,
-     "trend_mult": 0.19856750640855023,
-     "mvrv_z": 0.1811198241923675,
-     "pi_ratio": 0.1057178230578112,
-     "trends": 0.09317116658721028,
-     "activity": 0.2116191416397481
+     "mayer": 0.2088990842589952,
+     "trend_mult": 0.19771054823293427,
+     "mvrv_z": 0.18033816501300293,
+     "pi_ratio": 0.10526157644215742,
+     "trends": 0.09708476955646173,
+     "activity": 0.21070585649644832
     },
     "score_hot": {
      "equal": 92.0,
@@ -153,7 +153,7 @@
      "price_pct_of_top": 5.7,
      "false_episodes": [
       "2019-06-24..2019-07-13",
-      "2020-11-30..2020-12-31"
+      "2020-12-01..2020-12-31"
      ]
     },
     "T80": {
@@ -174,8 +174,8 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 25.0,
-    "min_near_bottom": 23.2,
+    "score_at_bottom": 24.8,
+    "min_near_bottom": 23.1,
     "min_near_bottom_date": "2019-02-07"
    },
    "fitted": {
@@ -213,8 +213,8 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 19.2,
-    "min_near_bottom": 19.0,
+    "score_at_bottom": 19.4,
+    "min_near_bottom": 19.2,
     "min_near_bottom_date": "2019-02-07"
    },
    "rules": {
@@ -262,14 +262,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.029859920845353178,
-     "mayer": 0.17394092417286708,
-     "p200w": 0.15099316034551033,
-     "trend_mult": 0.13981653742305927,
-     "mvrv_z": 0.15051847919956424,
-     "pi_ratio": 0.11447505655088135,
-     "trends": 0.05752978030377956,
-     "activity": 0.18286614115898508
+     "cycle_day": 0.02991733344468589,
+     "mayer": 0.1742753658024621,
+     "p200w": 0.1512834795952429,
+     "trend_mult": 0.14008536703197658,
+     "mvrv_z": 0.15080788576508095,
+     "pi_ratio": 0.11469516130565896,
+     "trends": 0.05571766347377607,
+     "activity": 0.18321774358111656
     },
     "score_hot": {
      "equal": 88.0,
@@ -321,8 +321,8 @@
    "fitted": {
     "top": "2021-11-08",
     "top_price": 67542,
-    "score_at_top": 63.8,
-    "max_near_top": 63.8,
+    "score_at_top": 63.7,
+    "max_near_top": 63.7,
     "max_near_top_date": "2021-11-08",
     "max_in_window": 82.8,
     "max_in_window_date": "2021-01-14",
@@ -348,8 +348,8 @@
     },
     "bottom": "2022-11-09",
     "bottom_price": 15758,
-    "score_at_bottom": 12.2,
-    "min_near_bottom": 12.2,
+    "score_at_bottom": 12.1,
+    "min_near_bottom": 12.1,
     "min_near_bottom_date": "2022-11-09"
    },
    "rules": {
@@ -393,14 +393,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.19539262464323595,
-     "mayer": 0.15058761071933924,
-     "p200w": 0.13991860182882004,
-     "trend_mult": 0.13426800521131665,
-     "mvrv_z": 0.13494279459882197,
-     "pi_ratio": 0.0751930494370902,
-     "trends": 0.04784037070339519,
-     "activity": 0.12185694285798068
+     "cycle_day": 0.19550142598619807,
+     "mayer": 0.15067146308740909,
+     "p200w": 0.13999651332528598,
+     "trend_mult": 0.1343427702609725,
+     "mvrv_z": 0.13501793539444934,
+     "pi_ratio": 0.07523491951675729,
+     "trends": 0.047310175428261665,
+     "activity": 0.12192479700066602
     },
     "score_hot": {
      "equal": 68.0,
