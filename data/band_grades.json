@@ -1,5 +1,5 @@
 {
- "asof": "2026-11-21",
+ "asof": "2026-11-22",
  "status": {
   "top": {
    "final": false,
@@ -13,8 +13,8 @@
   "floor_breaks": [
    {
     "start": "2026-11-15",
-    "end": "2026-11-15",
-    "weeks": 1
+    "end": "2026-11-22",
+    "weeks": 2
    }
   ],
   "K1_close_above_band_high": null
@@ -44,7 +44,7 @@
     "date": "2030-06-04",
     "source": "band at its post-peak low date"
    },
-   "path_mae": 0.11142964179355926
+   "path_mae": 0.13081676351649252
   },
   "C1": {
    "label": "Competitor 1: ensemble-corrected band (frozen snapshot)",
@@ -70,7 +70,7 @@
     "date": "2030-06-04",
     "source": "equal-weight ensemble"
    },
-   "path_mae": 0.11142964179355926
+   "path_mae": 0.13081676351649252
   },
   "C2": {
    "label": "Competitor 2: S1 size law (frozen snapshot value)",
@@ -110,13 +110,13 @@
   "low": null,
   "path": {
    "mae": {
-    "band": 0.11142964179355926,
-    "C1": 0.11142964179355926,
-    "trend": 0.23665697509035097,
-    "unscaled2": 0.03235688540151068,
-    "last_cycle": 0.041738044493736005
+    "band": 0.13081676351649252,
+    "C1": 0.13081676351649252,
+    "trend": 0.2566117762796274,
+    "unscaled2": 0.051442998850566246,
+    "last_cycle": 0.044805682526451784
    },
-   "best": "unscaled2",
+   "best": "last_cycle",
    "final": false
   }
  },
@@ -124,7 +124,7 @@
  "benchmarks": {
   "trend": {
    "height": {
-    "point": 290860.03026308346,
+    "point": 290860.03026308585,
     "range": [
      null,
      null
@@ -198,20 +198,20 @@
   }
  },
  "path": {
-  "weeks": 3,
+  "weeks": 4,
   "final": false,
   "formal_results_allowed": false,
   "mae": {
-   "band": 0.11142964179355926,
-   "C1": 0.11142964179355926,
-   "trend": 0.23665697509035097,
-   "unscaled2": 0.03235688540151068,
-   "last_cycle": 0.041738044493736005
+   "band": 0.13081676351649252,
+   "C1": 0.13081676351649252,
+   "trend": 0.2566117762796274,
+   "unscaled2": 0.051442998850566246,
+   "last_cycle": 0.044805682526451784
   },
   "coverage": {
-   "band": 0.3333333333333333,
+   "band": 0.25,
    "constant_width": 0.0,
-   "C1": 0.3333333333333333
+   "C1": 0.25
   },
   "H4_primary_DM_band_vs_trend": null,
   "secondary_DM_holm": {
