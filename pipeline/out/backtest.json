@@ -119,12 +119,12 @@
      "activity"
     ],
     "fitted_weights": {
-     "mayer": 0.21018289432151807,
-     "trend_mult": 0.1989255980364732,
-     "mvrv_z": 0.18144645111067467,
-     "pi_ratio": 0.10590847191090882,
-     "trends": 0.0915358143632863,
-     "activity": 0.21200077025713893
+     "mayer": 0.21066578002211162,
+     "trend_mult": 0.19938262060761971,
+     "mvrv_z": 0.1818633161317204,
+     "pi_ratio": 0.10615179183864404,
+     "trends": 0.08944865895436753,
+     "activity": 0.2124878324455366
     },
     "score_hot": {
      "equal": 92.0,
@@ -174,17 +174,17 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 24.7,
-    "min_near_bottom": 23.4,
+    "score_at_bottom": 25.1,
+    "min_near_bottom": 23.3,
     "min_near_bottom_date": "2019-02-07"
    },
    "fitted": {
     "top": "2017-12-16",
     "top_price": 19641,
-    "score_at_top": 91.4,
-    "max_near_top": 91.4,
+    "score_at_top": 91.3,
+    "max_near_top": 91.3,
     "max_near_top_date": "2017-12-16",
-    "max_in_window": 91.4,
+    "max_in_window": 91.3,
     "max_in_window_date": "2017-12-16",
     "T70": {
      "first_cross": "2017-03-01",
@@ -192,7 +192,7 @@
      "price_pct_of_top": 6.3,
      "false_episodes": [
       "2019-06-24..2019-07-13",
-      "2020-12-01..2020-12-31"
+      "2020-12-02..2020-12-31"
      ]
     },
     "T80": {
@@ -213,9 +213,9 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 18.9,
-    "min_near_bottom": 18.9,
-    "min_near_bottom_date": "2018-12-15"
+    "score_at_bottom": 19.0,
+    "min_near_bottom": 18.8,
+    "min_near_bottom_date": "2019-02-07"
    },
    "rules": {
     "n_signals": 6,
@@ -262,14 +262,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.02986059781967687,
-     "mayer": 0.17394486770440268,
-     "p200w": 0.15099658361287718,
-     "trend_mult": 0.13981970729770005,
-     "mvrv_z": 0.15052189170511598,
-     "pi_ratio": 0.11447765189178628,
-     "trends": 0.057508412928330546,
-     "activity": 0.18287028704011044
+     "cycle_day": 0.029860256839719976,
+     "mayer": 0.17394288141752892,
+     "p200w": 0.15099485937383542,
+     "trend_mult": 0.13981811068807906,
+     "mvrv_z": 0.15052017288660957,
+     "pi_ratio": 0.11447634466461545,
+     "trends": 0.05751917529627337,
+     "activity": 0.18286819883333813
     },
     "score_hot": {
      "equal": 88.0,
@@ -393,14 +393,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.19542041784201647,
-     "mayer": 0.15060903072639553,
-     "p200w": 0.13993850424591908,
-     "trend_mult": 0.1342871038715937,
-     "mvrv_z": 0.13496198924304734,
-     "pi_ratio": 0.07520374510881137,
-     "trends": 0.04770493282852065,
-     "activity": 0.1218742761336958
+     "cycle_day": 0.19575495489689956,
+     "mayer": 0.15086685589192525,
+     "p200w": 0.14017806270962588,
+     "trend_mult": 0.13451698779433865,
+     "mvrv_z": 0.13519302849115206,
+     "pi_ratio": 0.0753324851846064,
+     "trends": 0.046074714294197586,
+     "activity": 0.12208291073725464
     },
     "score_hot": {
      "equal": 68.0,
@@ -420,7 +420,7 @@
    "equal": {
     "top": "2025-10-06",
     "top_price": 124824,
-    "score_at_top": 62.1,
+    "score_at_top": 62.2,
     "max_near_top": 67.9,
     "max_near_top_date": "2025-08-13",
     "max_in_window": 67.9,
