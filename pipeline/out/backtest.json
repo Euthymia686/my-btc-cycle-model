@@ -174,8 +174,8 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 24.6,
-    "min_near_bottom": 23.2,
+    "score_at_bottom": 24.7,
+    "min_near_bottom": 23.4,
     "min_near_bottom_date": "2019-02-07"
    },
    "fitted": {
@@ -192,7 +192,7 @@
      "price_pct_of_top": 6.3,
      "false_episodes": [
       "2019-06-24..2019-07-13",
-      "2020-12-02..2020-12-31"
+      "2020-12-01..2020-12-31"
      ]
     },
     "T80": {
@@ -215,7 +215,7 @@
     "bottom_price": 3185,
     "score_at_bottom": 18.9,
     "min_near_bottom": 18.9,
-    "min_near_bottom_date": "2019-02-07"
+    "min_near_bottom_date": "2018-12-15"
    },
    "rules": {
     "n_signals": 6,
@@ -262,14 +262,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.029860256839719976,
-     "mayer": 0.17394288141752892,
-     "p200w": 0.15099485937383542,
-     "trend_mult": 0.13981811068807906,
-     "mvrv_z": 0.15052017288660957,
-     "pi_ratio": 0.11447634466461545,
-     "trends": 0.05751917529627337,
-     "activity": 0.18286819883333813
+     "cycle_day": 0.02986059781967687,
+     "mayer": 0.17394486770440268,
+     "p200w": 0.15099658361287718,
+     "trend_mult": 0.13981970729770005,
+     "mvrv_z": 0.15052189170511598,
+     "pi_ratio": 0.11447765189178628,
+     "trends": 0.057508412928330546,
+     "activity": 0.18287028704011044
     },
     "score_hot": {
      "equal": 88.0,
@@ -420,10 +420,10 @@
    "equal": {
     "top": "2025-10-06",
     "top_price": 124824,
-    "score_at_top": 62.0,
-    "max_near_top": 68.0,
+    "score_at_top": 62.1,
+    "max_near_top": 67.9,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 68.0,
+    "max_in_window": 67.9,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": null,
@@ -446,9 +446,9 @@
     "top": "2025-10-06",
     "top_price": 124824,
     "score_at_top": 63.0,
-    "max_near_top": 70.3,
+    "max_near_top": 70.2,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 70.3,
+    "max_in_window": 70.2,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": "2025-08-13",
