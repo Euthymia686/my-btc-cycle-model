@@ -46,9 +46,9 @@
      ]
     },
     "T80": {
-     "first_cross": "2013-02-22",
-     "lead_days": 285,
-     "price_pct_of_top": 2.7,
+     "first_cross": "2013-02-19",
+     "lead_days": 288,
+     "price_pct_of_top": 2.6,
      "false_episodes": []
     },
     "T90": {
@@ -80,9 +80,9 @@
      ]
     },
     "T80": {
-     "first_cross": "2013-02-22",
-     "lead_days": 285,
-     "price_pct_of_top": 2.7,
+     "first_cross": "2013-02-19",
+     "lead_days": 288,
+     "price_pct_of_top": 2.6,
      "false_episodes": []
     },
     "T90": {
@@ -174,7 +174,7 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 24.7,
+    "score_at_bottom": 24.8,
     "min_near_bottom": 23.1,
     "min_near_bottom_date": "2019-02-07"
    },
@@ -192,7 +192,7 @@
      "price_pct_of_top": 6.3,
      "false_episodes": [
       "2019-06-24..2019-07-13",
-      "2020-12-01..2020-12-31"
+      "2020-12-02..2020-12-31"
      ]
     },
     "T80": {
@@ -213,7 +213,7 @@
     },
     "bottom": "2018-12-15",
     "bottom_price": 3185,
-    "score_at_bottom": 18.9,
+    "score_at_bottom": 19.0,
     "min_near_bottom": 18.8,
     "min_near_bottom_date": "2019-02-07"
    },
@@ -262,14 +262,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.029802600756797186,
-     "mayer": 0.17360702143987805,
-     "p200w": 0.1507033088965672,
-     "trend_mult": 0.13954814098797869,
-     "mvrv_z": 0.1502295389641994,
-     "pi_ratio": 0.11425530645800828,
-     "trends": 0.059338977211371956,
-     "activity": 0.1825151052851992
+     "cycle_day": 0.029911203060756647,
+     "mayer": 0.17423965490249993,
+     "p200w": 0.15125247998046154,
+     "trend_mult": 0.14005666203109932,
+     "mvrv_z": 0.15077698360459907,
+     "pi_ratio": 0.11467165903146964,
+     "trends": 0.055911157097504695,
+     "activity": 0.1831802002916092
     },
     "score_hot": {
      "equal": 88.0,
@@ -321,8 +321,8 @@
    "fitted": {
     "top": "2021-11-08",
     "top_price": 67542,
-    "score_at_top": 63.9,
-    "max_near_top": 63.9,
+    "score_at_top": 63.8,
+    "max_near_top": 63.8,
     "max_near_top_date": "2021-11-08",
     "max_in_window": 82.8,
     "max_in_window_date": "2021-01-14",
@@ -348,8 +348,8 @@
     },
     "bottom": "2022-11-09",
     "bottom_price": 15758,
-    "score_at_bottom": 12.4,
-    "min_near_bottom": 12.4,
+    "score_at_bottom": 12.2,
+    "min_near_bottom": 12.2,
     "min_near_bottom_date": "2022-11-09"
    },
    "rules": {
@@ -393,14 +393,14 @@
      "activity"
     ],
     "fitted_weights": {
-     "cycle_day": 0.19546167732186004,
-     "mayer": 0.15064082909391585,
-     "p200w": 0.13996804972514296,
-     "trend_mult": 0.1343154561600425,
-     "mvrv_z": 0.1349904840213121,
-     "pi_ratio": 0.07521962301675844,
-     "trends": 0.04750387298245665,
-     "activity": 0.12190000767851139
+     "cycle_day": 0.19553116906158508,
+     "mayer": 0.15069438584954586,
+     "p200w": 0.14001781202849875,
+     "trend_mult": 0.13436320881850944,
+     "mvrv_z": 0.135038476669843,
+     "pi_ratio": 0.07524636556054769,
+     "trends": 0.04716523569122522,
+     "activity": 0.12194334632024487
     },
     "score_hot": {
      "equal": 68.0,
@@ -420,10 +420,10 @@
    "equal": {
     "top": "2025-10-06",
     "top_price": 124824,
-    "score_at_top": 62.1,
-    "max_near_top": 67.9,
+    "score_at_top": 62.3,
+    "max_near_top": 68.1,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 67.9,
+    "max_in_window": 68.1,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": null,
@@ -438,17 +438,19 @@
      "false_episodes": []
     },
     "T68": {
-     "first_cross": null,
+     "first_cross": "2025-08-13",
+     "lead_days": 54,
+     "price_pct_of_top": 98.9,
      "false_episodes": []
     }
    },
    "fitted": {
     "top": "2025-10-06",
     "top_price": 124824,
-    "score_at_top": 63.0,
-    "max_near_top": 70.2,
+    "score_at_top": 63.1,
+    "max_near_top": 70.3,
     "max_near_top_date": "2025-08-13",
-    "max_in_window": 70.2,
+    "max_in_window": 70.3,
     "max_in_window_date": "2025-08-13",
     "T70": {
      "first_cross": "2025-08-13",
